@@ -228,6 +228,7 @@ table.receipt-tbl thead th:nth-child(4), table.receipt-tbl tbody td:nth-child(4)
 table.receipt-tbl thead th:nth-child(5), table.receipt-tbl tbody td:nth-child(5){text-align:center;}
 table.receipt-tbl thead th:nth-child(6), table.receipt-tbl tbody td:nth-child(6){text-align:right;}
 table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); border-bottom:none; font-size:13.5px; color:var(--navy);}
+table.receipt-tbl tfoot td:last-child{text-align:right;}
 .receipt-note{font-size:10.5px; color:var(--ink-soft); margin-top:8px; white-space:pre-wrap; line-height:1.5;}
 .qr-block{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; gap:12px; align-items:center;}
 .qr-block img{width:110px; height:110px; border-radius:6px; border:1px solid var(--line); flex-shrink:0; background:#fff;}
@@ -316,7 +317,7 @@ table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); bo
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.7</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.9</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -345,6 +346,7 @@ const STATE = {
   filterText:'',
   skipEmptyPrint:true,
   phieuSelected:'ALL',
+  tamTruFilter:'all',
   prevDebts:{},          // stt -> {amount, monthLabel, monthKey} carried from previous unpaid month
   stagingRooms:null,     // editable preview grid for "Nhập đầu tháng" tab
   saveTimer:null
@@ -931,6 +933,7 @@ const TABS = [
   {id:'thutien', label:'💰 Thu tiền'},
   {id:'phieu', label:'🧾 Phiếu thu'},
   {id:'baocao', label:'📊 Báo cáo'},
+  {id:'tamtru', label:'🪪 Tạm trú'},
   {id:'nhapdaudthang', label:'🗓 Nhập đầu tháng'},
   {id:'lichsu', label:'🗂 Lịch sử'},
   {id:'caidat', label:'⚙️ Cài đặt'}
@@ -954,6 +957,7 @@ function renderMain(){
   if(STATE.activeTab==='thutien') return renderThuTien(main);
   if(STATE.activeTab==='phieu') return renderPhieu(main);
   if(STATE.activeTab==='baocao') return renderBaoCao(main);
+  if(STATE.activeTab==='tamtru') return renderTamTru(main);
   if(STATE.activeTab==='nhapdaudthang') return renderNhapDauThang(main);
   if(STATE.activeTab==='lichsu') return renderLichSu(main);
   if(STATE.activeTab==='caidat') return renderCaiDat(main);
@@ -2013,12 +2017,6 @@ function renderBaoCao(main){
     </div>
 
     <div class="panel">
-      <h2>📋 Tạm trú chưa đăng ký</h2>
-      <div class="desc">Danh sách người ở tại các phòng đang có khách nhưng chưa đăng ký tạm trú.</div>
-      <div id="tamTruWarnList"></div>
-    </div>
-
-    <div class="panel">
       <h2>🔒 Tiền cọc đang giữ</h2>
       <div class="desc">Danh sách tiền cọc của các phòng đang có khách (nhập lúc nhận khách mới, mục Nhập liệu). Số tiền này không tính vào doanh thu hàng tháng.</div>
       <div id="cocList"></div>
@@ -2031,7 +2029,6 @@ function renderBaoCao(main){
   `;
   renderContractWarnList(m);
   renderVacantRoomsList(m);
-  renderTamTruWarnList(m);
   renderCocList(m);
   renderHistoryChart();
 }
@@ -2053,23 +2050,7 @@ function renderVacantRoomsList(m){
     </tbody>
   </table></div>`;
 }
-function renderTamTruWarnList(m){
-  const el = document.getElementById('tamTruWarnList');
-  if(!el) return;
-  const rows = [];
-  m.rooms.filter(r=>r.active).forEach(r=>{
-    (r.nguoiO||[]).forEach(o=>{
-      if(!o.daDangKyTamTru) rows.push({stt:r.stt, hoTen:o.hoTen||'(chưa có tên)'});
-    });
-  });
-  if(!rows.length){ el.innerHTML = '<div class="empty-state">Tất cả người ở đã đăng ký tạm trú (hoặc chưa nhập thông tin người ở).</div>'; return; }
-  el.innerHTML = `<div class="table-wrap"><table class="data">
-    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Họ tên</th></tr></thead>
-    <tbody>
-      ${rows.map(x=>`<tr><td class="text-center sticky-col"><b>${x.stt}</b></td><td>${escapeAttr(x.hoTen)}</td></tr>`).join('')}
-    </tbody>
-  </table></div>`;
-}
+
 function renderContractWarnList(m){
   const el = document.getElementById('contractWarnList');
   if(!el) return;
@@ -2111,6 +2092,122 @@ function renderCocList(m){
     <tfoot><tr><td colspan="2">Tổng cọc đang giữ</td><td class="mono">${fmtVND(tong)}</td></tr></tfoot>
   </table></div>`;
 }
+
+/* ============ TAB: TẠM TRÚ ============ */
+function getAllOccupantsFlat(){
+  const list = [];
+  STATE.monthData.rooms.filter(r=>r.active).forEach(r=>{
+    (r.nguoiO||[]).forEach(o=>{ list.push({r, o}); });
+  });
+  return list.sort((a,b)=>a.r.stt-b.r.stt);
+}
+function renderTamTru(main){
+  const all = getAllOccupantsFlat();
+  const soDaDK = all.filter(x=>x.o.daDangKyTamTru).length;
+  const soChuaDK = all.length - soDaDK;
+  main.innerHTML = `
+    <div class="panel">
+      <h2>🪪 Tạm trú</h2>
+      <div class="desc">Danh sách người ở tại các phòng đang có khách. Tick vào ô "Đã đăng ký" ngay khi bên công an xác nhận — không cần vào từng phòng để sửa. Dùng các nút xuất file khi công an yêu cầu cung cấp danh sách.</div>
+      <div class="stat-row">
+        <div class="stat"><div class="lbl">Tổng số người</div><div class="val">${all.length}</div></div>
+        <div class="stat good"><div class="lbl">Đã đăng ký</div><div class="val">${soDaDK}</div></div>
+        <div class="stat bad"><div class="lbl">Chưa đăng ký</div><div class="val">${soChuaDK}</div></div>
+      </div>
+      <div class="toolbar">
+        <select id="tamTruFilterSelect" onchange="STATE.tamTruFilter=this.value; renderMain();">
+          <option value="all" ${STATE.tamTruFilter==='all'?'selected':''}>— Tất cả —</option>
+          <option value="yes" ${STATE.tamTruFilter==='yes'?'selected':''}>Đã đăng ký</option>
+          <option value="no" ${STATE.tamTruFilter==='no'?'selected':''}>Chưa đăng ký</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="exportTamTruTemplate()">⬇️ Xuất file mẫu</button>
+        <button class="btn btn-outline btn-sm" onclick="exportTamTruList('yes')">⬇️ Xuất DS đã đăng ký</button>
+        <button class="btn btn-outline btn-sm" onclick="exportTamTruList('no')">⬇️ Xuất DS chưa đăng ký</button>
+        <button class="btn btn-brass btn-sm" onclick="exportTamTruList('all')">⬇️ Xuất danh sách tổng</button>
+      </div>
+      <div id="tamTruTableWrap"></div>
+    </div>
+  `;
+  renderTamTruTable();
+}
+function renderTamTruTable(){
+  const el = document.getElementById('tamTruTableWrap');
+  if(!el) return;
+  let list = getAllOccupantsFlat();
+  if(STATE.tamTruFilter==='yes') list = list.filter(x=>x.o.daDangKyTamTru);
+  else if(STATE.tamTruFilter==='no') list = list.filter(x=>!x.o.daDangKyTamTru);
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Không có ai khớp bộ lọc này.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr>
+      <th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th>
+      <th>Thường trú</th><th>Nghề nghiệp</th><th class="text-center">Đã đăng ký</th>
+    </tr></thead>
+    <tbody>
+      ${list.map(x=>`<tr>
+        <td class="text-center sticky-col"><b>${x.r.stt}</b></td>
+        <td>${escapeAttr(x.o.hoTen||'(chưa có tên)')}</td>
+        <td>${x.o.ngaySinh?fmtDate(x.o.ngaySinh):'—'}</td>
+        <td>${x.o.gioiTinh||'—'}</td>
+        <td>${escapeAttr(x.o.diaChiThuongTru||'—')}</td>
+        <td>${escapeAttr(x.o.ngheNghiep||'—')}</td>
+        <td class="text-center"><input type="checkbox" ${x.o.daDangKyTamTru?'checked':''} onchange="toggleTamTruStatus(${x.r.stt}, '${x.o.id}', this.checked)"></td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+function toggleTamTruStatus(stt, occupantId, checked){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  const o = r && (r.nguoiO||[]).find(x=>x.id===occupantId);
+  if(!o) return;
+  o.daDangKyTamTru = checked;
+  if(checked && !o.ngayDangKyTamTru) o.ngayDangKyTamTru = todayISO();
+  scheduleSave();
+  renderTamTruTable();
+  renderTabsNav(); // không bắt buộc, giữ giao diện đồng nhất nếu sau này thêm huy hiệu số lượng
+}
+function normalizeCCCD(cccd){
+  const digits = String(cccd||'').replace(/\D/g,'');
+  return digits.slice(-11); // so sánh 11 số bên phải, bỏ qua số 0 đầu hay bị mất khi mở Excel
+}
+const TAM_TRU_HEADER = ['Họ và Tên','Số điện thoại:','Đang ở Nhà trọ 187. Phòng số: (điền số từ 2 đến 48)','Ngày sinh:','Số Căn Cước/CCCD','DangKyTamTru','Ngày cấp:','Nơi cấp:  (Cục cảnh sát Hoặc khác)','Địa chỉ Thường trú (điền theo thông tin trên Căn Cước/CCCD)','Nghề nghiệp:','Giới tính (trên CCCD)'];
+function buildTamTruAOA(list, titleLabel){
+  const aoa = [[`DANH SÁCH TẠM TRÚ — ${titleLabel} — Nhà trọ 187 NSHL — ${STATE.monthData.label}`], [], TAM_TRU_HEADER.slice()];
+  list.forEach(x=>{
+    aoa.push([
+      x.o.hoTen||'', x.o.soDienThoai||'', x.r.stt, x.o.ngaySinh||'', x.o.cccd||'',
+      x.o.daDangKyTamTru?'Có':'Không', x.o.ngayCapCccd||'', x.o.noiCapCccd||'',
+      x.o.diaChiThuongTru||'', x.o.ngheNghiep||'', x.o.gioiTinh||''
+    ]);
+  });
+  return aoa;
+}
+function exportTamTruList(filterMode){
+  const all = getAllOccupantsFlat();
+  let list = all, label = 'TỔNG HỢP';
+  if(filterMode==='yes'){ list = all.filter(x=>x.o.daDangKyTamTru); label = 'ĐÃ ĐĂNG KÝ'; }
+  else if(filterMode==='no'){ list = all.filter(x=>!x.o.daDangKyTamTru); label = 'CHƯA ĐĂNG KÝ'; }
+  if(!list.length){ showToast('Không có ai trong danh sách này để xuất.'); return; }
+  const aoa = buildTamTruAOA(list, label);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [22,16,14,14,18,14,14,20,32,18,14].map(w=>({wch:w}));
+  ws['!merges'] = [{s:{r:0,c:0}, e:{r:0,c:TAM_TRU_HEADER.length-1}}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'TamTru');
+  XLSX.writeFile(wb, `DSTamTru_${filterMode||'tonghop'}_187NSHL_${STATE.monthData.key}.xlsx`);
+  showToast(`Đã xuất danh sách ${label.toLowerCase()} (${list.length} người).`);
+}
+function exportTamTruTemplate(){
+  const example = ['Nguyễn Văn A', '0901234567', 5, '2000-01-01', '012345678901', 'Không', '2022-05-10', 'Cục Cảnh Sát', '123 Đường ABC, Phường X, Quận Y, Tỉnh/TP Z', 'Nhân viên', 'Nam'];
+  const aoa = [TAM_TRU_HEADER.slice(), example];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [22,16,14,14,18,14,14,20,32,18,14].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'MauTamTru');
+  XLSX.writeFile(wb, 'MauImport_TamTru.xlsx');
+  showToast('Đã xuất file mẫu — có thể dùng lại cho dãy trọ khác.');
+}
+
 function chiphiRowsHtml(c){
   const labels = [
     ['luongBaoVe','Lương bảo vệ'],['internet','Tiền Internet'],['dienChung','Điện chung'],
@@ -2374,8 +2471,9 @@ function renderCaiDat(main){
 
     <div class="panel">
       <h2>📥 Import danh sách người ở &amp; tạm trú (Excel)</h2>
-      <div class="desc">Dùng để nhập nhanh danh sách đã có sẵn (file dạng câu trả lời Google Form), có các cột theo đúng thứ tự: Họ và Tên, Số điện thoại, Phòng số, Ngày sinh, Số CCCD, Đăng ký tạm trú (Có/Không), Ngày cấp, Nơi cấp, Địa chỉ thường trú, Nghề nghiệp, Giới tính. Mỗi dòng sẽ được thêm vào đúng phòng theo cột "Phòng số". <b>Chỉ nên import 1 lần</b> — import lại file cũ có thể tạo trùng người ở.</div>
+      <div class="desc">Dùng để nhập nhanh danh sách đã có sẵn (file dạng câu trả lời Google Form), có các cột theo đúng thứ tự: Họ và Tên, Số điện thoại, Phòng số, Ngày sinh, Số CCCD, Đăng ký tạm trú (Có/Không), Ngày cấp, Nơi cấp, Địa chỉ thường trú, Nghề nghiệp, Giới tính. Mỗi dòng sẽ được thêm vào đúng phòng theo cột "Phòng số". App tự <b>bỏ qua dòng trùng CCCD</b> với người đã có (so 11 số bên phải, không tính số 0 đầu hay bị mất khi mở Excel), nên import lại file cũ vẫn an toàn, không lo tạo trùng.</div>
       <div class="toolbar">
+        <button class="btn btn-outline btn-sm" onclick="exportTamTruTemplate()">⬇️ Xuất file mẫu</button>
         <label class="btn btn-brass" style="margin:0;">📥 Chọn file Excel để import
           <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importTamTruExcel(this.files[0]); this.value='';">
         </label>
@@ -2499,7 +2597,15 @@ function importTamTruExcel(file){
         if(v instanceof Date) return v.toISOString().slice(0,10);
         return '';
       };
-      let count = 0, skipped = 0;
+      // gom sẵn CCCD (11 số bên phải) của những người đã có, để so trùng
+      const existingCCCD = new Set();
+      STATE.monthData.rooms.forEach(r=>{
+        (r.nguoiO||[]).forEach(o=>{
+          const n = normalizeCCCD(o.cccd);
+          if(n) existingCCCD.add(n);
+        });
+      });
+      let count = 0, skipped = 0, trung = 0;
       for(let i=1;i<rows.length;i++){
         const row = rows[i];
         if(!row || !row.length) continue;
@@ -2508,13 +2614,16 @@ function importTamTruExcel(file){
         const stt = Number(row[2]);
         const r = STATE.monthData.rooms.find(x=>x.stt===stt);
         if(!r){ skipped++; continue; }
+        const cccdRaw = String(row[4]||'');
+        const cccdNorm = normalizeCCCD(cccdRaw);
+        if(cccdNorm && existingCCCD.has(cccdNorm)){ trung++; continue; } // đã có người này rồi, bỏ qua tránh trùng
         if(!r.nguoiO) r.nguoiO = [];
         r.nguoiO.push({
           id: 'occ_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
           hoTen: String(hoTen),
           soDienThoai: String(row[1]||''),
           ngaySinh: toISO(row[3]),
-          cccd: String(row[4]||''),
+          cccd: cccdRaw,
           daDangKyTamTru: String(row[5]||'').trim()==='Có',
           ngayCapCccd: toISO(row[6]),
           noiCapCccd: String(row[7]||''),
@@ -2523,11 +2632,12 @@ function importTamTruExcel(file){
           gioiTinh: String(row[10]||''),
           documents: {}
         });
+        if(cccdNorm) existingCCCD.add(cccdNorm); // tránh trùng luôn cả trong chính file đang import
         count++;
       }
       scheduleSave();
       renderMain();
-      setStatus(`✅ Đã nhập ${count} người ở.${skipped?` Bỏ qua ${skipped} dòng không khớp số phòng nào đang có.`:''}`);
+      setStatus(`✅ Đã nhập ${count} người ở.${trung?` Bỏ qua ${trung} dòng trùng CCCD với người đã có.`:''}${skipped?` Bỏ qua ${skipped} dòng không khớp số phòng nào đang có.`:''}`);
       showToast(`Đã nhập ${count} người ở.`);
     }catch(err){
       setStatus('❌ File không đúng định dạng: '+(err&&err.message?err.message:err));
