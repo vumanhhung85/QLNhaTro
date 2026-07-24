@@ -1,4 +1,3 @@
-/*file V 1.5 */
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -317,7 +316,7 @@ table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); bo
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.5</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.7</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -327,9 +326,9 @@ table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); bo
 
 <script>
 /* ============ SEED / DEFAULT DATA ============ */
-const SEED_ROOMS = [{"stt": 1, "gia": 8500000, "songuoi": 3, "dongiaNuoc": 26000, "waterMeter": true, "nuocMoi": 1523, "nuocCu": 1493, "soxe": 0, "dongiaXe": 100000, "sodienmoi": 45166, "sodiencu": 44507, "dongiaDien": 3300, "racmode": "fixed", "dongiaRac": 0, "coc": 0, "ghichu": "hẹn đầu tháng 4 | tiền điện 3k/kw, nước 26k", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 2, "gia": 0, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck8", "paid": false, "paidDate": "", "paidNote": "", "active": false, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 3, "gia": 2300000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dời lên phòng 24", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 4, "gia": 2200000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2551, "sodiencu": 2428, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "gửi cô hòa, đã ck lại | bà ở nhà, sợ tống rác xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 5, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 7457, "sodiencu": 7375, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 6, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 4611, "sodiencu": 4597, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3 | Nước 100k/người", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 7, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1842, "sodiencu": 1787, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 8, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1773, "sodiencu": 1701, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, dời từ P46 xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 9, "gia": 2200000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1396, "sodiencu": 1362, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Mới vô đã đóng đủ và cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 10, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2708, "sodiencu": 2626, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "khách đã cọc 2 triệu đống tiền phòng.  | đã nhận 3.260k (đã cọc 1tr) (vào 23/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 11, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 765, "sodiencu": 765, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đủ tiền T3 và cọc đủ 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 12, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1229, "sodiencu": 1203, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, hết tháng 0 xe", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 13, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 912, "sodiencu": 894, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3, p36 đã xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 14, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3258, "sodiencu": 3190, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 15, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 8084, "sodiencu": 8017, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | ko có nắp, nhưng ko cần thay", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 16, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1833, "sodiencu": 1733, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 17, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4261, "sodiencu": 4154, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo6 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 18, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2585, "sodiencu": 2485, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, phản ánh sáng đèn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 19, "gia": 2100000, "songuoi": 0, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 192, "sodiencu": 171, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "hết T4 trả", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 20, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3127, "sodiencu": 3114, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, xin đấu nước máy, đã cọc 2 triệu | có lưới lọc", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 21, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 715, "sodiencu": 667, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Khách đã vô, đóng đủ tiền T4 và cọc 2tr, kiểm tra lại", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 22, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 799, "sodiencu": 770, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20. muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 23, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 50000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6329, "sodiencu": 6302, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4, Phòng 21 dời qua, ở ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 24, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5682, "sodiencu": 5505, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck10", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 25, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1944, "sodiencu": 1908, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 26, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3103, "sodiencu": 3076, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mời vô, đã cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 27, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1849, "sodiencu": 1695, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck 4, gửi phiếu muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 28, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2482, "sodiencu": 2324, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 29, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4173, "sodiencu": 4072, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | 2.1", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 30, "gia": 1900000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4568, "sodiencu": 4530, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 31, "gia": 2300000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5190, "sodiencu": 5085, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo5,p39 qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 32, "gia": 2700000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4853, "sodiencu": 4804, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,đã thuê giá 2.7tr kèm máy lạnh, it xài, cọc 2.5tr)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 33, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4987, "sodiencu": 4941, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 34, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6203, "sodiencu": 6108, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck14 | ko có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 35, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 5774, "sodiencu": 5763, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 36, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4840, "sodiencu": 4546, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "giá 2.5 triệu, đã gắn ML. C2 tháng sau thêm 1tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 37, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 644, "sodiencu": 634, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck17", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 38, "gia": 2200000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 8643, "sodiencu": 8478, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck23", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 39, "gia": 2100000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5948, "sodiencu": 5808, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã cọc 2 triệu, hẹn tuần 20/4 dọn dần vô", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 40, "gia": 1800000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 384, "sodiencu": 372, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo9, dự kiến tăng giá lên 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 41, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4128, "sodiencu": 4128, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dđã đóng 2 triệu, còn thiếu ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 42, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 2354, "sodiencu": 2263, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "T01,thuê giá 2.5 triệu, đã cọc 2tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 43, "gia": 2600000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 3, "dongiaXe": 150000, "sodienmoi": 789, "sodiencu": 483, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã thay ĐH, ML, giá 2.5 tr, 12KW T11", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 44, "gia": 2000000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3333, "sodiencu": 3097, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Thiếu 100k | ko zalo", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 45, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1958, "sodiencu": 1898, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6, đã cọc 2 triệu, ck3 | đã có khách cọc 1 triệu, P48 cũ", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 46, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4459, "sodiencu": 4438, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đóng tiền 22, xin cọc 50%, chưa gửi pheie xin ở tới ngày 5/5 | Đã nhận 4.430k (vô 22/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 47, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4551, "sodiencu": 4513, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,Phòng 45 chuyển qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 48, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 883, "sodiencu": 866, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}];
+const SEED_ROOMS = [{"stt": 1, "gia": 8500000, "songuoi": 3, "dongiaNuoc": 26000, "waterMeter": true, "nuocMoi": 1523, "nuocCu": 1493, "soxe": 0, "dongiaXe": 100000, "sodienmoi": 45166, "sodiencu": 44507, "dongiaDien": 3300, "racmode": "fixed", "dongiaRac": 0, "coc": 0, "ghichu": "hẹn đầu tháng 4 | tiền điện 3k/kw, nước 26k", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 2, "gia": 0, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck8", "paid": false, "paidDate": "", "paidNote": "", "active": false, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 3, "gia": 2300000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dời lên phòng 24", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 4, "gia": 2200000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2551, "sodiencu": 2428, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "gửi cô hòa, đã ck lại | bà ở nhà, sợ tống rác xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 5, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 7457, "sodiencu": 7375, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 6, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 4611, "sodiencu": 4597, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3 | Nước 100k/người", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 7, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1842, "sodiencu": 1787, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 8, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1773, "sodiencu": 1701, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, dời từ P46 xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 9, "gia": 2200000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1396, "sodiencu": 1362, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Mới vô đã đóng đủ và cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 10, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2708, "sodiencu": 2626, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "khách đã cọc 2 triệu đống tiền phòng.  | đã nhận 3.260k (đã cọc 1tr) (vào 23/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 11, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 765, "sodiencu": 765, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đủ tiền T3 và cọc đủ 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 12, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1229, "sodiencu": 1203, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, hết tháng 0 xe", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 13, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 912, "sodiencu": 894, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3, p36 đã xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 14, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3258, "sodiencu": 3190, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 15, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 8084, "sodiencu": 8017, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | ko có nắp, nhưng ko cần thay", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 16, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1833, "sodiencu": 1733, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 17, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4261, "sodiencu": 4154, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo6 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 18, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2585, "sodiencu": 2485, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, phản ánh sáng đèn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 19, "gia": 2100000, "songuoi": 0, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 192, "sodiencu": 171, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "hết T4 trả", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 20, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3127, "sodiencu": 3114, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, xin đấu nước máy, đã cọc 2 triệu | có lưới lọc", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 21, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 715, "sodiencu": 667, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Khách đã vô, đóng đủ tiền T4 và cọc 2tr, kiểm tra lại", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 22, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 799, "sodiencu": 770, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20. muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 23, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 50000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6329, "sodiencu": 6302, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4, Phòng 21 dời qua, ở ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 24, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5682, "sodiencu": 5505, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck10", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 25, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1944, "sodiencu": 1908, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 26, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3103, "sodiencu": 3076, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mời vô, đã cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 27, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1849, "sodiencu": 1695, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck 4, gửi phiếu muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 28, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2482, "sodiencu": 2324, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 29, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4173, "sodiencu": 4072, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | 2.1", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 30, "gia": 1900000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4568, "sodiencu": 4530, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 31, "gia": 2300000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5190, "sodiencu": 5085, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo5,p39 qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 32, "gia": 2700000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4853, "sodiencu": 4804, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,đã thuê giá 2.7tr kèm máy lạnh, it xài, cọc 2.5tr)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 33, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4987, "sodiencu": 4941, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 34, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6203, "sodiencu": 6108, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck14 | ko có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 35, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 5774, "sodiencu": 5763, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 36, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4840, "sodiencu": 4546, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "giá 2.5 triệu, đã gắn ML. C2 tháng sau thêm 1tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 37, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 644, "sodiencu": 634, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck17", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 38, "gia": 2200000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 8643, "sodiencu": 8478, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck23", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 39, "gia": 2100000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5948, "sodiencu": 5808, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã cọc 2 triệu, hẹn tuần 20/4 dọn dần vô", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 40, "gia": 1800000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 384, "sodiencu": 372, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo9, dự kiến tăng giá lên 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 41, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4128, "sodiencu": 4128, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dđã đóng 2 triệu, còn thiếu ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 42, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 2354, "sodiencu": 2263, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "T01,thuê giá 2.5 triệu, đã cọc 2tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 43, "gia": 2600000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 3, "dongiaXe": 150000, "sodienmoi": 789, "sodiencu": 483, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã thay ĐH, ML, giá 2.5 tr, 12KW T11", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 44, "gia": 2000000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3333, "sodiencu": 3097, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Thiếu 100k | ko zalo", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 45, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1958, "sodiencu": 1898, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6, đã cọc 2 triệu, ck3 | đã có khách cọc 1 triệu, P48 cũ", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 46, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4459, "sodiencu": 4438, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đóng tiền 22, xin cọc 50%, chưa gửi pheie xin ở tới ngày 5/5 | Đã nhận 4.430k (vô 22/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 47, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4551, "sodiencu": 4513, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,Phòng 45 chuyển qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}, {"stt": 48, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 883, "sodiencu": 866, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": "", "nguoiO": [], "lichSuKhach": [], "ngayTrong": ""}];
 const DEFAULT_CHIPHI = {"luongBaoVe": 12000000, "internet": 500000, "dienChung": 12000000, "racChung": 850000, "nuocChung": 3000000, "ca": 2000000, "suaChua": 2000000, "chuaChay": 1000000, "chiKhac": 0, "tienNha": 55000000};
-const DEFAULT_SETTINGS = {"tenNguoiNhan": "Vũ Mạnh Hưng", "stk": "101004138575", "nganHang": "NH Công Thương Vietinbank", "momo": "0983642606", "zalo": "0904.883.252", "contractWarnDays": 30, "hanDongNgay": 6, "recoveryQuestion1": "Số điện thoại đầu tiên của bạn?", "recoveryAnswer1": "", "recoveryQuestion2": "Tên của ông/bà nội bạn?", "recoveryAnswer2": "", "sheetWebhookUrl": "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec", "vietQRBankBin": "970415"};
+const DEFAULT_SETTINGS = {"tenNguoiNhan": "Vũ Mạnh Hưng", "stk": "101004138575", "nganHang": "NH Công Thương Vietinbank", "momo": "0983642606", "zalo": "0904.883.252", "contractWarnDays": 30, "hanDongNgay": 6, "recoveryQuestion1": "Số điện thoại đầu tiên của bạn?", "recoveryAnswer1": "", "recoveryQuestion2": "Tên của ông/bà nội bạn?", "recoveryAnswer2": "", "sheetWebhookUrl": "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec", "vietQRBankBin": "970415", "giayToTypes": ["Hợp đồng", "CCCD"]};
 const SEED_MONTH_KEY = "2026-07";
 const SEED_MONTH_LABEL = "Tháng 7/2026";
 const DEFAULT_PASSWORD = "187nshl";
@@ -818,6 +817,12 @@ function daysUntil(iso){
   const today = new Date(); today.setHours(0,0,0,0);
   return Math.round((target-today)/86400000);
 }
+function daysSince(iso){
+  if(!iso) return null;
+  const start = new Date(iso+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((today-start)/86400000);
+}
 function contractWarnDays(){ return (STATE.settings && STATE.settings.contractWarnDays) || 30; }
 function roomDebtInfo(r){
   const debt = STATE.prevDebts[r.stt];
@@ -960,6 +965,7 @@ function renderNhap(main){
   const filter = STATE.filterText.trim();
   const shown = rooms.filter(r=> !filter || String(r.stt)===filter || (r.ghichu||'').toLowerCase().includes(filter.toLowerCase()));
   const activeRooms = rooms.filter(r=>r.active);
+  const vacantRooms = rooms.filter(r=>!r.active).map(r=>r.stt);
   const daThuThucTe = activeRooms.reduce((s,r)=>s+roomDaDongAmount(r),0);
   const conThieuThucTe = activeRooms.reduce((s,r)=>s+roomThieuAmount(r),0);
   const soPhongDaDongDu = activeRooms.filter(r=>r.paid && roomThieuAmount(r)===0).length;
@@ -968,6 +974,7 @@ function renderNhap(main){
     <div class="panel">
       <h2><span class="month-highlight">${STATE.monthData.label}</span></h2>
       <div class="desc">Hạn đóng tiền: <b>${STATE.monthData.hanDong? fmtDate(STATE.monthData.hanDong) : '—'}</b> · Cập nhật đầu tháng: số điện mới → số cũ, sửa giá phòng / số người / số xe nếu có thay đổi.</div>
+      ${vacantRooms.length ? `<div style="background:var(--danger-bg); color:var(--danger); font-weight:700; font-size:12.5px; padding:8px 10px; border-radius:7px; margin-bottom:10px;">🏚 Phòng đang trống: ${vacantRooms.join(', ')}</div>` : ''}
       <div class="stat-row">
         <div class="stat"><div class="lbl">Tổng thu dự kiến</div><div class="val mono" id="stat-tongthu">${fmtVND(totals.tong)}</div></div>
         <div class="stat good"><div class="lbl">Đã thu (thực tế)</div><div class="val mono" id="stat-dathu">${fmtVND(daThuThucTe)}</div></div>
@@ -1133,6 +1140,18 @@ function roomFormHtml(r){
       <div class="f span2"><label>Ghi chú phòng</label><input type="text" value="${escapeAttr(r.ghichu||'')}" onchange="updRoom(${r.stt},'ghichu', this.value)"></div>
     </div>
 
+    ${r.active ? `
+    <div class="section-title">👥 Người ở &amp; Tạm trú</div>
+    <div>${occupantsListHtml(r)}</div>
+    <div class="toolbar" style="gap:6px;">
+      <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${r.stt}, null)">+ Thêm người ở</button>
+      <button class="btn btn-outline btn-sm" onclick="openTenantHistoryModal(${r.stt})">📜 Lịch sử khách thuê (${(r.lichSuKhach||[]).length})</button>
+    </div>
+    ` : `
+    <div class="section-title">👥 Người ở &amp; Tạm trú</div>
+    <button class="btn btn-outline btn-sm" onclick="openTenantHistoryModal(${r.stt})">📜 Lịch sử khách thuê (${(r.lichSuKhach||[]).length})</button>
+    `}
+
     <div class="breakdown">
       <span>Tiền phòng${r._c.prorated?' (tính theo ngày ở)':''}: <b class="mono">${fmtVND(r._c.tienPhong)}</b></span>
       <span>Tiền nước: <b class="mono">${fmtVND(r._c.tienNuoc)}</b></span>
@@ -1194,12 +1213,249 @@ function openNewTenantModal(stt){
     </div>
   `);
 }
+/* ============ NGƯỜI Ở & TẠM TRÚ (lưu giấy tờ qua Google Drive) ============ */
+function giayToTypesList(){
+  return (STATE.settings && STATE.settings.giayToTypes && STATE.settings.giayToTypes.length) ? STATE.settings.giayToTypes : ['Hợp đồng','CCCD'];
+}
+function archiveCurrentTenancy(r, denNgay){
+  if(!r.nguoiO || !r.nguoiO.length) { r.nguoiO = []; return; }
+  if(!r.lichSuKhach) r.lichSuKhach = [];
+  r.lichSuKhach.push({
+    tuNgay: r.ngayVaoO || '', denNgay: denNgay || todayISO(),
+    soDienThoai: r.soDienThoai || '', nguoiO: JSON.parse(JSON.stringify(r.nguoiO))
+  });
+  r.nguoiO = [];
+}
+function occupantsListHtml(r){
+  const list = r.nguoiO || [];
+  if(!list.length) return '<div class="empty-state" style="padding:10px;">Chưa có thông tin người ở.</div>';
+  return list.map(o => `
+    <div style="border:1px solid var(--line); border-radius:7px; padding:8px 10px; margin-bottom:6px; background:#fff;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+        <div><b>${escapeAttr(o.hoTen||'(chưa có tên)')}</b>${o.gioiTinh?(' · '+o.gioiTinh):''}${o.soDienThoai?(' · '+escapeAttr(o.soDienThoai)):''}</div>
+        <span class="pill ${o.daDangKyTamTru?'pill-green':'pill-yellow'}">${o.daDangKyTamTru?'Đã đăng ký TT':'Chưa đăng ký TT'}</span>
+      </div>
+      <div style="font-size:11px; color:var(--ink-soft); margin-top:3px;">CCCD: ${escapeAttr(o.cccd||'—')}${o.ngayCapCccd?(' · Cấp '+fmtDate(o.ngayCapCccd)):''}${o.noiCapCccd?(' · '+escapeAttr(o.noiCapCccd)):''}</div>
+      ${o.diaChiThuongTru?`<div style="font-size:11px;color:var(--ink-soft);">Thường trú: ${escapeAttr(o.diaChiThuongTru)}</div>`:''}
+      ${o.ngheNghiep?`<div style="font-size:11px;color:var(--ink-soft);">Nghề nghiệp: ${escapeAttr(o.ngheNghiep)}</div>`:''}
+      <div class="toolbar" style="margin-top:6px; gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${r.stt}, '${o.id}')">Sửa</button>
+        <button class="btn btn-outline btn-sm" onclick="deleteOccupant(${r.stt}, '${o.id}')">Xoá</button>
+      </div>
+      ${docsListHtml(r.stt, o)}
+    </div>
+  `).join('');
+}
+function docsListHtml(roomStt, o){
+  const types = giayToTypesList();
+  const docs = o.documents || {};
+  return `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+    ${types.map(t=>{
+      const d = docs[t];
+      if(d && d.fileId){
+        return `<button class="btn btn-outline btn-sm" onclick="viewDoc('${d.fileId}')">👁 ${t}</button>` +
+               `<button class="btn btn-outline btn-sm" onclick="deleteDocForOccupant(${roomStt},'${o.id}','${t}')">🗑 ${t}</button>`;
+      }
+      return `<label class="btn btn-outline btn-sm" style="margin:0;">📎 Tải ${t}<input type="file" accept="image/*" style="display:none" onchange="uploadDocForOccupant(${roomStt},'${o.id}','${t}',this.files[0]); this.value='';"></label>`;
+    }).join('')}
+  </div>`;
+}
+function openOccupantModal(roomStt, occupantId){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  const o = occupantId ? (r.nguoiO||[]).find(x=>x.id===occupantId) : {};
+  showModal(`
+    <h3>${occupantId?'Sửa':'Thêm'} người ở — Phòng ${roomStt}</h3>
+    <div class="form-grid">
+      <div class="f span2"><label>Họ và tên</label><input type="text" id="oc_hoten" value="${escapeAttr(o.hoTen||'')}"></div>
+      <div class="f"><label>Số điện thoại</label><input type="tel" id="oc_sdt" value="${escapeAttr(o.soDienThoai||'')}"></div>
+      <div class="f"><label>Giới tính</label>
+        <select id="oc_gioitinh">
+          <option value="" ${!o.gioiTinh?'selected':''}>—</option>
+          <option value="Nam" ${o.gioiTinh==='Nam'?'selected':''}>Nam</option>
+          <option value="Nữ" ${o.gioiTinh==='Nữ'?'selected':''}>Nữ</option>
+        </select>
+      </div>
+      <div class="f"><label>Ngày sinh</label><input type="date" id="oc_ngaysinh" value="${o.ngaySinh||''}"></div>
+      <div class="f"><label>Nghề nghiệp</label><input type="text" id="oc_nghe" value="${escapeAttr(o.ngheNghiep||'')}"></div>
+      <div class="f"><label>Số CCCD</label><input type="text" id="oc_cccd" value="${escapeAttr(o.cccd||'')}"></div>
+      <div class="f"><label>Ngày cấp CCCD</label><input type="date" id="oc_ngaycap" value="${o.ngayCapCccd||''}"></div>
+      <div class="f"><label>Nơi cấp</label><input type="text" id="oc_noicap" value="${escapeAttr(o.noiCapCccd||'')}"></div>
+      <div class="f span2"><label>Địa chỉ thường trú (theo CCCD)</label><input type="text" id="oc_diachi" value="${escapeAttr(o.diaChiThuongTru||'')}"></div>
+      <div class="f span2"><label class="checkbox-row"><input type="checkbox" id="oc_tamtru" ${o.daDangKyTamTru?'checked':''}> Đã đăng ký tạm trú</label></div>
+      <div class="f"><label>Ngày đăng ký tạm trú</label><input type="date" id="oc_ngaydk" value="${o.ngayDangKyTamTru||''}"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-primary" onclick="saveOccupant(${roomStt}, ${occupantId?`'${occupantId}'`:'null'})">Lưu</button>
+    </div>
+  `);
+}
+function saveOccupant(roomStt, occupantId){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  if(!r) return;
+  if(!r.nguoiO) r.nguoiO = [];
+  const data = {
+    hoTen: document.getElementById('oc_hoten').value,
+    soDienThoai: document.getElementById('oc_sdt').value,
+    gioiTinh: document.getElementById('oc_gioitinh').value,
+    ngaySinh: document.getElementById('oc_ngaysinh').value,
+    ngheNghiep: document.getElementById('oc_nghe').value,
+    cccd: document.getElementById('oc_cccd').value,
+    ngayCapCccd: document.getElementById('oc_ngaycap').value,
+    noiCapCccd: document.getElementById('oc_noicap').value,
+    diaChiThuongTru: document.getElementById('oc_diachi').value,
+    daDangKyTamTru: document.getElementById('oc_tamtru').checked,
+    ngayDangKyTamTru: document.getElementById('oc_ngaydk').value
+  };
+  if(occupantId){
+    const idx = r.nguoiO.findIndex(x=>x.id===occupantId);
+    if(idx>=0) r.nguoiO[idx] = Object.assign({}, r.nguoiO[idx], data);
+  } else {
+    data.id = 'occ_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    data.documents = {};
+    r.nguoiO.push(data);
+  }
+  scheduleSave();
+  closeModal();
+  renderMain();
+  showToast('Đã lưu thông tin người ở.');
+}
+function deleteOccupant(roomStt, occupantId){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  if(!r || !r.nguoiO) return;
+  r.nguoiO = r.nguoiO.filter(x=>x.id!==occupantId);
+  scheduleSave();
+  renderMain();
+  showToast('Đã xoá người ở khỏi danh sách.');
+}
+function openTenantHistoryModal(roomStt){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  const hist = (r && r.lichSuKhach) || [];
+  if(!hist.length){
+    showModal(`<h3>📜 Lịch sử khách thuê — Phòng ${roomStt}</h3><div class="empty-state">Chưa có lịch sử.</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>`);
+    return;
+  }
+  showModal(`
+    <h3>📜 Lịch sử khách thuê — Phòng ${roomStt}</h3>
+    <div style="max-height:60vh; overflow-y:auto;">
+      ${hist.slice().reverse().map(h=>`
+        <div style="border:1px solid var(--line); border-radius:7px; padding:8px 10px; margin-bottom:8px;">
+          <div style="font-weight:700; color:var(--navy);">${fmtDate(h.tuNgay)} → ${fmtDate(h.denNgay)}</div>
+          <div style="font-size:11px; color:var(--ink-soft);">SĐT: ${escapeAttr(h.soDienThoai||'—')}</div>
+          ${(h.nguoiO||[]).map(o=>`
+            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);">
+              <b>${escapeAttr(o.hoTen||'—')}</b>${o.gioiTinh?(' · '+o.gioiTinh):''}<br>
+              <span style="font-size:11px;color:var(--ink-soft);">CCCD: ${escapeAttr(o.cccd||'—')}${o.diaChiThuongTru?(' · '+escapeAttr(o.diaChiThuongTru)):''}</span>
+              ${docsListHtml(roomStt, o)}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
+  `);
+}
+
+/* ---- Ảnh giấy tờ qua Google Drive (dùng chung link Apps Script đã cấu hình) ---- */
+async function compressImageFile(file, maxDim, quality){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w>=h && w>maxDim){ h = Math.round(h*maxDim/w); w = maxDim; }
+        else if(h>w && h>maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadDocForOccupant(roomStt, occupantId, docType, file){
+  if(!file) return;
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình link Google Sheet/Apps Script trong Cài đặt.'); return; }
+  showToast('Đang nén và tải ảnh lên Google Drive…');
+  try{
+    const base64 = await compressImageFile(file, 1600, 0.8);
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
+      action:'uploadDoc', roomStt, base64Data: base64, mimeType:'image/jpeg', fileName:`Phong${roomStt}_${docType}_${occupantId}.jpg`
+    })});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok'){
+      const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+      const o = r && (r.nguoiO||[]).find(x=>x.id===occupantId);
+      if(o){
+        if(!o.documents) o.documents = {};
+        o.documents[docType] = {fileId: json.fileId, uploadedAt: Date.now()};
+        scheduleSave();
+        renderMain();
+      }
+      showToast('Đã tải ảnh lên Google Drive.');
+    } else {
+      showToast('Tải lên thất bại: '+(json&&json.message?json.message:describeSyncError({message:text.slice(0,150)})));
+    }
+  }catch(err){
+    showToast('Lỗi tải lên: '+describeSyncError(err));
+  }
+}
+async function viewDoc(fileId){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình link Google Sheet/Apps Script.'); return; }
+  showToast('Đang tải ảnh…');
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'getDoc', fileId})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok' && json.base64){
+      showModal(`
+        <h3>Xem giấy tờ</h3>
+        <img src="data:${json.mimeType};base64,${json.base64}" style="width:100%; border-radius:8px; border:1px solid var(--line);">
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
+      `);
+    } else {
+      showToast('Không tải được ảnh: '+describeSyncError({message:text.slice(0,150)}));
+    }
+  }catch(err){
+    showToast('Lỗi: '+describeSyncError(err));
+  }
+}
+async function deleteDocForOccupant(roomStt, occupantId, docType){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  const o = r && (r.nguoiO||[]).find(x=>x.id===occupantId);
+  if(!o || !o.documents || !o.documents[docType]) return;
+  const fileId = o.documents[docType].fileId;
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  showToast('Đang xoá…');
+  try{
+    if(url){
+      await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'deleteDoc', fileId})});
+    }
+  }catch(err){ /* vẫn xoá tham chiếu trong app dù lỡ lỗi kết nối tới Drive */ }
+  delete o.documents[docType];
+  scheduleSave();
+  renderMain();
+  showToast('Đã xoá giấy tờ.');
+}
+
 async function applyTenantChange(stt, isNewTenant){
   const r = STATE.monthData.rooms.find(x=>x.stt===stt);
   if(!r) return;
   r.active = true;
   r.khachMoi = !!isNewTenant;
+  r.ngayTrong = ''; // không còn trống nữa
   if(isNewTenant){
+    archiveCurrentTenancy(r, todayISO()); // đề phòng còn sót người ở cũ chưa được lưu lịch sử
     r.ngayVaoO = todayISO();
     const cocEl = document.getElementById('nt_coc');
     if(cocEl){ r.coc = parseMoneyVal(cocEl); }
@@ -1331,9 +1587,11 @@ async function applyVacate(stt){
   }
   const hoanLai = Math.max(0, cocGoc - dienCuoiKy - truThem);
 
+  archiveCurrentTenancy(r, todayISO());
   r.active = false;
   r.songuoi = 0; r.soxe = 0; r.coc = 0; r.soDienThoai = '';
   r.ngayVaoO = '';
+  r.ngayTrong = todayISO();
 
   if(cocGoc>0 || dienCuoiKy>0 || truThem>0){
     const parts = [`Cọc ${fmtVND(cocGoc)}`];
@@ -1383,7 +1641,7 @@ async function confirmTransfer(fromStt){
   if(newRoom.active){ errEl.textContent = 'Phòng đích không còn trống, vui lòng chọn lại.'; return; }
 
   // giữ lại thông tin khách trước khi xoá ở phòng cũ
-  const tenant = {songuoi:oldRoom.songuoi||0, soxe:oldRoom.soxe||0, coc:oldRoom.coc||0, soDienThoai:oldRoom.soDienThoai||''};
+  const tenant = {songuoi:oldRoom.songuoi||0, soxe:oldRoom.soxe||0, coc:oldRoom.coc||0, soDienThoai:oldRoom.soDienThoai||'', nguoiO: JSON.parse(JSON.stringify(oldRoom.nguoiO||[]))};
 
   let dienPhongCu = 0, dienNote = '';
   if(oldReadingVal !== ''){
@@ -1395,20 +1653,24 @@ async function confirmTransfer(fromStt){
     dienNote = ` — điện P${fromStt} chốt: ${daDung} số × ${fmtVND(oldRoom.dongiaDien)} = ${fmtVND(dienPhongCu)} (${oldReading} - ${oldCu} = ${daDung} số)`;
   }
 
-  // đóng sổ phòng cũ, trả về trạng thái trống
+  // đóng sổ phòng cũ, trả về trạng thái trống (lưu lịch sử người ở trước khi xoá)
+  archiveCurrentTenancy(oldRoom, todayISO());
   oldRoom.sodiencu = oldRoom.sodienmoi!=null ? oldRoom.sodienmoi : oldRoom.sodiencu;
   oldRoom.active = false;
   oldRoom.songuoi = 0; oldRoom.soxe = 0; oldRoom.coc = 0; oldRoom.ngayVaoO = ''; oldRoom.soDienThoai = '';
+  oldRoom.ngayTrong = todayISO();
   oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang P${targetStt} (${fmtDateShort(todayISO())})`;
 
-  // mở phòng mới cho khách, kế thừa số người/xe/cọc, cộng tiền điện phòng cũ vào điều chỉnh
+  // mở phòng mới cho khách, kế thừa số người/xe/cọc/giấy tờ, cộng tiền điện phòng cũ vào điều chỉnh
   newRoom.active = true;
   newRoom.khachMoi = true; // nợ cũ (nếu có) của phòng này trước đây coi như đã chốt, không cộng dồn cho khách mới tới
+  newRoom.ngayTrong = '';
   newRoom.ngayVaoO = todayISO();
   newRoom.songuoi = tenant.songuoi;
   newRoom.soxe = tenant.soxe;
   newRoom.coc = tenant.coc;
   newRoom.soDienThoai = tenant.soDienThoai;
+  newRoom.nguoiO = tenant.nguoiO;
   if(newReadingVal !== ''){ newRoom.sodiencu = Number(newReadingVal); }
   newRoom.dieuchinh = Number(newRoom.dieuchinh||0) + dienPhongCu;
   newRoom.ghichu = (note || `Dời P${fromStt} ${fmtDateShort(todayISO())}`) + dienNote;
@@ -1745,6 +2007,18 @@ function renderBaoCao(main){
     </div>
 
     <div class="panel">
+      <h2>🏚 Phòng đang trống</h2>
+      <div class="desc">Xem phòng nào trống lâu để lên phương án cho thuê lại.</div>
+      <div id="vacantRoomsList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>📋 Tạm trú chưa đăng ký</h2>
+      <div class="desc">Danh sách người ở tại các phòng đang có khách nhưng chưa đăng ký tạm trú.</div>
+      <div id="tamTruWarnList"></div>
+    </div>
+
+    <div class="panel">
       <h2>🔒 Tiền cọc đang giữ</h2>
       <div class="desc">Danh sách tiền cọc của các phòng đang có khách (nhập lúc nhận khách mới, mục Nhập liệu). Số tiền này không tính vào doanh thu hàng tháng.</div>
       <div id="cocList"></div>
@@ -1756,8 +2030,45 @@ function renderBaoCao(main){
     </div>
   `;
   renderContractWarnList(m);
+  renderVacantRoomsList(m);
+  renderTamTruWarnList(m);
   renderCocList(m);
   renderHistoryChart();
+}
+function renderVacantRoomsList(m){
+  const el = document.getElementById('vacantRoomsList');
+  if(!el) return;
+  const list = m.rooms.filter(r=>!r.active).map(r=>({
+    stt:r.stt, ngayTrong:r.ngayTrong, days: r.ngayTrong ? daysSince(r.ngayTrong) : null
+  })).sort((a,b)=>(b.days||0)-(a.days||0));
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Không có phòng nào đang trống.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Trống từ ngày</th><th>Số ngày đã trống</th></tr></thead>
+    <tbody>
+      ${list.map(x=>`<tr>
+        <td class="text-center sticky-col"><b>${x.stt}</b></td>
+        <td>${x.ngayTrong ? fmtDate(x.ngayTrong) : 'Không rõ'}</td>
+        <td>${x.days!=null ? `<span class="pill ${x.days>30?'pill-red':'pill-yellow'}">${x.days} ngày</span>` : '—'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+function renderTamTruWarnList(m){
+  const el = document.getElementById('tamTruWarnList');
+  if(!el) return;
+  const rows = [];
+  m.rooms.filter(r=>r.active).forEach(r=>{
+    (r.nguoiO||[]).forEach(o=>{
+      if(!o.daDangKyTamTru) rows.push({stt:r.stt, hoTen:o.hoTen||'(chưa có tên)'});
+    });
+  });
+  if(!rows.length){ el.innerHTML = '<div class="empty-state">Tất cả người ở đã đăng ký tạm trú (hoặc chưa nhập thông tin người ở).</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Họ tên</th></tr></thead>
+    <tbody>
+      ${rows.map(x=>`<tr><td class="text-center sticky-col"><b>${x.stt}</b></td><td>${escapeAttr(x.hoTen)}</td></tr>`).join('')}
+    </tbody>
+  </table></div>`;
 }
 function renderContractWarnList(m){
   const el = document.getElementById('contractWarnList');
@@ -2052,6 +2363,42 @@ function renderCaiDat(main){
     </div>
 
     <div class="panel">
+      <h2>📎 Loại giấy tờ lưu trữ (Google Drive)</h2>
+      <div class="desc">Danh sách loại giấy tờ sẽ hiện ra để tải ảnh lên cho mỗi người ở trong phòng (mục "👥 Người ở &amp; Tạm trú" ở tab Nhập liệu). Ảnh lưu riêng tư trong Google Drive của bạn qua đúng link Apps Script đã cấu hình bên dưới.</div>
+      <div id="giayToTypesList" style="margin:8px 0;"></div>
+      <div class="toolbar">
+        <input type="text" id="newGiayToType" placeholder="Tên loại giấy tờ mới, VD: Hộ khẩu">
+        <button class="btn btn-outline btn-sm" onclick="addGiayToType()">+ Thêm loại</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>📥 Import danh sách người ở &amp; tạm trú (Excel)</h2>
+      <div class="desc">Dùng để nhập nhanh danh sách đã có sẵn (file dạng câu trả lời Google Form), có các cột theo đúng thứ tự: Họ và Tên, Số điện thoại, Phòng số, Ngày sinh, Số CCCD, Đăng ký tạm trú (Có/Không), Ngày cấp, Nơi cấp, Địa chỉ thường trú, Nghề nghiệp, Giới tính. Mỗi dòng sẽ được thêm vào đúng phòng theo cột "Phòng số". <b>Chỉ nên import 1 lần</b> — import lại file cũ có thể tạo trùng người ở.</div>
+      <div class="toolbar">
+        <label class="btn btn-brass" style="margin:0;">📥 Chọn file Excel để import
+          <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importTamTruExcel(this.files[0]); this.value='';">
+        </label>
+      </div>
+      <div id="tamTruImportStatus" style="font-size:12px;color:var(--ink-soft);margin-top:8px;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>📷 Sao lưu / Phục hồi ảnh giấy tờ</h2>
+      <div class="desc">
+        Lưu ý trước tiên: <b>Google Drive tự giữ file đã xoá trong Thùng rác 30 ngày</b> — nếu vừa lỡ tay xoá nhầm, vào Thùng rác trên Drive khôi phục ngay sẽ nhanh và chắc ăn hơn dùng file sao lưu này.<br><br>
+        File .zip bên dưới là lớp phòng hờ thứ 2: tải toàn bộ ảnh CCCD/hợp đồng (cả người đang ở lẫn khách cũ trong lịch sử) về máy — dùng khi Thùng rác cũng đã dọn hoặc mất cả thư mục gốc trên Drive.
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-outline" onclick="exportAllDocsBackup()">⬇️ Sao lưu toàn bộ ảnh (.zip)</button>
+        <label class="btn btn-outline" style="margin:0;">📂 Phục hồi ảnh từ file .zip
+          <input type="file" accept=".zip" style="display:none" onchange="importDocsBackup(this.files[0]); this.value='';">
+        </label>
+      </div>
+      <div id="docsBackupStatus" style="font-size:12px;color:var(--ink-soft);margin-top:8px;"></div>
+    </div>
+
+    <div class="panel">
       <h2>Đổi mật khẩu</h2>
       <div class="form-grid">
         <div class="f"><label>Mật khẩu hiện tại</label><input type="password" id="pw_old"></div>
@@ -2103,6 +2450,189 @@ function renderCaiDat(main){
     </div>
   `;
   updateQRPreview();
+  renderGiayToTypesList();
+}
+function renderGiayToTypesList(){
+  const el = document.getElementById('giayToTypesList');
+  if(!el) return;
+  const types = giayToTypesList();
+  el.innerHTML = types.map((t,i)=>`
+    <span class="pill pill-muted" style="margin:3px 6px 3px 0; display:inline-flex; align-items:center; gap:6px;">
+      ${escapeAttr(t)} <button onclick="removeGiayToType(${i})" style="border:none;background:none;color:var(--brick);cursor:pointer;font-weight:800;padding:0;">✕</button>
+    </span>`).join('') || '<span class="desc">Chưa có loại nào.</span>';
+}
+async function addGiayToType(){
+  const input = document.getElementById('newGiayToType');
+  const val = (input.value||'').trim();
+  if(!val) return;
+  if(!STATE.settings.giayToTypes) STATE.settings.giayToTypes = giayToTypesList().slice();
+  if(STATE.settings.giayToTypes.includes(val)){ showToast('Loại này đã có rồi.'); return; }
+  STATE.settings.giayToTypes.push(val);
+  await stSetJSON('settings', STATE.settings);
+  await touchLastModified();
+  input.value = '';
+  renderGiayToTypesList();
+  showToast('Đã thêm loại giấy tờ.');
+}
+async function removeGiayToType(idx){
+  if(!STATE.settings.giayToTypes) STATE.settings.giayToTypes = giayToTypesList().slice();
+  STATE.settings.giayToTypes.splice(idx,1);
+  await stSetJSON('settings', STATE.settings);
+  await touchLastModified();
+  renderGiayToTypesList();
+  showToast('Đã xoá loại giấy tờ.');
+}
+function importTamTruExcel(file){
+  if(!file) return;
+  const statusEl = document.getElementById('tamTruImportStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  setStatus('Đang đọc file…');
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+      const toISO = (v)=>{
+        if(!v) return '';
+        if(v instanceof Date) return v.toISOString().slice(0,10);
+        return '';
+      };
+      let count = 0, skipped = 0;
+      for(let i=1;i<rows.length;i++){
+        const row = rows[i];
+        if(!row || !row.length) continue;
+        const hoTen = row[0];
+        if(!hoTen) continue;
+        const stt = Number(row[2]);
+        const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+        if(!r){ skipped++; continue; }
+        if(!r.nguoiO) r.nguoiO = [];
+        r.nguoiO.push({
+          id: 'occ_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+          hoTen: String(hoTen),
+          soDienThoai: String(row[1]||''),
+          ngaySinh: toISO(row[3]),
+          cccd: String(row[4]||''),
+          daDangKyTamTru: String(row[5]||'').trim()==='Có',
+          ngayCapCccd: toISO(row[6]),
+          noiCapCccd: String(row[7]||''),
+          diaChiThuongTru: String(row[8]||''),
+          ngheNghiep: String(row[9]||''),
+          gioiTinh: String(row[10]||''),
+          documents: {}
+        });
+        count++;
+      }
+      scheduleSave();
+      renderMain();
+      setStatus(`✅ Đã nhập ${count} người ở.${skipped?` Bỏ qua ${skipped} dòng không khớp số phòng nào đang có.`:''}`);
+      showToast(`Đã nhập ${count} người ở.`);
+    }catch(err){
+      setStatus('❌ File không đúng định dạng: '+(err&&err.message?err.message:err));
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ---- Sao lưu / phục hồi ảnh giấy tờ (đề phòng xoá nhầm ngoài 30 ngày trên Drive) ---- */
+async function exportAllDocsBackup(){
+  const statusEl = document.getElementById('docsBackupStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình link Google Sheet/Apps Script.'); return; }
+  const items = [];
+  STATE.monthData.rooms.forEach(r=>{
+    (r.nguoiO||[]).forEach(o=>{
+      Object.keys(o.documents||{}).forEach(docType=>{
+        items.push({stt:r.stt, occupantId:o.id, hoTen:o.hoTen, docType, fileId:o.documents[docType].fileId, isHistory:false});
+      });
+    });
+    (r.lichSuKhach||[]).forEach((h,hi)=>{
+      (h.nguoiO||[]).forEach(o=>{
+        Object.keys(o.documents||{}).forEach(docType=>{
+          items.push({stt:r.stt, occupantId:o.id, hoTen:o.hoTen, docType, fileId:o.documents[docType].fileId, isHistory:true, historyIndex:hi});
+        });
+      });
+    });
+  });
+  if(!items.length){ showToast('Chưa có ảnh giấy tờ nào để sao lưu.'); return; }
+  showToast(`Đang sao lưu ${items.length} ảnh, vui lòng đợi…`);
+  const zip = new JSZip();
+  const manifest = [];
+  let done = 0;
+  for(const it of items){
+    setStatus(`Đang tải ảnh… (${done}/${items.length})`);
+    try{
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'getDoc', fileId: it.fileId})});
+      const text = await res.text();
+      let json = null;
+      try{ json = JSON.parse(text); }catch(e){}
+      if(json && json.status==='ok' && json.base64){
+        const ext = (json.mimeType||'image/jpeg').split('/')[1] || 'jpg';
+        const path = `Phong_${it.stt}/${it.occupantId}__${it.docType}.${ext}`;
+        zip.file(path, json.base64, {base64:true});
+        manifest.push(Object.assign({}, it, {path, mimeType: json.mimeType}));
+      }
+    }catch(err){ /* bỏ qua ảnh lỗi, tiếp tục ảnh khác */ }
+    done++;
+  }
+  zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+  const content = await zip.generateAsync({type:'blob'});
+  const urlBlob = URL.createObjectURL(content);
+  const a = document.createElement('a'); a.href=urlBlob; a.download = `SaoLuu_GiayTo_187NSHL_${todayISO()}.zip`; a.click();
+  URL.revokeObjectURL(urlBlob);
+  setStatus(`✅ Đã sao lưu ${manifest.length}/${items.length} ảnh lúc ${fmtDate(todayISO())}.`);
+  showToast(`Đã sao lưu xong ${manifest.length}/${items.length} ảnh.`);
+}
+async function importDocsBackup(file){
+  if(!file) return;
+  const statusEl = document.getElementById('docsBackupStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình link Google Sheet/Apps Script.'); return; }
+  setStatus('Đang đọc file sao lưu…');
+  try{
+    const zip = await JSZip.loadAsync(file);
+    const manifestFile = zip.file('manifest.json');
+    if(!manifestFile){ setStatus('❌ File .zip không đúng định dạng sao lưu (thiếu manifest.json).'); return; }
+    const manifest = JSON.parse(await manifestFile.async('string'));
+    let restored = 0, done = 0;
+    for(const item of manifest){
+      setStatus(`Đang phục hồi… (${done}/${manifest.length})`);
+      done++;
+      const imgFile = zip.file(item.path);
+      if(!imgFile) continue;
+      const base64 = await imgFile.async('base64');
+      try{
+        const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
+          action:'uploadDoc', roomStt:item.stt, base64Data: base64, mimeType:item.mimeType||'image/jpeg',
+          fileName:`Phong${item.stt}_${item.docType}_${item.occupantId}_restore.jpg`
+        })});
+        const text = await res.text();
+        const json = JSON.parse(text);
+        if(!(json && json.status==='ok')) continue;
+        const r = STATE.monthData.rooms.find(x=>x.stt===item.stt);
+        if(!r) continue;
+        let target = (r.nguoiO||[]).find(x=>x.id===item.occupantId);
+        if(!target && item.isHistory && r.lichSuKhach && r.lichSuKhach[item.historyIndex]){
+          target = (r.lichSuKhach[item.historyIndex].nguoiO||[]).find(x=>x.id===item.occupantId);
+        }
+        if(target){
+          if(!target.documents) target.documents = {};
+          target.documents[item.docType] = {fileId: json.fileId, uploadedAt: Date.now(), restored:true};
+          restored++;
+        }
+      }catch(err){ /* bỏ qua ảnh lỗi, tiếp tục phục hồi ảnh còn lại */ }
+    }
+    scheduleSave();
+    renderMain();
+    setStatus(`✅ Đã phục hồi ${restored}/${manifest.length} ảnh.`);
+    showToast(`Đã phục hồi ${restored}/${manifest.length} ảnh.`);
+  }catch(err){
+    setStatus('❌ Lỗi phục hồi: '+describeSyncError(err));
+  }
 }
 async function saveSheetUrl(){
   STATE.settings.sheetWebhookUrl = (document.getElementById('s_sheeturl').value||'').trim();
