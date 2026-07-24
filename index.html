@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Sổ Thu Tiền — Nhà Trọ 187 NSHL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --paper:#FAF5E9;
+  --paper-2:#F1E8D4;
+  --card:#FFFDF8;
+  --ink:#22241F;
+  --ink-soft:#5B5A4E;
+  --navy:#16233B;
+  --navy-2:#1F3050;
+  --brass:#B8863B;
+  --brass-dark:#8C6526;
+  --brass-light:#E6C989;
+  --brick:#A8442B;
+  --brick-dark:#8A3722;
+  --green-ok:#2F6B4F;
+  --green-bg:#E3EFE6;
+  --line:#DCCFAE;
+  --danger:#B23A3A;
+  --danger-bg:#F6E4E1;
+  --shadow: 0 1px 2px rgba(22,35,59,.06), 0 4px 16px rgba(22,35,59,.06);
+  --radius: 10px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 500px at 10% -10%, #FFFCF5 0%, transparent 60%),
+    var(--paper);
+  color:var(--ink);
+  font-family:'Be Vietnam Pro', -apple-system, sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  min-height:100vh;
+}
+.mono{font-family:'JetBrains Mono', ui-monospace, monospace;}
+button{font-family:inherit; cursor:pointer;}
+input,select,textarea{font-family:inherit; font-size:14px;}
+a{color:inherit;}
+
+/* ---------- Login ---------- */
+#loginScreen{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-card{
+  width:100%; max-width:380px; background:var(--card); border:1px solid var(--line);
+  border-radius:16px; padding:36px 30px 30px; box-shadow:var(--shadow); position:relative; overflow:hidden;
+}
+.login-card::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:6px;
+  background:repeating-linear-gradient(90deg, var(--brass) 0 14px, var(--brick) 14px 28px);
+}
+.login-seal{
+  width:56px;height:56px;border-radius:50%; margin:0 auto 14px; display:flex; align-items:center; justify-content:center;
+  background:var(--navy); color:var(--brass-light); font-weight:800; font-size:20px; letter-spacing:.5px;
+  border:2px solid var(--brass);
+}
+.login-card h1{font-size:19px; text-align:center; margin:0 0 2px; color:var(--navy); font-weight:800;}
+.login-card p.sub{text-align:center; color:var(--ink-soft); margin:0 0 22px; font-size:12.5px;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;}
+.field input, .field select, .field textarea{
+  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--brass-light); border-color:var(--brass);}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:10px 16px; border-radius:8px; border:1px solid transparent; font-weight:600; font-size:13.5px;
+  transition:transform .05s ease, filter .15s ease;
+}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--navy); color:#fff;}
+.btn-primary:hover{filter:brightness(1.15);}
+.btn-brass{background:var(--brass); color:#2A1D06;}
+.btn-brass:hover{filter:brightness(1.06);}
+.btn-outline{background:transparent; border-color:var(--line); color:var(--ink);}
+.btn-outline:hover{background:var(--paper-2);}
+.btn-danger{background:var(--danger); color:#fff;}
+.btn-block{width:100%;}
+.btn-sm{padding:6px 10px; font-size:12px; border-radius:6px;}
+.err-msg{color:var(--danger); font-size:12.5px; margin-top:8px; text-align:center; min-height:16px;}
+.hint{font-size:11.5px; color:var(--ink-soft); text-align:center; margin-top:16px;}
+.forgot-link{display:block; text-align:center; margin-top:12px; font-size:12.5px; color:var(--brass-dark); text-decoration:underline; cursor:pointer; background:none; border:none;}
+.btn-logout{background:var(--brick); color:#fff; font-weight:700; padding:9px 16px;}
+.btn-logout:hover{background:var(--brick-dark);}
+
+/* ---------- App shell ---------- */
+#appScreen{display:none; min-height:100vh; flex-direction:column;}
+header.topbar{
+  background:var(--navy); color:#EFE7D3; padding:12px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  border-bottom:3px solid var(--brass);
+}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:15px; letter-spacing:.02em;}
+.brand .seal-mini{width:30px;height:30px;border-radius:50%;background:var(--brass); color:var(--navy); display:flex;align-items:center;justify-content:center; font-size:13px; font-weight:800; flex-shrink:0;}
+.cloud-indicator{display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:4px 9px; border-radius:20px; background:rgba(255,255,255,.1); color:#c9c2ab; white-space:nowrap;}
+.cloud-indicator.syncing{background:rgba(184,134,59,.25); color:var(--brass-light);}
+.cloud-indicator.synced{background:rgba(47,107,79,.25); color:#8fd6ac;}
+.cloud-indicator.error{background:rgba(168,68,43,.3); color:#ffb3a3;}
+.cloud-indicator .dot{width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
+.cloud-indicator.syncing .dot{animation:pulse-dot 1s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
+.month-picker{display:flex; align-items:center; gap:6px; margin-left:auto;}
+.month-picker select{background:var(--navy-2); color:#fff; border:1px solid #3a4a6b; border-radius:7px; padding:7px 10px;}
+.topbar .btn{padding:8px 12px; font-size:12.5px;}
+
+nav.tabs{
+  display:flex; gap:2px; background:var(--paper-2); padding:0 12px; overflow-x:auto; border-bottom:1px solid var(--line);
+}
+nav.tabs button{
+  background:none; border:none; padding:12px 14px; font-weight:600; font-size:13px; color:var(--ink-soft);
+  border-bottom:3px solid transparent; white-space:nowrap;
+}
+nav.tabs button.active{color:var(--navy); border-bottom-color:var(--brick);}
+nav.tabs button:hover{color:var(--navy);}
+
+main{flex:1; padding:16px; max-width:1100px; width:100%; margin:0 auto;}
+footer.appfoot{text-align:center; color:var(--ink-soft); font-size:11px; padding:16px 10px; opacity:.7; line-height:1.7;}
+footer.appfoot .foot-line{display:block;}
+
+.panel{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:var(--shadow);}
+.panel h2{margin:0 0 4px; font-size:16px; color:var(--navy);}
+.panel .desc{color:var(--ink-soft); font-size:12.5px; margin:0 0 14px;}
+
+.stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px;}
+.stat{background:var(--paper-2); border:1px solid var(--line); border-radius:9px; padding:10px 12px;}
+.stat .lbl{font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
+.stat .val{font-size:17px; font-weight:700; color:var(--navy);}
+.stat.good .val{color:var(--green-ok);}
+.stat.bad .val{color:var(--brick);}
+
+.toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
+.toolbar input[type=text], .toolbar input[type=search]{padding:8px 10px; border:1px solid var(--line); border-radius:7px; min-width:160px;}
+.spacer{flex:1;}
+
+/* room accordion */
+.room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:#fff; overflow:hidden;}
+.room-card.inactive{opacity:.6;}
+.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none;}
+.room-head:hover{background:var(--paper-2);}
+.room-num{
+  width:34px;height:34px;border-radius:8px;background:var(--navy); color:var(--brass-light); font-weight:800;
+  display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+}
+.room-card.inactive .room-num{background:#9a9384;}
+.room-num.contract-warn{background:#D9791E !important; color:#fff;}
+.room-num.contract-expired{background:var(--brick) !important; color:#fff;}
+.room-mid{flex:1; min-width:0;}
+.room-mid .note{font-size:11.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.room-total{font-weight:700; color:var(--navy); font-size:14.5px; white-space:nowrap;}
+.room-total.urgent-yellow{color:#946200; background:#FFF3CD; padding:2px 7px; border-radius:5px;}
+.room-total.urgent-red{color:#fff; background:var(--brick); padding:2px 7px; border-radius:5px;}
+.urgent-yellow{color:#946200; background:#FFF3CD; padding:2px 7px;}
+.urgent-red{color:#fff; background:var(--brick); padding:2px 7px;}
+.pill{display:inline-block; font-weight:700; font-size:11.5px; padding:3px 10px; border-radius:20px; white-space:nowrap; line-height:1.4;}
+.pill-red{background:var(--brick); color:#fff;}
+.pill-yellow{background:#FFF3CD; color:#946200;}
+.pill-muted{background:var(--paper-2); color:var(--ink-soft); font-weight:600;}
+.pill-green{background:var(--green-bg); color:var(--green-ok);}
+.month-highlight{color:var(--brick); font-weight:800;}
+.text-center{text-align:center !important;}
+.paid-pill{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; white-space:nowrap;}
+.paid-pill.yes{background:var(--green-bg); color:var(--green-ok);}
+.paid-pill.no{background:var(--danger-bg); color:var(--danger);}
+.chev{transition:transform .15s ease; color:var(--ink-soft); flex-shrink:0;}
+.room-card.open .chev{transform:rotate(90deg);}
+.room-body{display:none; border-top:1px solid var(--line); padding:14px; background:var(--paper-2);}
+.room-card.open .room-body{display:block;}
+
+.form-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px 12px;}
+.form-grid .f label{display:block; font-size:11px; color:var(--ink-soft); margin-bottom:4px; font-weight:600;}
+.form-grid .f input, .form-grid .f select{width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:6px;}
+.form-grid .f.span2{grid-column:span 2;}
+.section-title{font-size:11.5px; font-weight:700; color:var(--brass-dark); text-transform:uppercase; letter-spacing:.05em; margin:14px 0 8px; border-bottom:1px dashed var(--line); padding-bottom:4px;}
+.section-title:first-child{margin-top:0;}
+.breakdown{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:12.5px;}
+.breakdown span b{color:var(--navy);}
+
+.checkbox-row{display:flex; align-items:center; gap:8px;}
+.checkbox-row input{width:auto;}
+
+.sticky-actions{
+  position:sticky; bottom:0; background:var(--paper); border-top:1px solid var(--line); padding:10px 0; margin-top:10px;
+  display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;
+}
+
+/* tables */
+table.data{width:100%; border-collapse:collapse; font-size:12.5px;}
+table.data th{background:var(--navy); color:#EFE7D3; text-align:left; padding:8px 9px; font-weight:600; white-space:nowrap;}
+table.data td{padding:7px 9px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.data tr:nth-child(even) td{background:#FBF8F0;}
+table.data tfoot td{font-weight:700; background:var(--paper-2); border-top:2px solid var(--brass);}
+.table-wrap{overflow-x:auto; border-radius:8px; border:1px solid var(--line); position:relative;}
+.table-wrap table.data{border:none;}
+.table-wrap table.data th.sticky-col{position:sticky; left:0; z-index:3; background:var(--navy);}
+.table-wrap table.data td.sticky-col{position:sticky; left:0; z-index:2; background:var(--card); box-shadow:2px 0 5px rgba(22,35,59,.08);}
+
+/* receipts */
+.receipt{
+  background:#fffef9; border:1px dashed var(--ink-soft); border-radius:6px; padding:16px; max-width:480px; margin:0 auto 18px;
+  position:relative;
+}
+.receipt-header{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--navy); padding-bottom:8px; margin-bottom:8px;}
+.receipt-header .rname{font-weight:800; color:var(--navy); font-size:15px;}
+.receipt-header .rroom{font-size:13px; color:var(--ink-soft);}
+.receipt-header .rdate{font-size:11.5px; color:var(--ink-soft); text-align:right;}
+.receipt-header .rmonth-big{color:var(--brick); font-weight:800; font-size:15px;}
+.receipt-total-hero{font-weight:800; font-size:15px; margin-bottom:8px; padding-bottom:6px; border-bottom:1px dashed var(--line); display:flex; justify-content:space-between; align-items:baseline;}
+.receipt-total-hero .hero-label{color:var(--brick);}
+.receipt-total-hero .room-num-big{font-size:22px; font-weight:900; margin:0 2px; display:inline-block;}
+.receipt-total-hero .amt{color:var(--brick);}
+table.receipt-tbl{width:100%; border-collapse:collapse; font-size:12px;}
+table.receipt-tbl th{text-align:left; border-bottom:1px solid var(--ink); padding:4px 3px; font-size:11px;}
+table.receipt-tbl td{padding:4px 3px; border-bottom:1px dotted var(--line); vertical-align:top;}
+table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); border-bottom:none; font-size:13.5px; color:var(--navy);}
+.receipt-note{font-size:10.5px; color:var(--ink-soft); margin-top:8px; white-space:pre-wrap; line-height:1.5;}
+.stamp{
+  position:absolute; top:14px; right:16px; width:74px; height:74px; border:3px solid var(--brick); border-radius:50%;
+  color:var(--brick); display:flex; align-items:center; justify-content:center; text-align:center; font-weight:800;
+  font-size:10.5px; transform:rotate(-14deg); opacity:.85; line-height:1.15; letter-spacing:.02em;
+}
+
+/* misc */
+.badge{display:inline-block; background:var(--brass-light); color:var(--brass-dark); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:20px;}
+.empty-state{text-align:center; padding:40px 20px; color:var(--ink-soft);}
+.modal-overlay{position:fixed; inset:0; background:rgba(22,20,15,.5); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--card); border-radius:14px; padding:22px; max-width:440px; width:100%; box-shadow:var(--shadow); max-height:88vh; overflow-y:auto;}
+.modal-box h3{margin:0 0 4px; color:var(--navy);}
+.modal-box .desc{color:var(--ink-soft); font-size:12.5px; margin-bottom:16px;}
+.modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:18px;}
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:10px 18px;
+  border-radius:8px; font-size:13px; box-shadow:var(--shadow); z-index:200; opacity:0; transition:opacity .25s ease; pointer-events:none;
+}
+.toast.show{opacity:1;}
+
+@media print{
+  header.topbar, nav.tabs, .no-print, footer.appfoot{display:none !important;}
+  body{background:#fff;}
+  main{max-width:none; padding:0;}
+  .receipt{page-break-after:always; border:1px solid #999; box-shadow:none;}
+  .receipt:last-child{page-break-after:auto;}
+}
+@media (max-width:640px){
+  .form-grid{grid-template-columns:repeat(2,1fr);}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  main{padding:10px;}
+  .modal-box{padding:16px; max-width:100%;}
+  table.data{font-size:11.5px;}
+  table.data th, table.data td{padding:6px 7px;}
+  .receipt{padding:12px;}
+  .login-card{padding:28px 18px 22px;}
+}
+@media (max-width:400px){
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .stat .val{font-size:15px;}
+  header.topbar{padding:10px 12px;}
+  .brand{font-size:13.5px;}
+  .month-picker select{padding:6px 8px; font-size:12.5px;}
+  nav.tabs button{padding:10px 11px; font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-seal">187</div>
+    <h1>Nhà Trọ 187 NSHL</h1>
+    <p class="sub">Sổ thu tiền phòng trọ — chỉ dành cho quản lý</p>
+    <div class="field">
+      <label for="pwInput">Mật khẩu</label>
+      <input type="password" id="pwInput" placeholder="Nhập mật khẩu" autocomplete="off">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="tryLogin()">Đăng nhập</button>
+    <div class="err-msg" id="loginErr"></div>
+    <button class="forgot-link" onclick="openForgotPasswordModal()">Quên mật khẩu?</button>
+    <button class="forgot-link" onclick="openFirstDeviceSyncModal()">Thiết bị mới? Đồng bộ dữ liệu từ Google Sheet</button>
+    <p class="hint">Dữ liệu lưu ngay trên trình duyệt này. Dùng Google Sheet để đồng bộ giữa nhiều thiết bị.</p>
+  </div>
+</div>
+
+<div id="appScreen">
+  <header class="topbar">
+    <div class="brand"><span class="seal-mini">187</span> Sổ Thu Tiền Nhà Trọ</div>
+    <span class="cloud-indicator" id="cloudIndicator" title="Chưa cấu hình Google Sheet"><span class="dot"></span><span id="cloudIndicatorText">Chưa đồng bộ</span></span>
+    <div class="month-picker">
+      <select id="monthSelect" onchange="onChangeMonth(this.value)"></select>
+      <button class="btn btn-brass btn-sm" onclick="openNewMonthModal()">+ Tháng mới</button>
+    </div>
+    <button class="btn btn-logout btn-sm" onclick="logout()">🚪 Đăng xuất</button>
+  </header>
+
+  <nav class="tabs" id="tabsNav"></nav>
+
+  <main id="mainContent"></main>
+
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.7</span></footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ SEED / DEFAULT DATA ============ */
+const SEED_ROOMS = [{"stt": 1, "gia": 8500000, "songuoi": 3, "dongiaNuoc": 26000, "waterMeter": true, "nuocMoi": 1523, "nuocCu": 1493, "soxe": 0, "dongiaXe": 100000, "sodienmoi": 45166, "sodiencu": 44507, "dongiaDien": 3300, "racmode": "fixed", "dongiaRac": 0, "coc": 0, "ghichu": "hẹn đầu tháng 4 | tiền điện 3k/kw, nước 26k", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 2, "gia": 0, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck8", "paid": false, "paidDate": "", "paidNote": "", "active": false, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 3, "gia": 2300000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dời lên phòng 24", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 4, "gia": 2200000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2551, "sodiencu": 2428, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "gửi cô hòa, đã ck lại | bà ở nhà, sợ tống rác xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 5, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 7457, "sodiencu": 7375, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 6, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 4611, "sodiencu": 4597, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3 | Nước 100k/người", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 7, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1842, "sodiencu": 1787, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 8, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1773, "sodiencu": 1701, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, dời từ P46 xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 9, "gia": 2200000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1396, "sodiencu": 1362, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Mới vô đã đóng đủ và cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 10, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2708, "sodiencu": 2626, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "khách đã cọc 2 triệu đống tiền phòng.  | đã nhận 3.260k (đã cọc 1tr) (vào 23/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 11, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 765, "sodiencu": 765, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đủ tiền T3 và cọc đủ 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 12, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1229, "sodiencu": 1203, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, hết tháng 0 xe", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 13, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 912, "sodiencu": 894, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3, p36 đã xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 14, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3258, "sodiencu": 3190, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 15, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 8084, "sodiencu": 8017, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | ko có nắp, nhưng ko cần thay", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 16, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1833, "sodiencu": 1733, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 17, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4261, "sodiencu": 4154, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo6 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 18, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2585, "sodiencu": 2485, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, phản ánh sáng đèn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 19, "gia": 2100000, "songuoi": 0, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 192, "sodiencu": 171, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "hết T4 trả", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 20, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3127, "sodiencu": 3114, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, xin đấu nước máy, đã cọc 2 triệu | có lưới lọc", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 21, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 715, "sodiencu": 667, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Khách đã vô, đóng đủ tiền T4 và cọc 2tr, kiểm tra lại", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 22, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 799, "sodiencu": 770, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20. muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 23, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 50000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6329, "sodiencu": 6302, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4, Phòng 21 dời qua, ở ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 24, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5682, "sodiencu": 5505, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck10", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 25, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1944, "sodiencu": 1908, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 26, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3103, "sodiencu": 3076, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mời vô, đã cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 27, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1849, "sodiencu": 1695, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck 4, gửi phiếu muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 28, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2482, "sodiencu": 2324, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 29, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4173, "sodiencu": 4072, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | 2.1", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 30, "gia": 1900000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4568, "sodiencu": 4530, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 31, "gia": 2300000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5190, "sodiencu": 5085, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo5,p39 qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 32, "gia": 2700000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4853, "sodiencu": 4804, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,đã thuê giá 2.7tr kèm máy lạnh, it xài, cọc 2.5tr)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 33, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4987, "sodiencu": 4941, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 34, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6203, "sodiencu": 6108, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck14 | ko có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 35, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 5774, "sodiencu": 5763, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 36, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4840, "sodiencu": 4546, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "giá 2.5 triệu, đã gắn ML. C2 tháng sau thêm 1tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 37, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 644, "sodiencu": 634, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck17", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 38, "gia": 2200000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 8643, "sodiencu": 8478, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck23", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 39, "gia": 2100000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5948, "sodiencu": 5808, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã cọc 2 triệu, hẹn tuần 20/4 dọn dần vô", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 40, "gia": 1800000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 384, "sodiencu": 372, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo9, dự kiến tăng giá lên 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 41, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4128, "sodiencu": 4128, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dđã đóng 2 triệu, còn thiếu ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 42, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 2354, "sodiencu": 2263, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "T01,thuê giá 2.5 triệu, đã cọc 2tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 43, "gia": 2600000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 3, "dongiaXe": 150000, "sodienmoi": 789, "sodiencu": 483, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã thay ĐH, ML, giá 2.5 tr, 12KW T11", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 44, "gia": 2000000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3333, "sodiencu": 3097, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Thiếu 100k | ko zalo", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 45, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1958, "sodiencu": 1898, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6, đã cọc 2 triệu, ck3 | đã có khách cọc 1 triệu, P48 cũ", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 46, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4459, "sodiencu": 4438, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đóng tiền 22, xin cọc 50%, chưa gửi pheie xin ở tới ngày 5/5 | Đã nhận 4.430k (vô 22/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 47, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4551, "sodiencu": 4513, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,Phòng 45 chuyển qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 48, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 883, "sodiencu": 866, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}];
+const DEFAULT_CHIPHI = {"luongBaoVe": 12000000, "internet": 500000, "dienChung": 12000000, "racChung": 850000, "nuocChung": 3000000, "ca": 2000000, "suaChua": 2000000, "chuaChay": 1000000, "chiKhac": 0, "tienNha": 55000000};
+const DEFAULT_SETTINGS = {"tenNguoiNhan": "Vũ Mạnh Hưng", "stk": "101004138575", "nganHang": "NH Công Thương Vietinbank", "momo": "0983642606", "zalo": "0904.883.252", "contractWarnDays": 30, "hanDongNgay": 6, "recoveryQuestion1": "Số điện thoại đầu tiên của bạn?", "recoveryAnswer1": "", "recoveryQuestion2": "Tên của ông/bà nội bạn?", "recoveryAnswer2": "", "sheetWebhookUrl": ""};
+const SEED_MONTH_KEY = "2026-07";
+const SEED_MONTH_LABEL = "Tháng 7/2026";
+const DEFAULT_PASSWORD = "187nshl";
+
+/* ============ STATE ============ */
+const STATE = {
+  authed:false,
+  monthsIndex:[],       // [{key,label}]
+  currentKey:null,
+  monthData:null,       // active month object (rooms, chiphi, hanDong, key,label)
+  settings:null,
+  activeTab:'nhap',
+  openRooms:{},         // stt -> bool (accordion open state, ui only)
+  filterText:'',
+  skipEmptyPrint:true,
+  phieuSelected:'ALL',
+  prevDebts:{},          // stt -> {amount, monthLabel, monthKey} carried from previous unpaid month
+  stagingRooms:null,     // editable preview grid for "Nhập đầu tháng" tab
+  saveTimer:null
+};
+
+/* ============ STORAGE HELPERS (localStorage — chạy độc lập, không cần Claude) ============ */
+const LS_PREFIX = 'nt187_';
+async function stGet(key){
+  try{
+    const v = localStorage.getItem(LS_PREFIX+key);
+    return v===null ? null : v;
+  }catch(e){ return null; }
+}
+async function stSet(key,val){
+  try{
+    localStorage.setItem(LS_PREFIX+key, val);
+    return true;
+  }catch(e){ return false; }
+}
+async function stGetJSON(key){
+  const v = await stGet(key);
+  if(v===null||v===undefined) return null;
+  try{ return JSON.parse(v); }catch(e){ return null; }
+}
+async function stSetJSON(key,obj){
+  return stSet(key, JSON.stringify(obj));
+}
+
+/* ============ INIT ============ */
+async function boot(){
+  const savedPw = await stGet('auth-password');
+  if(savedPw===null){ await stSet('auth-password', DEFAULT_PASSWORD); }
+  document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+}
+boot();
+
+/* ---- Tự động đăng xuất sau 15 phút không thao tác ---- */
+const INACTIVITY_LIMIT_MS = 15*60*1000;
+let lastActivityAt = Date.now();
+function markActivity(){ lastActivityAt = Date.now(); }
+['click','keydown','input','touchstart','scroll'].forEach(evt=>{
+  document.addEventListener(evt, markActivity, {passive:true});
+});
+setInterval(()=>{
+  if(STATE.authed && (Date.now()-lastActivityAt) > INACTIVITY_LIMIT_MS){
+    logout();
+    showToast('Đã tự động đăng xuất do không thao tác trong 15 phút.');
+  }
+}, 20000);
+
+async function tryLogin(){
+  const input = document.getElementById('pwInput').value;
+  const errEl = document.getElementById('loginErr');
+  const savedPw = (await stGet('auth-password')) || DEFAULT_PASSWORD;
+  if(input === savedPw){
+    errEl.textContent='';
+    STATE.authed = true;
+    markActivity();
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appScreen').style.display='flex';
+    await loadAll();
+    checkRemoteForNewerData(); // âm thầm kiểm tra ở nền, không chặn màn hình
+  } else {
+    errEl.textContent = 'Sai mật khẩu, vui lòng thử lại.';
+  }
+}
+function logout(){
+  STATE.authed=false;
+  document.getElementById('pwInput').value='';
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+async function loadAll(){
+  let idx = await stGetJSON('months-index');
+  let settings = await stGetJSON('settings');
+  if(!settings){ settings = Object.assign({}, DEFAULT_SETTINGS); await stSetJSON('settings', settings); }
+  STATE.settings = settings;
+
+  if(!idx || !idx.length){
+    // first run: seed with July 2026 data
+    const seedMonth = {
+      key: SEED_MONTH_KEY,
+      label: SEED_MONTH_LABEL,
+      hanDong: deadlineDateForMonth(SEED_MONTH_KEY),
+      rooms: JSON.parse(JSON.stringify(SEED_ROOMS)),
+      chiphi: Object.assign({}, DEFAULT_CHIPHI),
+      updatedAt: Date.now()
+    };
+    await stSetJSON('month:'+SEED_MONTH_KEY, seedMonth);
+    idx = [{key:SEED_MONTH_KEY,label:SEED_MONTH_LABEL}];
+    await stSetJSON('months-index', idx);
+    await stSet('active-month', SEED_MONTH_KEY);
+  }
+  STATE.monthsIndex = idx;
+  let activeKey = await stGet('active-month');
+  if(!activeKey || !idx.find(m=>m.key===activeKey)) activeKey = idx[idx.length-1].key;
+  STATE.currentKey = activeKey;
+  STATE.monthData = await stGetJSON('month:'+activeKey);
+  await refreshPrevDebts();
+  renderTabsNav();
+  renderMonthSelect();
+  renderMain();
+  setCloudIndicator('', STATE.settings.sheetWebhookUrl ? 'Đã cấu hình' : 'Chưa đồng bộ');
+}
+
+/* ============ CARRY-FORWARD DEBT (nợ tháng trước chưa đóng / đóng thiếu) ============ */
+async function refreshPrevDebts(){
+  STATE.prevDebts = {};
+  const idx = STATE.monthsIndex;
+  const pos = idx.findIndex(m=>m.key===STATE.currentKey);
+  if(pos<=0) return; // no previous month on record
+  const running = {}; // stt -> số tiền còn thiếu mang sang tháng kế tiếp
+  for(let i=0;i<pos;i++){
+    const mm = idx[i];
+    const data = mm.key===STATE.currentKey ? STATE.monthData : await stGetJSON('month:'+mm.key);
+    if(!data) continue;
+    data.rooms.forEach(r=>{
+      let prevRunning = running[r.stt] || 0;
+      if(r.khachMoi){ prevRunning = 0; } // khách mới bắt đầu ở tháng này: xoá nợ cũ của phòng, không cộng dồn nữa
+      const c = computeRoom(r, mm.key);
+      const rWithC = Object.assign({}, r, {_c:c});
+      const phaiThu = (r.active ? c.tong : 0) + prevRunning;
+      const daDong = r.active ? calcRoomDaDong(rWithC, prevRunning) : 0;
+      running[r.stt] = Math.max(0, phaiThu - daDong);
+    });
+  }
+  const prevLabel = idx[pos-1].label;
+  Object.keys(running).forEach(sttStr=>{
+    const amt = running[sttStr];
+    if(amt>0){
+      STATE.prevDebts[Number(sttStr)] = {amount:amt, monthLabel:prevLabel, monthKey:idx[pos-1].key};
+    }
+  });
+}
+
+function scheduleSave(){
+  if(STATE.saveTimer) clearTimeout(STATE.saveTimer);
+  STATE.saveTimer = setTimeout(saveCurrentMonth, 1200);
+  scheduleCloudSync();
+}
+/* ---- Tự động đồng bộ lên Google Sheet sau khi ngừng sửa vài giây ---- */
+let cloudSyncTimer = null;
+function describeSyncError(err){
+  const msg = err && err.message ? err.message : String(err);
+  if(/failed to fetch/i.test(msg)){
+    return 'Không kết nối được tới Google Sheet. Kiểm tra lại: (1) link Web App đã đúng và kết thúc bằng /exec, (2) lúc Triển khai đã chọn "Người có quyền truy cập: Bất kỳ ai", (3) thiết bị đang có Internet.';
+  }
+  return msg;
+}
+function setCloudIndicator(state, text){
+  const el = document.getElementById('cloudIndicator');
+  const txt = document.getElementById('cloudIndicatorText');
+  if(!el || !txt) return;
+  el.className = 'cloud-indicator' + (state ? ' '+state : '');
+  txt.textContent = text;
+}
+function scheduleCloudSync(){
+  const url = STATE.settings && STATE.settings.sheetWebhookUrl;
+  if(!url) { setCloudIndicator('', 'Chưa đồng bộ'); return; }
+  setCloudIndicator('', 'Đang chờ lưu…');
+  if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(autoSyncToSheet, 3000);
+}
+async function autoSyncToSheet(){
+  const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
+  if(!url) return;
+  setCloudIndicator('syncing', 'Đang đồng bộ…');
+  try{
+    await saveCurrentMonth();
+    const payload = await buildFullStatePayload();
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    const timeStr = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+    if(json && json.status==='ok'){
+      setCloudIndicator('synced', 'Đã đồng bộ '+timeStr);
+      const statusEl = document.getElementById('sheetSyncStatus');
+      if(statusEl) statusEl.textContent = '✅ Tự động đồng bộ lúc '+timeStr;
+    } else {
+      setCloudIndicator('error', 'Lỗi đồng bộ');
+      const statusEl = document.getElementById('sheetSyncStatus');
+      if(statusEl) statusEl.textContent = '⚠️ Phản hồi bất thường lúc tự động đồng bộ: '+text.slice(0,200);
+    }
+  }catch(err){
+    setCloudIndicator('error', 'Lỗi kết nối');
+    const statusEl = document.getElementById('sheetSyncStatus');
+    if(statusEl) statusEl.textContent = '❌ Lỗi tự động đồng bộ: '+describeSyncError(err);
+  }
+}
+async function touchLastModified(){
+  await stSet('last-modified', String(Date.now()));
+}
+async function saveCurrentMonth(){
+  if(!STATE.monthData) return;
+  STATE.monthData.updatedAt = Date.now();
+  await stSetJSON('month:'+STATE.currentKey, STATE.monthData);
+  await touchLastModified();
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+async function manualSave(){
+  await saveCurrentMonth();
+  showToast('Đã lưu dữ liệu tháng '+STATE.monthData.label);
+}
+
+/* ---- Lưu ngay khi rời khỏi app/thu nhỏ trình duyệt, phòng khi đóng ngang không kịp tự lưu ---- */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden' && STATE.authed){
+    if(STATE.saveTimer) clearTimeout(STATE.saveTimer);
+    saveCurrentMonth();
+  }
+});
+window.addEventListener('pagehide', ()=>{
+  if(STATE.authed){ saveCurrentMonth(); }
+});
+
+/* ============ MONTH SWITCH ============ */
+function renderMonthSelect(){
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = STATE.monthsIndex.map(m=>
+    `<option value="${m.key}" ${m.key===STATE.currentKey?'selected':''}>${m.label}</option>`
+  ).join('');
+}
+async function onChangeMonth(key){
+  await saveCurrentMonth();
+  STATE.currentKey = key;
+  await stSet('active-month', key);
+  STATE.monthData = await stGetJSON('month:'+key);
+  STATE.openRooms = {};
+  STATE.stagingRooms = null;
+  await refreshPrevDebts();
+  renderMain();
+}
+
+/* ============ NEW MONTH MODAL ============ */
+function nextMonthGuess(key){
+  const [y,m] = key.split('-').map(Number);
+  let ny=y, nm=m+1;
+  if(nm>12){nm=1;ny++;}
+  return ny+'-'+String(nm).padStart(2,'0');
+}
+function todayMonthKey(){
+  const n = new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+}
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return 'Tháng '+m+'/'+y;
+}
+function defaultDeadlineDay(){
+  return (STATE.settings && STATE.settings.hanDongNgay) || 6;
+}
+function deadlineDateForMonth(nk){
+  return nk + '-' + String(defaultDeadlineDay()).padStart(2,'0');
+}
+function openNewMonthModal(){
+  const nk = nextMonthGuess(STATE.currentKey);
+  const maxAllowed = nextMonthGuess(todayMonthKey());
+  const c = STATE.monthData.chiphi;
+  const body = `
+    <h3>➕ Bắt đầu tháng mới</h3>
+    <div class="desc">Số điện (và nước đồng hồ) tháng này sẽ chuyển thành số cũ. Giá phòng, số người, số xe, đơn giá sẽ giữ nguyên — bạn có thể sửa lại nếu có thay đổi.</div>
+    <div class="field"><label>Tháng mới</label><input type="month" id="nmMonth" value="${nk}" max="${maxAllowed}">
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">Chỉ tạo được tối đa đến ${monthLabel(maxAllowed)} (1 tháng sau ngày hệ thống hiện tại).</div>
+    </div>
+    <div class="field"><label>Hạn đóng tiền</label><input type="date" id="nmDeadline" value="${deadlineDateForMonth(nk)}"></div>
+    <div class="section-title">Chi phí chung (mang từ tháng trước sang, có thể sửa)</div>
+    <div class="form-grid">
+      ${chiphiFieldsHtml(c,'nm_')}
+    </div>
+    <div class="err-msg" id="nm_err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmNewMonth()">Tạo tháng mới</button>
+    </div>
+  `;
+  showModal(body);
+}
+function chiphiFieldsHtml(c, prefix){
+  const labels = [
+    ['luongBaoVe','Lương bảo vệ'],['internet','Tiền Internet'],['dienChung','Điện chung'],
+    ['racChung','Rác (nộp)'],['nuocChung','Nước (nộp)'],['ca','CA / an ninh'],
+    ['suaChua','Sửa chữa'],['chuaChay','Chữa cháy'],['chiKhac','Chi khác'],['tienNha','Tiền nhà (trả chủ)']
+  ];
+  return labels.map(([k,lbl])=>
+    `<div class="f"><label>${lbl}</label><input type="text" inputmode="numeric" id="${prefix}${k}" value="${fmtMoneyInputVal(c[k]||0)}" oninput="onMoneyInputFmt(this)"></div>`
+  ).join('');
+}
+function readChiphiFields(prefix){
+  const keys = ['luongBaoVe','internet','dienChung','racChung','nuocChung','ca','suaChua','chuaChay','chiKhac','tienNha'];
+  const out = {};
+  keys.forEach(k=>{ out[k] = Number((document.getElementById(prefix+k).value||'').replace(/[^\d]/g,''))||0; });
+  return out;
+}
+async function confirmNewMonth(){
+  const nk = document.getElementById('nmMonth').value; // YYYY-MM
+  const errEl = document.getElementById('nm_err');
+  if(!nk){ return; }
+  const maxAllowed = nextMonthGuess(todayMonthKey());
+  if(nk > maxAllowed){
+    errEl.textContent = `Chỉ được tạo tối đa đến ${monthLabel(maxAllowed)} — theo ngày hệ thống hiện tại, chưa thể tạo ${monthLabel(nk)}.`;
+    return;
+  }
+  if(STATE.monthsIndex.find(m=>m.key===nk)){ showToast('Tháng này đã tồn tại!'); return; }
+  const deadline = document.getElementById('nmDeadline').value;
+  const chiphi = readChiphiFields('nm_');
+
+  await saveCurrentMonth();
+
+  const newRooms = STATE.monthData.rooms.map(r=>{
+    const nr = Object.assign({}, r);
+    if(r.waterMeter){ nr.nuocCu = r.nuocMoi; nr.nuocMoi = null; }
+    nr.sodiencu = r.sodienmoi || 0;
+    nr.sodienmoi = null;
+    nr.paid = false; nr.paidDate='';
+    nr.soTienDaDong = null;
+    // giữ lại ghi chú thu tiền tháng trước để tham khảo; xoá đi và bấm "Ghi" nếu muốn thay bằng ghi chú mới
+    nr.paidNote = r.paidNote || '';
+    nr.dieuchinh = 0;
+    nr.khachMoi = false;
+    return nr;
+  });
+  const newMonth = {
+    key:nk, label:monthLabel(nk), hanDong:deadline, rooms:newRooms, chiphi:chiphi, updatedAt:Date.now()
+  };
+  await stSetJSON('month:'+nk, newMonth);
+  STATE.monthsIndex.push({key:nk,label:monthLabel(nk)});
+  STATE.monthsIndex.sort((a,b)=>a.key.localeCompare(b.key));
+  await stSetJSON('months-index', STATE.monthsIndex);
+  await stSet('active-month', nk);
+  STATE.currentKey = nk;
+  STATE.monthData = newMonth;
+  STATE.openRooms = {};
+  STATE.stagingRooms = null;
+  await refreshPrevDebts();
+  closeModal();
+  renderTabsNav(); renderMonthSelect(); renderMain();
+  showToast('Đã tạo '+monthLabel(nk));
+}
+
+/* ============ MODAL / TOAST HELPERS ============ */
+function showModal(html){
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+
+/* ============ FORMAT HELPERS ============ */
+function fmtVND(n){
+  n = Number(n)||0;
+  return n.toLocaleString('vi-VN') + ' đ';
+}
+function fmtNum(n){ return (Number(n)||0).toLocaleString('vi-VN'); }
+function fmtDate(iso){
+  if(!iso) return '—';
+  const parts = String(iso).split('-');
+  if(parts.length!==3) return iso;
+  const [y,m,d] = parts;
+  return `${d.padStart(2,'0')}-${m.padStart(2,'0')}-${y}`;
+}
+function todayISO(){
+  const n = new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
+/* money-masked text inputs (dot thousand separators) */
+function fmtMoneyInputVal(n){ n=Number(n)||0; return n? n.toLocaleString('vi-VN') : ''; }
+function onMoneyInputFmt(el){
+  const raw = el.value.replace(/[^\d]/g,'');
+  el.value = raw ? Number(raw).toLocaleString('vi-VN') : '';
+}
+function parseMoneyVal(el){ return Number((el.value||'').replace(/[^\d]/g,''))||0; }
+
+/* contract / hợp đồng helpers */
+function daysInMonth(y,m){ return new Date(y,m,0).getDate(); }
+function addMonths(iso, n){
+  if(!iso) return null;
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y, (m-1)+Number(n||0), d);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+function contractEndDate(r){
+  if(!r.ngayVaoO) return null;
+  return addMonths(r.ngayVaoO, r.soThangHopDong||6);
+}
+function daysUntil(iso){
+  if(!iso) return null;
+  const target = new Date(iso+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((target-today)/86400000);
+}
+function contractWarnDays(){ return (STATE.settings && STATE.settings.contractWarnDays) || 30; }
+function roomDebtInfo(r){
+  const debt = STATE.prevDebts[r.stt];
+  if(!debt) return null;
+  return debt;
+}
+function roomTotalWithDebt(r){
+  const debt = roomDebtInfo(r);
+  return r._c.tong + (debt? debt.amount : 0);
+}
+function calcRoomDaDong(r, debtAmount){
+  if(!r.paid) return 0;
+  const phaiThu = r._c.tong + (debtAmount||0);
+  const soTien = Number(r.soTienDaDong)||0;
+  return soTien>0 ? soTien : phaiThu; // để trống/0 = đóng đủ
+}
+function calcRoomThieu(r, debtAmount){
+  const phaiThu = r._c.tong + (debtAmount||0);
+  return Math.max(0, phaiThu - calcRoomDaDong(r, debtAmount));
+}
+function roomDaDongAmount(r){ return calcRoomDaDong(r, roomDebtInfo(r)? roomDebtInfo(r).amount : 0); }
+function roomThieuAmount(r){ return calcRoomThieu(r, roomDebtInfo(r)? roomDebtInfo(r).amount : 0); }
+function contractStatusClass(r){
+  const end = contractEndDate(r);
+  if(!end) return '';
+  const d = daysUntil(end);
+  if(d<0) return 'contract-expired';
+  if(d<=contractWarnDays()) return 'contract-warn';
+  return '';
+}
+/* payment urgency coloring: only for the real-world current month */
+function paymentUrgencyClass(){
+  const now = new Date();
+  const thisKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  if(STATE.monthData.key !== thisKey) return '';
+  const day = now.getDate();
+  if(day>25) return 'urgent-red';
+  return '';
+}
+
+/* ============ COMPUTE ============ */
+function computeRoom(r, monthKey){
+  if(!r.active){
+    // phòng trống: không tính bất kỳ khoản nào, dù các trường số liệu còn sót giá trị cũ
+    return {tienNuoc:0, tienXe:0, dienDaDung:0, tienDien:0, tienRac:0, dieuchinh:0, tienPhong:0, prorated:false, tong:0};
+  }
+  const tienNuoc = r.waterMeter ? Math.max(0,(Number(r.nuocMoi||0)-Number(r.nuocCu||0)))*Number(r.dongiaNuoc||0)
+                                 : Number(r.songuoi||0)*Number(r.dongiaNuoc||0);
+  const tienXe = Number(r.soxe||0)*Number(r.dongiaXe||0);
+  const dienDaDung = Math.max(0,(Number(r.sodienmoi||0)-Number(r.sodiencu||0)));
+  const tienDien = dienDaDung*Number(r.dongiaDien||0);
+  const tienRac = r.racmode==='nguoi' ? Number(r.songuoi||0)*Number(r.dongiaRac||0) : Number(r.dongiaRac||0);
+  const dieuchinh = Number(r.dieuchinh||0);
+
+  let tienPhong = Number(r.gia||0);
+  let prorated = false;
+  if(r.ngayVaoO && monthKey){
+    const [vy,vm,vd] = r.ngayVaoO.split('-').map(Number);
+    const [my,mm] = monthKey.split('-').map(Number);
+    if(vy===my && vm===mm){
+      const dim = daysInMonth(my,mm);
+      const soNgayConLai = Math.max(0, dim - vd + 1);
+      tienPhong = Math.round(Number(r.gia||0)/30*soNgayConLai);
+      prorated = true;
+    }
+  }
+  const tong = tienPhong + tienNuoc + tienXe + tienDien + tienRac + dieuchinh;
+  return {tienNuoc, tienXe, dienDaDung, tienDien, tienRac, dieuchinh, tienPhong, prorated, tong};
+}
+function computeMonth(md){
+  const rooms = md.rooms.map(r=>Object.assign({}, r, {_c: computeRoom(r, md.key)}));
+  const totals = rooms.reduce((a,r)=>{
+    a.gia += r._c.tienPhong;
+    a.nuoc += r._c.tienNuoc;
+    a.xe += r._c.tienXe;
+    a.dien += r._c.tienDien;
+    a.rac += r._c.tienRac;
+    a.dieuchinh += r._c.dieuchinh;
+    a.tong += r._c.tong;
+    if(r.paid) a.daThu += r._c.tong;
+    if(r.active) a.soPhongHD++;
+    if(r.paid) a.soPhongDaDong++;
+    return a;
+  }, {gia:0,nuoc:0,xe:0,dien:0,rac:0,dieuchinh:0,tong:0,daThu:0,soPhongHD:0,soPhongDaDong:0});
+  const c = md.chiphi;
+  const tongChi = (c.luongBaoVe||0)+(c.internet||0)+(c.dienChung||0)+(c.racChung||0)+(c.nuocChung||0)+(c.ca||0)+(c.suaChua||0)+(c.chuaChay||0)+(c.chiKhac||0);
+  const tienNha = c.tienNha||0;
+  const conDu = totals.tong - tongChi - tienNha;
+  return {rooms, totals, tongChi, tienNha, conDu};
+}
+
+/* ============ TABS ============ */
+const TABS = [
+  {id:'nhap', label:'📋 Nhập liệu'},
+  {id:'thutien', label:'💰 Thu tiền'},
+  {id:'phieu', label:'🧾 Phiếu thu'},
+  {id:'baocao', label:'📊 Báo cáo'},
+  {id:'nhapdaudthang', label:'🗓 Nhập đầu tháng'},
+  {id:'lichsu', label:'🗂 Lịch sử'},
+  {id:'caidat', label:'⚙️ Cài đặt'}
+];
+function renderTabsNav(){
+  const nav = document.getElementById('tabsNav');
+  nav.innerHTML = TABS.map(t=>
+    `<button class="${t.id===STATE.activeTab?'active':''}" onclick="setTab('${t.id}')">${t.label}</button>`
+  ).join('');
+}
+function setTab(id){
+  if(STATE.activeTab==='nhap') scheduleSave();
+  STATE.activeTab = id;
+  renderTabsNav();
+  renderMain();
+}
+function renderMain(){
+  const main = document.getElementById('mainContent');
+  if(!STATE.monthData){ main.innerHTML = '<div class="empty-state">Đang tải dữ liệu…</div>'; return; }
+  if(STATE.activeTab==='nhap') return renderNhap(main);
+  if(STATE.activeTab==='thutien') return renderThuTien(main);
+  if(STATE.activeTab==='phieu') return renderPhieu(main);
+  if(STATE.activeTab==='baocao') return renderBaoCao(main);
+  if(STATE.activeTab==='nhapdaudthang') return renderNhapDauThang(main);
+  if(STATE.activeTab==='lichsu') return renderLichSu(main);
+  if(STATE.activeTab==='caidat') return renderCaiDat(main);
+}
+
+/* ============ TAB: NHẬP LIỆU ============ */
+function renderNhap(main){
+  const {rooms, totals} = computeMonth(STATE.monthData);
+  const filter = STATE.filterText.trim();
+  const shown = rooms.filter(r=> !filter || String(r.stt)===filter || (r.ghichu||'').toLowerCase().includes(filter.toLowerCase()));
+  const activeRooms = rooms.filter(r=>r.active);
+  const daThuThucTe = activeRooms.reduce((s,r)=>s+roomDaDongAmount(r),0);
+  const conThieuThucTe = activeRooms.reduce((s,r)=>s+roomThieuAmount(r),0);
+  const soPhongDaDongDu = activeRooms.filter(r=>r.paid && roomThieuAmount(r)===0).length;
+
+  main.innerHTML = `
+    <div class="panel">
+      <h2><span class="month-highlight">${STATE.monthData.label}</span></h2>
+      <div class="desc">Hạn đóng tiền: <b>${STATE.monthData.hanDong? fmtDate(STATE.monthData.hanDong) : '—'}</b> · Cập nhật đầu tháng: số điện mới → số cũ, sửa giá phòng / số người / số xe nếu có thay đổi.</div>
+      <div class="stat-row">
+        <div class="stat"><div class="lbl">Tổng thu dự kiến</div><div class="val mono" id="stat-tongthu">${fmtVND(totals.tong)}</div></div>
+        <div class="stat good"><div class="lbl">Đã thu (thực tế)</div><div class="val mono" id="stat-dathu">${fmtVND(daThuThucTe)}</div></div>
+        <div class="stat bad"><div class="lbl">Còn thiếu (gồm nợ cũ)</div><div class="val mono" id="stat-conthieu">${fmtVND(conThieuThucTe)}</div></div>
+        <div class="stat"><div class="lbl">Phòng đã đóng đủ</div><div class="val">${soPhongDaDongDu} / ${activeRooms.length}</div></div>
+      </div>
+      <div class="toolbar no-print">
+        <input type="text" placeholder="Lọc theo số phòng / ghi chú…" oninput="STATE.filterText=this.value; applyRoomFilter();" value="${filter}">
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="toggleAllRooms(true)">Mở tất cả</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleAllRooms(false)">Đóng tất cả</button>
+      </div>
+      <div id="roomsList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Chi phí chung tháng này</h2>
+      <div class="desc">Các khoản chi vận hành nhà trọ (không tính riêng cho phòng nào).</div>
+      <div class="form-grid" id="chiphiGrid"></div>
+      <div class="breakdown">
+        <span>Tổng chi vận hành: <b class="mono" id="bd-tongchi">${fmtVND(computeMonth(STATE.monthData).tongChi)}</b></span>
+        <span>Tiền nhà (trả chủ): <b class="mono" id="bd-tiennha">${fmtVND(STATE.monthData.chiphi.tienNha||0)}</b></span>
+        <span>Còn dư lại: <b class="mono" id="bd-condu">${fmtVND(computeMonth(STATE.monthData).conDu)}</b></span>
+      </div>
+    </div>
+
+    <div class="sticky-actions no-print">
+      <button class="btn btn-outline" onclick="manualSave()">💾 Lưu tháng này</button>
+      <button class="btn btn-brass" onclick="openNewMonthModal()">➕ Bắt đầu tháng mới</button>
+    </div>
+  `;
+  document.getElementById('roomsList').innerHTML = shown.map(r=>roomCardHtml(r)).join('') || '<div class="empty-state">Không tìm thấy phòng phù hợp.</div>';
+  document.getElementById('chiphiGrid').innerHTML = chiphiFieldsHtml(STATE.monthData.chiphi, 'cp_') ;
+  // wire chiphi inputs
+  ['luongBaoVe','internet','dienChung','racChung','nuocChung','ca','suaChua','chuaChay','chiKhac','tienNha'].forEach(k=>{
+    const el = document.getElementById('cp_'+k);
+    el.addEventListener('input', ()=>{ STATE.monthData.chiphi[k] = Number(el.value.replace(/[^\d]/g,''))||0; scheduleSave(); refreshBreakdownOnly(); });
+  });
+}
+function refreshBreakdownOnly(){
+  // lightweight refresh of totals without collapsing accordion state
+  const m = computeMonth(STATE.monthData);
+  const activeRooms = m.rooms.filter(r=>r.active);
+  const daThuThucTe = activeRooms.reduce((s,r)=>s+roomDaDongAmount(r),0);
+  const conThieuThucTe = activeRooms.reduce((s,r)=>s+roomThieuAmount(r),0);
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent = val; };
+  set('stat-tongthu', fmtVND(m.totals.tong));
+  set('stat-dathu', fmtVND(daThuThucTe));
+  set('stat-conthieu', fmtVND(conThieuThucTe));
+  set('bd-tongchi', fmtVND(m.tongChi));
+  set('bd-tiennha', fmtVND(STATE.monthData.chiphi.tienNha||0));
+  set('bd-condu', fmtVND(m.conDu));
+}
+function applyRoomFilter(){
+  const {rooms} = computeMonth(STATE.monthData);
+  const filter = STATE.filterText.trim();
+  const shown = rooms.filter(r=> !filter || String(r.stt)===filter || (r.ghichu||'').toLowerCase().includes(filter.toLowerCase()));
+  const list = document.getElementById('roomsList');
+  if(list) list.innerHTML = shown.map(r=>roomCardHtml(r)).join('') || '<div class="empty-state">Không tìm thấy phòng phù hợp.</div>';
+}
+function toggleAllRooms(open){
+  STATE.monthData.rooms.forEach(r=>{ STATE.openRooms[r.stt]=open; });
+  renderMain();
+}
+function roomCardHtml(r){
+  const open = !!STATE.openRooms[r.stt];
+  const c = r._c;
+  const contractCls = contractStatusClass(r);
+  const urgency = (!r.paid) ? paymentUrgencyClass() : '';
+  const end = contractEndDate(r);
+  const debt = roomDebtInfo(r);
+  const totalWithDebt = roomTotalWithDebt(r);
+  return `
+  <div class="room-card ${open?'open':''} ${r.active?'':'inactive'}" id="room-${r.stt}">
+    <div class="room-head" onclick="toggleRoom(${r.stt})">
+      <div class="room-num ${contractCls}" title="${end?('Hết hạn HĐ: '+fmtDate(end)):''}">${r.stt}</div>
+      <div class="room-mid">
+        <div class="room-total mono ${urgency}">${fmtVND(totalWithDebt)}${debt?' <span style="font-weight:600;font-size:10.5px;">(gồm nợ)</span>':''}</div>
+        <div class="note">${r.active? (r.ghichu||'—') : 'Phòng trống'}${r.mayLanh?' · ❄️':''}${r.active && !r.ngayVaoO? ' · <span style="color:var(--brass-dark);">chưa có ngày vào</span>':''}</div>
+      </div>
+      <span class="paid-pill ${r.paid?'yes':'no'}">${r.paid?'Đã đóng':'Chưa đóng'}</span>
+      <span class="chev">▶</span>
+    </div>
+    <div class="room-body">
+      ${roomFormHtml(r)}
+    </div>
+  </div>`;
+}
+function toggleRoom(stt){
+  STATE.openRooms[stt] = !STATE.openRooms[stt];
+  const el = document.getElementById('room-'+stt);
+  el.classList.toggle('open');
+}
+function roomFormHtml(r){
+  const end = contractEndDate(r);
+  const remain = end ? daysUntil(end) : null;
+  return `
+    <div class="section-title">Thông tin phòng</div>
+    <div class="form-grid">
+      <div class="f"><label>Đang cho thuê?</label>
+        <select onchange="onRoomActiveChange(${r.stt}, this.value==='1')">
+          <option value="1" ${r.active?'selected':''}>Có khách</option>
+          <option value="0" ${!r.active?'selected':''}>Phòng trống</option>
+        </select>
+      </div>
+      ${r.active ? `<div class="f"><label>&nbsp;</label><button class="btn btn-outline btn-sm" style="width:100%;" onclick="openTransferModal(${r.stt})">🔀 Dời sang phòng khác</button></div>` : ''}
+      <div class="f" style="background:var(--brass-light); border-radius:7px; padding:6px 8px 8px;">
+        <label style="color:var(--brass-dark);">📅 Ngày vào ở (mốc tính)</label>
+        <input type="date" value="${r.ngayVaoO||''}" onchange="updRoom(${r.stt},'ngayVaoO', this.value)">
+        <div style="font-size:10.5px;color:var(--brass-dark);margin-top:3px;">${r.ngayVaoO? fmtDate(r.ngayVaoO) : 'Chưa nhập — bổ sung sau'}</div>
+      </div>
+      <div class="f"><label>Giá phòng</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'gia',parseMoneyVal(this))"></div>
+      <div class="f"><label>Số người</label><input type="number" value="${r.songuoi||0}" onchange="updRoom(${r.stt},'songuoi',Number(this.value))"></div>
+      <div class="f"><label>Số xe</label><input type="number" value="${r.soxe||0}" onchange="updRoom(${r.stt},'soxe',Number(this.value))"></div>
+      <div class="f"><label>Đơn giá / xe</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaXe)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaXe',parseMoneyVal(this))"></div>
+      <div class="f"><label>Tiền cọc</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.coc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'coc',parseMoneyVal(this))"></div>
+      <div class="f"><label>SĐT khách (Zalo)</label><input type="tel" value="${escapeAttr(r.soDienThoai||'')}" placeholder="09xxxxxxxx" onchange="updRoom(${r.stt},'soDienThoai', this.value)"></div>
+      <div class="f"><label>Hợp đồng (tháng)</label><input type="number" min="1" value="${r.soThangHopDong||6}" onchange="updRoom(${r.stt},'soThangHopDong',Number(this.value)||6)">
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${end? ('Hết hạn: '+fmtDate(end)+(remain!=null?` (còn ${remain} ngày)`:'')) : 'Chưa có ngày vào ở'}</div></div>
+      <div class="f"><label class="checkbox-row" style="margin-top:6px;"><input type="checkbox" ${r.mayLanh?'checked':''} onchange="updRoom(${r.stt},'mayLanh',this.checked)"> Có máy lạnh</label></div>
+      <div class="f span2"><label>Ghi chú máy lạnh</label><input type="text" placeholder="VD: Casper, cũ..." value="${escapeAttr(r.mayLanhGhiChu||'')}" onchange="updRoom(${r.stt},'mayLanhGhiChu', this.value)"></div>
+    </div>
+
+    <div class="section-title">Điện</div>
+    <div class="form-grid">
+      <div class="f"><label>Số điện cũ</label><input type="number" value="${r.sodiencu||0}" onchange="updRoom(${r.stt},'sodiencu',Number(this.value))"></div>
+      <div class="f"><label>Số điện mới</label><input type="number" value="${r.sodienmoi==null?'':r.sodienmoi}" onchange="updRoom(${r.stt},'sodienmoi', this.value===''?null:Number(this.value))"></div>
+      <div class="f"><label>Đơn giá / kWh</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaDien)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaDien',parseMoneyVal(this))"></div>
+    </div>
+
+    <div class="section-title">Nước</div>
+    <div class="form-grid">
+      <div class="f"><label>Cách tính nước</label>
+        <select onchange="updRoom(${r.stt},'waterMeter', this.value==='1')">
+          <option value="0" ${!r.waterMeter?'selected':''}>Theo đầu người</option>
+          <option value="1" ${r.waterMeter?'selected':''}>Đồng hồ riêng</option>
+        </select>
+      </div>
+      ${r.waterMeter ? `
+        <div class="f"><label>Số nước cũ</label><input type="number" value="${r.nuocCu||0}" onchange="updRoom(${r.stt},'nuocCu',Number(this.value))"></div>
+        <div class="f"><label>Số nước mới</label><input type="number" value="${r.nuocMoi==null?'':r.nuocMoi}" onchange="updRoom(${r.stt},'nuocMoi', this.value===''?null:Number(this.value))"></div>
+        <div class="f"><label>Đơn giá / m³</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaNuoc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaNuoc',parseMoneyVal(this))"></div>
+      ` : `
+        <div class="f"><label>Đơn giá / người</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaNuoc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaNuoc',parseMoneyVal(this))"></div>
+      `}
+    </div>
+
+    <div class="section-title">Rác</div>
+    <div class="form-grid">
+      <div class="f"><label>Cách tính rác</label>
+        <select onchange="updRoom(${r.stt},'racmode', this.value)">
+          <option value="nguoi" ${r.racmode==='nguoi'?'selected':''}>Theo đầu người</option>
+          <option value="fixed" ${r.racmode==='fixed'?'selected':''}>Cố định / phòng</option>
+        </select>
+      </div>
+      <div class="f"><label>${r.racmode==='nguoi'?'Đơn giá / người':'Số tiền cố định'}</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaRac)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaRac',parseMoneyVal(this))"></div>
+      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dieuchinh)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyVal(this))"></div>
+    </div>
+
+    <div class="section-title">Ghi chú</div>
+    <div class="form-grid">
+      <div class="f span2"><label>Ghi chú phòng</label><input type="text" value="${escapeAttr(r.ghichu||'')}" onchange="updRoom(${r.stt},'ghichu', this.value)"></div>
+    </div>
+
+    <div class="breakdown">
+      <span>Tiền phòng${r._c.prorated?' (tính theo ngày ở)':''}: <b class="mono">${fmtVND(r._c.tienPhong)}</b></span>
+      <span>Tiền nước: <b class="mono">${fmtVND(r._c.tienNuoc)}</b></span>
+      <span>Tiền xe: <b class="mono">${fmtVND(r._c.tienXe)}</b></span>
+      <span>Điện đã dùng: <b class="mono">${fmtNum(r._c.dienDaDung)}</b></span>
+      <span>Tiền điện: <b class="mono">${fmtVND(r._c.tienDien)}</b></span>
+      <span>Tiền rác: <b class="mono">${fmtVND(r._c.tienRac)}</b></span>
+      <span>Tổng tháng này: <b class="mono">${fmtVND(r._c.tong)}</b></span>
+    </div>
+    ${roomDebtInfo(r) ? `
+    <div class="breakdown" style="border-top:none; margin-top:0; padding-top:6px;">
+      <span style="color:var(--brick);">+ Còn thiếu từ ${roomDebtInfo(r).monthLabel}: <b class="mono">${fmtVND(roomDebtInfo(r).amount)}</b></span>
+      <span>= <b class="mono" style="font-size:14px;">Tổng phải đóng: ${fmtVND(roomTotalWithDebt(r))}</b></span>
+    </div>` : ''}
+    ${r.paid ? `
+    <div class="breakdown" style="border-top:none; margin-top:0; padding-top:6px;">
+      <span>Đã đóng tháng này: <b class="mono" style="color:var(--green-ok);">${fmtVND(roomDaDongAmount(r))}</b></span>
+      ${roomThieuAmount(r)>0? `<span>Còn thiếu (sẽ cộng sang tháng sau): <b class="mono" style="color:var(--brick);">${fmtVND(roomThieuAmount(r))}</b></span>` : ''}
+    </div>` : ''}
+    ${r.active && Number(r.coc)>0 ? `
+    <div class="breakdown" style="border-top:none; margin-top:0; padding-top:6px;">
+      <span>🔒 Tiền cọc đang giữ: <b class="mono">${fmtVND(r.coc)}</b></span>
+    </div>` : ''}
+  `;
+}
+function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function updRoom(stt, field, value){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  r[field] = value;
+  scheduleSave();
+  // re-render just this card to keep accordion state + update numbers elsewhere
+  renderMain();
+}
+function onRoomActiveChange(stt, isActive){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  if(isActive === r.active){ renderMain(); return; } // no real change, just re-sync UI
+  if(isActive){
+    openNewTenantModal(stt);
+  } else {
+    openVacateModal(stt);
+  }
+}
+
+/* ---- Nhận khách: khách mới hay khách cũ ở tiếp ---- */
+function openNewTenantModal(stt){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  showModal(`
+    <h3>Phòng ${stt} — Nhận khách</h3>
+    <div class="desc">Đây là khách <b>mới</b>, hay khách <b>cũ đang ở tiếp</b> (chỉ sửa lại trạng thái, ví dụ tick nhầm)?</div>
+    <div class="field"><label>Tiền cọc nhận lúc vào ở (chỉ áp dụng nếu là khách mới)</label>
+      <input type="text" inputmode="numeric" id="nt_coc" placeholder="VD: 2.000.000" value="${fmtMoneyInputVal(r?r.coc:0)}" oninput="onMoneyInputFmt(this)">
+    </div>
+    <div class="modal-actions" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <button class="btn btn-outline btn-block" onclick="applyTenantChange(${stt}, false)">Khách cũ ở tiếp — giữ nguyên nợ cũ (nếu có)</button>
+      <button class="btn btn-brass btn-block" onclick="applyTenantChange(${stt}, true)">Khách mới — xoá nợ cũ, lưu tiền cọc</button>
+      <button class="btn btn-outline btn-block" onclick="closeModal(); renderMain();">Hủy</button>
+    </div>
+  `);
+}
+async function applyTenantChange(stt, isNewTenant){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  r.active = true;
+  r.khachMoi = !!isNewTenant;
+  if(isNewTenant){
+    r.ngayVaoO = todayISO();
+    const cocEl = document.getElementById('nt_coc');
+    if(cocEl){ r.coc = parseMoneyVal(cocEl); }
+  } else if(!r.ngayVaoO){
+    r.ngayVaoO = todayISO();
+  }
+  scheduleSave();
+  await refreshPrevDebts();
+  closeModal();
+  renderMain();
+  showToast(isNewTenant ? 'Đã nhận khách mới — nợ cũ đã xoá, đã lưu tiền cọc.' : 'Đã khôi phục trạng thái khách cũ ở tiếp.');
+}
+
+/* ---- Trả phòng: khách rời đi -> phòng trống, gợi ý chốt số điện ---- */
+function openVacateModal(stt){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  showModal(`
+    <h3>Phòng ${stt} — Khách đã rời phòng</h3>
+    <div class="desc">Nhập số điện hiện tại (lúc khách rời đi) để chốt sổ điện — tiền điện kỳ cuối sẽ tự trừ vào tiền cọc. Bỏ trống nếu không muốn chốt/trừ tiền điện.</div>
+    <div class="field"><label>Số điện lúc rời đi (tuỳ chọn)</label><input type="number" id="vc_dien" placeholder="để trống nếu bỏ qua" oninput="updateVacatePreview(${stt})"></div>
+    <div class="field"><label>Trừ cọc thêm — hư hỏng, chưa dọn dẹp... (tuỳ chọn)</label>
+      <input type="text" inputmode="numeric" id="vc_tru" placeholder="0" oninput="onMoneyInputFmt(this); updateVacatePreview(${stt})">
+    </div>
+    <div class="field"><label>Lý do trừ thêm</label><input type="text" id="vc_lydo" placeholder="VD: làm hư tủ lạnh, chưa dọn phòng..."></div>
+    <div class="breakdown" id="vc_preview" style="border-top:1px dashed var(--line); padding-top:8px;">
+      ${vacatePreviewHtml(r, '', 0)}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-primary" onclick="applyVacate(${stt})">Xác nhận phòng trống</button>
+    </div>
+  `);
+}
+function vacatePreviewHtml(r, dienVal, truThem){
+  const coc = Number(r.coc)||0;
+  let dienCuoiKy = 0;
+  if(dienVal !== ''){
+    dienCuoiKy = Math.max(0, Number(dienVal) - Number(r.sodiencu||0)) * Number(r.dongiaDien||0);
+  }
+  const hoanLai = Math.max(0, coc - dienCuoiKy - (Number(truThem)||0));
+  return `
+    <span>Tiền cọc hiện có: <b class="mono">${fmtVND(coc)}</b></span>
+    <span>Trừ điện cuối kỳ: <b class="mono" style="color:var(--brick);">${fmtVND(dienCuoiKy)}</b></span>
+    <span>Trừ khác: <b class="mono" style="color:var(--brick);">${fmtVND(truThem||0)}</b></span>
+    <span>= <b class="mono" style="font-size:14px;color:var(--green-ok);">Hoàn lại khách: ${fmtVND(hoanLai)}</b></span>
+  `;
+}
+function updateVacatePreview(stt){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  const dienVal = document.getElementById('vc_dien').value;
+  const truVal = parseMoneyVal(document.getElementById('vc_tru'));
+  const el = document.getElementById('vc_preview');
+  if(el) el.innerHTML = vacatePreviewHtml(r, dienVal, truVal);
+}
+async function applyVacate(stt){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  const dienVal = document.getElementById('vc_dien').value;
+  const truThem = parseMoneyVal(document.getElementById('vc_tru'));
+  const lyDo = (document.getElementById('vc_lydo').value||'').trim();
+
+  const cocGoc = Number(r.coc)||0;
+  let dienCuoiKy = 0;
+  if(dienVal !== ''){
+    const reading = Number(dienVal);
+    dienCuoiKy = Math.max(0, reading - Number(r.sodiencu||0)) * Number(r.dongiaDien||0);
+    r.sodienmoi = reading;
+    r.sodiencu = reading; // chốt sổ điện, làm mốc cho khách tiếp theo
+  }
+  const hoanLai = Math.max(0, cocGoc - dienCuoiKy - truThem);
+
+  r.active = false;
+  r.songuoi = 0; r.soxe = 0; r.coc = 0; r.soDienThoai = '';
+  r.ngayVaoO = '';
+
+  if(cocGoc>0 || dienCuoiKy>0 || truThem>0){
+    const parts = [`Cọc ${fmtVND(cocGoc)}`];
+    if(dienCuoiKy>0) parts.push(`trừ điện cuối kỳ ${fmtVND(dienCuoiKy)}`);
+    if(truThem>0) parts.push(`trừ khác ${fmtVND(truThem)}${lyDo?(' ('+lyDo+')'):''}`);
+    parts.push(`hoàn lại ${fmtVND(hoanLai)}`);
+    r.ghichu = ((r.ghichu||'').trim() ? r.ghichu.trim()+' · ' : '') + parts.join(', ') + ` (${fmtDate(todayISO())})`;
+  }
+
+  scheduleSave();
+  await refreshPrevDebts();
+  closeModal();
+  renderMain();
+  showToast('Đã chuyển phòng '+stt+' sang trạng thái trống. Hoàn lại khách: '+fmtVND(hoanLai));
+}
+
+/* ---- Dời phòng: khách chuyển sang phòng trống khác, gộp tiền điện phòng cũ vào phòng mới ---- */
+function openTransferModal(fromStt){
+  const vacantRooms = STATE.monthData.rooms.filter(x=>!x.active && x.stt!==fromStt);
+  if(!vacantRooms.length){ showToast('Hiện không có phòng nào đang trống để dời sang.'); return; }
+  const r = STATE.monthData.rooms.find(x=>x.stt===fromStt);
+  showModal(`
+    <h3>Dời khách từ phòng ${fromStt}</h3>
+    <div class="desc">Chỉ hiện các phòng đang trống. Số điện phòng cũ sẽ được chốt sổ và cộng tiền vào phòng mới (không thu riêng ở phòng cũ nữa); số điện phòng mới nếu bỏ qua sẽ giữ theo số đầu tháng hiện có của phòng đó.</div>
+    <div class="field"><label>Dời sang phòng</label>
+      <select id="tf_target">${vacantRooms.map(x=>`<option value="${x.stt}">Phòng ${x.stt}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>Số điện phòng ${fromStt} lúc dời đi (chốt sổ, tuỳ chọn)</label><input type="number" id="tf_oldreading" placeholder="để trống nếu bỏ qua"></div>
+    <div class="field"><label>Số điện phòng mới lúc dọn vào (tuỳ chọn)</label><input type="number" id="tf_newreading" placeholder="để trống = giữ số đầu tháng"></div>
+    <div class="field"><label>Ghi chú</label><input type="text" id="tf_note" value="Dời từ phòng ${fromStt} ngày ${fmtDate(todayISO())}"></div>
+    <div class="err-msg" id="tf_err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmTransfer(${fromStt})">Xác nhận dời phòng</button>
+    </div>
+  `);
+}
+async function confirmTransfer(fromStt){
+  const targetStt = Number(document.getElementById('tf_target').value);
+  const oldReadingVal = document.getElementById('tf_oldreading').value;
+  const newReadingVal = document.getElementById('tf_newreading').value;
+  const note = (document.getElementById('tf_note').value||'').trim();
+  const errEl = document.getElementById('tf_err');
+  const oldRoom = STATE.monthData.rooms.find(x=>x.stt===fromStt);
+  const newRoom = STATE.monthData.rooms.find(x=>x.stt===targetStt);
+  if(!oldRoom || !newRoom){ errEl.textContent = 'Không tìm thấy phòng.'; return; }
+  if(newRoom.active){ errEl.textContent = 'Phòng đích không còn trống, vui lòng chọn lại.'; return; }
+
+  // giữ lại thông tin khách trước khi xoá ở phòng cũ
+  const tenant = {songuoi:oldRoom.songuoi||0, soxe:oldRoom.soxe||0, coc:oldRoom.coc||0, soDienThoai:oldRoom.soDienThoai||''};
+
+  let dienPhongCu = 0, dienNote = '';
+  if(oldReadingVal !== ''){
+    const oldReading = Number(oldReadingVal);
+    const daDung = Math.max(0, oldReading - Number(oldRoom.sodiencu||0));
+    dienPhongCu = daDung * Number(oldRoom.dongiaDien||0);
+    oldRoom.sodienmoi = oldReading;
+    dienNote = ` — điện phòng ${fromStt} chốt: ${daDung} số × ${fmtVND(oldRoom.dongiaDien)} = ${fmtVND(dienPhongCu)}`;
+  }
+
+  // đóng sổ phòng cũ, trả về trạng thái trống
+  oldRoom.sodiencu = oldRoom.sodienmoi!=null ? oldRoom.sodienmoi : oldRoom.sodiencu;
+  oldRoom.active = false;
+  oldRoom.songuoi = 0; oldRoom.soxe = 0; oldRoom.coc = 0; oldRoom.ngayVaoO = ''; oldRoom.soDienThoai = '';
+  oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang phòng ${targetStt} (${fmtDate(todayISO())})`;
+
+  // mở phòng mới cho khách, kế thừa số người/xe/cọc, cộng tiền điện phòng cũ vào điều chỉnh
+  newRoom.active = true;
+  newRoom.khachMoi = true; // nợ cũ (nếu có) của phòng này trước đây coi như đã chốt, không cộng dồn cho khách mới tới
+  newRoom.ngayVaoO = todayISO();
+  newRoom.songuoi = tenant.songuoi;
+  newRoom.soxe = tenant.soxe;
+  newRoom.coc = tenant.coc;
+  newRoom.soDienThoai = tenant.soDienThoai;
+  if(newReadingVal !== ''){ newRoom.sodiencu = Number(newReadingVal); }
+  newRoom.dieuchinh = Number(newRoom.dieuchinh||0) + dienPhongCu;
+  newRoom.ghichu = (note || `Dời từ phòng ${fromStt} (${fmtDate(todayISO())})`) + dienNote;
+
+  scheduleSave();
+  await refreshPrevDebts();
+  closeModal();
+  renderMain();
+  showToast(`Đã dời khách từ phòng ${fromStt} sang phòng ${targetStt}.`);
+}
+
+/* ============ TAB: THU TIỀN ============ */
+function renderThuTien(main){
+  const {rooms} = computeMonth(STATE.monthData);
+  const active = rooms.filter(r=>r.active);
+  const tongDaThu = active.reduce((s,r)=>s+roomDaDongAmount(r),0);
+  const tongConThieu = active.reduce((s,r)=>s+roomThieuAmount(r),0);
+  const soPhongDaDongDu = active.filter(r=>r.paid && roomThieuAmount(r)===0).length;
+  main.innerHTML = `
+    <div class="panel">
+      <h2>Xác nhận thu tiền — ${STATE.monthData.label}</h2>
+      <div class="desc">
+        Tick "Đã đóng" khi phòng có nộp tiền (ngày đóng tự lấy theo ngày hệ thống). Ô "Số tiền đã đóng" chỉ cần điền khi phòng đóng <b>thiếu</b> —
+        để trống nếu đóng đủ. Số tiền còn thiếu sẽ tự cộng dồn sang tổng phải thu của tháng sau. Ghi chú thu tiền hiển thị lại nội dung tháng trước — muốn ghi mới thì xoá và bấm nút Ghi.
+      </div>
+      <div class="stat-row">
+        <div class="stat good"><div class="lbl">Đã thu (thực tế)</div><div class="val mono">${fmtVND(tongDaThu)}</div></div>
+        <div class="stat bad"><div class="lbl">Còn thiếu (gồm nợ cũ)</div><div class="val mono">${fmtVND(tongConThieu)}</div></div>
+        <div class="stat"><div class="lbl">Đã đóng đủ</div><div class="val">${soPhongDaDongDu}/${active.length}</div></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th class="text-center sticky-col">Phòng</th><th>Tổng phải thu</th><th>Đã đóng</th><th>Số tiền đã đóng</th><th>Còn thiếu</th><th>Ngày đóng</th><th>Ghi chú thu tiền</th></tr></thead>
+          <tbody>
+          ${active.map(r=>{
+            const debt = roomDebtInfo(r);
+            const totalWithDebt = roomTotalWithDebt(r);
+            const thieu = roomThieuAmount(r);
+            return `
+            <tr>
+              <td class="text-center sticky-col"><b>${r.stt}</b></td>
+              <td class="mono" style="font-weight:800; color:var(--brick); font-size:13.5px;">${fmtVND(totalWithDebt)}${debt?`<div style="font-size:10px;font-weight:600;color:var(--ink-soft);">gồm nợ ${debt.monthLabel}: ${fmtVND(debt.amount)}</div>`:''}</td>
+              <td><input type="checkbox" ${r.paid?'checked':''} onchange="onTogglePaid(${r.stt}, this.checked)"></td>
+              <td><input type="text" inputmode="numeric" style="width:120px" placeholder="để trống = đủ" value="${fmtMoneyInputVal(r.soTienDaDong)}" oninput="onMoneyInputFmt(this)" onchange="onSoTienDaDongChange(${r.stt}, this)"></td>
+              <td>${thieu>0 ? `<span class="pill pill-red mono">${fmtVND(thieu)}</span>` : `<span class="pill pill-muted">Đủ</span>`}</td>
+              <td>
+                <input type="date" style="width:130px" value="${r.paidDate||''}" onchange="updRoom(${r.stt},'paidDate',this.value)">
+                ${r.paidDate?`<div style="font-size:10.5px;color:var(--ink-soft);">${fmtDate(r.paidDate)}</div>`:''}
+              </td>
+              <td>
+                <div style="display:flex; gap:5px; align-items:center;">
+                  <input type="text" id="note-${r.stt}" style="width:170px" value="${escapeAttr(r.paidNote||'')}">
+                  <button class="btn btn-outline btn-sm" onclick="savePaidNote(${r.stt})">Ghi</button>
+                </div>
+              </td>
+            </tr>
+          `;}).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function onSoTienDaDongChange(stt, el){
+  const val = parseMoneyVal(el);
+  updRoom(stt, 'soTienDaDong', val>0? val : null);
+}
+function savePaidNote(stt){
+  const el = document.getElementById('note-'+stt);
+  if(!el) return;
+  updRoom(stt, 'paidNote', el.value);
+  showToast('Đã ghi chú cho phòng '+stt+'.');
+}
+function onTogglePaid(stt, checked){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r) return;
+  r.paid = checked;
+  if(checked){ r.paidDate = todayISO(); }
+  scheduleSave();
+  renderMain();
+}
+
+/* ============ TAB: PHIẾU THU ============ */
+function renderPhieu(main){
+  const s = STATE.settings;
+  main.innerHTML = `
+    <div class="panel no-print">
+      <h2>Phiếu thu tiền phòng</h2>
+      <div class="desc">Chọn 1 phòng để chỉ xem/tải phiếu đó, hoặc để "Tất cả" để xem/in toàn bộ.</div>
+      <div class="toolbar">
+        <label class="checkbox-row"><input type="checkbox" id="skipEmptyChk" ${STATE.skipEmptyPrint?'checked':''} onchange="STATE.skipEmptyPrint=this.checked; renderReceiptsList(STATE.phieuSelected);"> Bỏ qua phòng trống</label>
+        <div class="spacer"></div>
+        <select id="phieuRoomSelect" onchange="STATE.phieuSelected=this.value; renderReceiptsList(this.value);"></select>
+        <button class="btn btn-outline btn-sm" onclick="exportOneReceiptImage()">🖼️ Tải ảnh phòng này</button>
+        <button class="btn btn-outline btn-sm" onclick="shareReceipt()">📤 Chia sẻ (Zalo...)</button>
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ In phiếu đang xem</button>
+        <button class="btn btn-brass btn-sm" onclick="openExportAllModal()">⬇️ Xuất tất cả ▾</button>
+      </div>
+    </div>
+    <div id="receiptsWrap"></div>
+  `;
+  const {rooms} = computeMonth(STATE.monthData);
+  const all = rooms.filter(r=> !STATE.skipEmptyPrint || r.active);
+  const sel = document.getElementById('phieuRoomSelect');
+  sel.innerHTML = `<option value="ALL">— Tất cả —</option>` + all.map(r=>`<option value="${r.stt}">Phòng ${r.stt}</option>`).join('');
+  sel.value = STATE.phieuSelected || 'ALL';
+  renderReceiptsList(sel.value);
+}
+function renderReceiptsList(selectedVal){
+  const wrap = document.getElementById('receiptsWrap');
+  if(!wrap) return;
+  const {rooms} = computeMonth(STATE.monthData);
+  const s = STATE.settings;
+  let list = rooms.filter(r=> !STATE.skipEmptyPrint || r.active);
+  if(selectedVal && selectedVal!=='ALL'){
+    list = list.filter(r=>String(r.stt)===String(selectedVal));
+  }
+  wrap.innerHTML = list.map(r=>receiptHtml(r,s)).join('') || '<div class="empty-state">Không có phiếu để hiển thị.</div>';
+}
+function receiptHtml(r, s){
+  const c = r._c;
+  const md = STATE.monthData;
+  const noteDien = `Lưu ý: Thu chuyển khoản: ${s.tenNguoiNhan}\n- STK: ${s.stk} — ${s.nganHang} (Momo: ${s.momo})\n- Đề nghị đóng tiền trước ${fmtDate(md.hanDong)}. Thanks\n- Zalo/SMS: ${s.zalo} xác nhận đã đóng tiền.`;
+  const waterRow = r.waterMeter ? `
+    <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.nuocMoi||0)}</td><td>${fmtNum(r.nuocCu||0)}</td><td>${fmtNum(Math.max(0,(r.nuocMoi||0)-(r.nuocCu||0)))}</td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
+  ` : `
+    <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.songuoi||0)}</td><td>Người</td><td></td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
+  `;
+  return `
+  <div class="receipt" data-stt="${r.stt}">
+    ${r.paid?'<div class="stamp">ĐÃ ĐÓNG<br>TIỀN</div>':''}
+    <div class="receipt-header">
+      <div><div class="rname">NHÀ TRỌ 187</div><div class="rroom">Phòng số <b>${r.stt}</b></div></div>
+      <div class="rdate"><div class="rmonth-big">${md.label}</div>Hạn đóng: ${fmtDate(md.hanDong)}</div>
+    </div>
+    <div class="receipt-total-hero"><span class="hero-label">Tổng tiền phòng <span class="room-num-big">${r.stt}</span></span><span class="amt mono">${fmtVND(c.tong)}</span></div>
+    <table class="receipt-tbl">
+      <thead><tr><th>TT</th><th>Danh mục</th><th>Số mới</th><th>Số cũ</th><th>Đã SD</th><th>Số tiền</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Tiền điện</td><td>${fmtNum(r.sodienmoi||0)}</td><td>${fmtNum(r.sodiencu||0)}</td><td>${fmtNum(c.dienDaDung)}</td><td class="mono">${fmtVND(c.tienDien)}</td></tr>
+        ${waterRow}
+        <tr><td>3</td><td>Tiền phòng${c.prorated?' (theo ngày ở)':''}</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienPhong)}</td></tr>
+        <tr><td>4</td><td>Tiền xe</td><td>${fmtNum(r.soxe||0)}</td><td>Xe</td><td></td><td class="mono">${fmtVND(c.tienXe)}</td></tr>
+        <tr><td>5</td><td>Rác</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienRac)}</td></tr>
+      </tbody>
+      <tfoot><tr><td colspan="5">Tổng cộng</td><td class="mono">${fmtVND(c.tong)}</td></tr></tfoot>
+    </table>
+    <div class="receipt-note">${noteDien}</div>
+  </div>`;
+}
+
+/* ---- export helpers: image / zip / pdf ---- */
+async function exportOneReceiptImage(){
+  const sel = document.getElementById('phieuRoomSelect').value;
+  if(sel==='ALL'){ showToast('Vui lòng chọn 1 phòng cụ thể trước.'); return; }
+  const el = document.querySelector(`#receiptsWrap .receipt[data-stt="${sel}"]`);
+  if(!el){ showToast('Không tìm thấy phiếu.'); return; }
+  showToast('Đang tạo ảnh…');
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+  const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`Phong_${sel}_${STATE.monthData.key}.png`; a.click();
+  URL.revokeObjectURL(url);
+}
+async function shareReceipt(){
+  const sel = document.getElementById('phieuRoomSelect').value;
+  if(sel==='ALL'){ showToast('Vui lòng chọn 1 phòng cụ thể trước.'); return; }
+  const el = document.querySelector(`#receiptsWrap .receipt[data-stt="${sel}"]`);
+  if(!el){ showToast('Không tìm thấy phiếu.'); return; }
+  showToast('Đang chuẩn bị ảnh để chia sẻ…');
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+  const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
+  const fileName = `Phong_${sel}_${STATE.monthData.key}.png`;
+  const file = new File([blob], fileName, {type:'image/png'});
+  const shareData = {
+    files:[file],
+    title:`Phiếu thu phòng ${sel} — ${STATE.monthData.label}`,
+    text:`Phiếu thu tiền phòng ${sel} — ${STATE.monthData.label}`
+  };
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share(shareData);
+      return;
+    }catch(err){
+      if(err && err.name==='AbortError'){ return; } // người dùng tự huỷ chia sẻ
+      // rơi xuống phần tải ảnh dự phòng bên dưới nếu chia sẻ lỗi
+    }
+  }
+  // Trình duyệt không hỗ trợ chia sẻ file (thường gặp trên máy tính): tải ảnh về, tự đính kèm vào Zalo
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=fileName; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Trình duyệt này chưa hỗ trợ chia sẻ trực tiếp — đã tải ảnh về, bạn mở Zalo và đính kèm ảnh gửi khách nhé.');
+}
+function openExportAllModal(){
+  showModal(`
+    <h3>Xuất tất cả phiếu thu</h3>
+    <div class="desc">Chọn cách bạn muốn lấy phiếu của tất cả các phòng đang hiển thị.</div>
+    <div class="modal-actions" style="flex-direction:column; align-items:stretch; gap:10px;">
+      <button class="btn btn-outline btn-block" onclick="closeModal(); doPrintAll();">🖨️ In (hộp thoại in / Lưu PDF trình duyệt)</button>
+      <button class="btn btn-outline btn-block" onclick="closeModal(); doExportAllImages();">🖼️ Tải ảnh từng phòng (.zip)</button>
+      <button class="btn btn-brass btn-block" onclick="closeModal(); doExportAllPDF();">📄 Tải 1 file PDF gộp tất cả</button>
+    </div>
+  `);
+}
+function doPrintAll(){
+  document.getElementById('phieuRoomSelect').value = 'ALL';
+  STATE.phieuSelected = 'ALL';
+  renderReceiptsList('ALL');
+  setTimeout(()=>window.print(), 150);
+}
+async function doExportAllImages(){
+  showToast('Đang tạo ảnh, vui lòng đợi…');
+  const prevSel = STATE.phieuSelected;
+  renderReceiptsList('ALL');
+  const els = document.querySelectorAll('#receiptsWrap .receipt');
+  const zip = new JSZip();
+  for(const el of els){
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+    const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
+    zip.file(`Phong_${el.dataset.stt}.png`, blob);
+  }
+  const content = await zip.generateAsync({type:'blob'});
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a'); a.href=url; a.download = `PhieuThu_${STATE.monthData.key}.zip`; a.click();
+  URL.revokeObjectURL(url);
+  renderReceiptsList(prevSel);
+  showToast('Đã tải file zip.');
+}
+async function doExportAllPDF(){
+  showToast('Đang tạo PDF, vui lòng đợi…');
+  const prevSel = STATE.phieuSelected;
+  renderReceiptsList('ALL');
+  const els = document.querySelectorAll('#receiptsWrap .receipt');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'px', format:'a5'});
+  let first = true;
+  for(const el of els){
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+    const imgData = canvas.toDataURL('image/png');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const ratio = Math.min(pageW/canvas.width, pageH/canvas.height);
+    const w = canvas.width*ratio, h = canvas.height*ratio;
+    if(!first) pdf.addPage();
+    pdf.addImage(imgData, 'PNG', (pageW-w)/2, 10, w, h);
+    first = false;
+  }
+  pdf.save(`PhieuThu_${STATE.monthData.key}.pdf`);
+  renderReceiptsList(prevSel);
+  showToast('Đã tải file PDF.');
+}
+
+/* ============ TAB: BÁO CÁO ============ */
+function renderBaoCao(main){
+  const m = computeMonth(STATE.monthData);
+  main.innerHTML = `
+    <div class="panel">
+      <h2>Báo cáo doanh thu — ${STATE.monthData.label}</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="lbl">Tổng thu phòng</div><div class="val mono">${fmtVND(m.totals.tong)}</div></div>
+        <div class="stat"><div class="lbl">Tổng chi vận hành</div><div class="val mono">${fmtVND(m.tongChi)}</div></div>
+        <div class="stat"><div class="lbl">Tiền nhà (trả chủ)</div><div class="val mono">${fmtVND(m.tienNha)}</div></div>
+        <div class="stat ${m.conDu>=0?'good':'bad'}"><div class="lbl">Còn dư lại</div><div class="val mono">${fmtVND(m.conDu)}</div></div>
+      </div>
+      <div class="section-title">Thu theo hạng mục</div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Hạng mục</th><th>Số tiền</th></tr></thead>
+        <tbody>
+          <tr><td>Tiền phòng</td><td class="mono">${fmtVND(m.totals.gia)}</td></tr>
+          <tr><td>Tiền nước</td><td class="mono">${fmtVND(m.totals.nuoc)}</td></tr>
+          <tr><td>Tiền điện</td><td class="mono">${fmtVND(m.totals.dien)}</td></tr>
+          <tr><td>Tiền xe</td><td class="mono">${fmtVND(m.totals.xe)}</td></tr>
+          <tr><td>Tiền rác</td><td class="mono">${fmtVND(m.totals.rac)}</td></tr>
+          <tr><td>Điều chỉnh khác</td><td class="mono">${fmtVND(m.totals.dieuchinh)}</td></tr>
+        </tbody>
+        <tfoot><tr><td>Tổng cộng</td><td class="mono">${fmtVND(m.totals.tong)}</td></tr></tfoot>
+      </table></div>
+
+      <div class="section-title">Chi phí chung</div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Khoản chi</th><th>Số tiền</th></tr></thead>
+        <tbody>
+          ${chiphiRowsHtml(STATE.monthData.chiphi)}
+        </tbody>
+        <tfoot><tr><td>Tổng chi vận hành</td><td class="mono">${fmtVND(m.tongChi)}</td></tr></tfoot>
+      </table></div>
+
+      <div class="toolbar" style="margin-top:14px;">
+        <button class="btn btn-brass" onclick="exportExcelReport()">⬇️ Tải Excel báo cáo</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>🔶 Phòng gần hết hợp đồng</h2>
+      <div class="desc">Cảnh báo khi hợp đồng còn ≤ ${contractWarnDays()} ngày (chỉnh ngưỡng này trong Cài đặt).</div>
+      <div id="contractWarnList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>🔒 Tiền cọc đang giữ</h2>
+      <div class="desc">Danh sách tiền cọc của các phòng đang có khách (nhập lúc nhận khách mới, mục Nhập liệu). Số tiền này không tính vào doanh thu hàng tháng.</div>
+      <div id="cocList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>So sánh giữa các tháng</h2>
+      <div id="historyChart"></div>
+    </div>
+  `;
+  renderContractWarnList(m);
+  renderCocList(m);
+  renderHistoryChart();
+}
+function renderContractWarnList(m){
+  const el = document.getElementById('contractWarnList');
+  if(!el) return;
+  const list = m.rooms.filter(r=>r.active).map(r=>{
+    const end = contractEndDate(r);
+    if(!end) return null;
+    const d = daysUntil(end);
+    if(d > contractWarnDays()) return null;
+    return {stt:r.stt, end, d, ghichu:r.ghichu};
+  }).filter(Boolean).sort((a,b)=>a.d-b.d);
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Không có phòng nào sắp hết hạn hợp đồng.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Hạn hợp đồng</th><th>Còn lại</th><th>Ghi chú</th></tr></thead>
+    <tbody>
+      ${list.map(x=>`<tr>
+        <td class="text-center sticky-col"><b>${x.stt}</b></td>
+        <td>${fmtDate(x.end)}</td>
+        <td><span class="pill ${x.d<0?'pill-red':'pill-yellow'}">${x.d<0? ('Đã hết '+Math.abs(x.d)+' ngày') : (x.d+' ngày')}</span></td>
+        <td>${x.ghichu||''}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+function renderCocList(m){
+  const el = document.getElementById('cocList');
+  if(!el) return;
+  const list = m.rooms.filter(r=>r.active && Number(r.coc)>0).sort((a,b)=>a.stt-b.stt);
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Chưa có phòng nào ghi nhận tiền cọc.</div>'; return; }
+  const tong = list.reduce((s,r)=>s+Number(r.coc||0),0);
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Ngày vào ở</th><th>Tiền cọc</th></tr></thead>
+    <tbody>
+      ${list.map(r=>`<tr>
+        <td class="text-center sticky-col"><b>${r.stt}</b></td>
+        <td>${r.ngayVaoO? fmtDate(r.ngayVaoO) : '—'}</td>
+        <td class="mono">${fmtVND(r.coc)}</td>
+      </tr>`).join('')}
+    </tbody>
+    <tfoot><tr><td colspan="2">Tổng cọc đang giữ</td><td class="mono">${fmtVND(tong)}</td></tr></tfoot>
+  </table></div>`;
+}
+function chiphiRowsHtml(c){
+  const labels = [
+    ['luongBaoVe','Lương bảo vệ'],['internet','Tiền Internet'],['dienChung','Điện chung'],
+    ['racChung','Rác (nộp)'],['nuocChung','Nước (nộp)'],['ca','CA / an ninh'],
+    ['suaChua','Sửa chữa'],['chuaChay','Chữa cháy'],['chiKhac','Chi khác']
+  ];
+  return labels.map(([k,lbl])=>`<tr><td>${lbl}</td><td class="mono">${fmtVND(c[k]||0)}</td></tr>`).join('');
+}
+async function renderHistoryChart(){
+  const wrap = document.getElementById('historyChart');
+  if(!wrap) return;
+  const items = [];
+  for(const mm of STATE.monthsIndex){
+    const data = mm.key===STATE.currentKey ? STATE.monthData : await stGetJSON('month:'+mm.key);
+    if(!data) continue;
+    const cm = computeMonth(data);
+    items.push({label:mm.label, tong:cm.totals.tong, conDu:cm.conDu});
+  }
+  const maxV = Math.max(1, ...items.map(i=>Math.max(i.tong, Math.abs(i.conDu))));
+  wrap.innerHTML = items.map(i=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+        <span>${i.label}</span><span class="mono">Thu ${fmtVND(i.tong)} · Dư ${fmtVND(i.conDu)}</span>
+      </div>
+      <div style="background:var(--paper-2); border-radius:5px; overflow:hidden; height:9px; margin-bottom:3px;">
+        <div style="width:${Math.max(2,(i.tong/maxV*100))}%; background:var(--brass); height:100%;"></div>
+      </div>
+      <div style="background:var(--paper-2); border-radius:5px; overflow:hidden; height:9px;">
+        <div style="width:${Math.max(2,(Math.abs(i.conDu)/maxV*100))}%; background:${i.conDu>=0?'var(--green-ok)':'var(--brick)'}; height:100%;"></div>
+      </div>
+    </div>
+  `).join('') || '<div class="empty-state">Chưa có dữ liệu.</div>';
+}
+function exportExcelReport(){
+  const m = computeMonth(STATE.monthData);
+  const md = STATE.monthData;
+  const aoa = [];
+  aoa.push(['BÁO CÁO DOANH THU - NHÀ TRỌ 187 NSHL', md.label]);
+  aoa.push([]);
+  aoa.push(['STT','Giá phòng gốc','Số người','Tiền phòng (thực tính)','Tiền nước','Số xe','Tiền xe','Điện cũ','Điện mới','Đã dùng','Tiền điện','Tiền rác','Điều chỉnh','Tổng cộng','Đã đóng','Ngày đóng']);
+  m.rooms.forEach(r=>{
+    aoa.push([r.stt, r.gia||0, r.songuoi||0, r._c.tienPhong, r._c.tienNuoc, r.soxe||0, r._c.tienXe, r.sodiencu||0, r.sodienmoi||0, r._c.dienDaDung, r._c.tienDien, r._c.tienRac, r._c.dieuchinh, r._c.tong, r.paid?'Đã đóng':'Chưa đóng', r.paidDate?fmtDate(r.paidDate):'']);
+  });
+  aoa.push(['TC', '', '', m.totals.gia, m.totals.nuoc, '', m.totals.xe, '', '', '', m.totals.dien, m.totals.rac, m.totals.dieuchinh, m.totals.tong, '', '']);
+  aoa.push([]);
+  aoa.push(['CHI PHÍ CHUNG']);
+  const c = md.chiphi;
+  const labels = [
+    ['luongBaoVe','Lương bảo vệ'],['internet','Tiền Internet'],['dienChung','Điện chung'],
+    ['racChung','Rác (nộp)'],['nuocChung','Nước (nộp)'],['ca','CA / an ninh'],
+    ['suaChua','Sửa chữa'],['chuaChay','Chữa cháy'],['chiKhac','Chi khác']
+  ];
+  labels.forEach(([k,lbl])=> aoa.push([lbl, c[k]||0]));
+  aoa.push(['Tổng chi vận hành', m.tongChi]);
+  aoa.push(['Tiền nhà (trả chủ)', m.tienNha]);
+  aoa.push(['Còn dư lại', m.conDu]);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:6},{wch:12},{wch:9},{wch:14},{wch:12},{wch:7},{wch:10},{wch:9},{wch:9},{wch:9},{wch:12},{wch:10},{wch:10},{wch:13},{wch:10},{wch:11}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, md.label.replace(/[\\/?*[\]:]/g,'_'));
+  XLSX.writeFile(wb, `BaoCao_187NSHL_${md.key}.xlsx`);
+}
+
+/* ============ TAB: NHẬP ĐẦU THÁNG (Excel) ============ */
+function initStagingFromMonth(){
+  STATE.stagingRooms = STATE.monthData.rooms.map(r=>({
+    stt:r.stt, gia:r.gia||0, songuoi:r.songuoi||0, soxe:r.soxe||0,
+    sodiencu:r.sodiencu||0, sodienmoi:r.sodienmoi, waterMeter:r.waterMeter, nuocMoi:r.nuocMoi,
+    dongiaNuoc:r.dongiaNuoc||0
+  }));
+}
+function renderNhapDauThang(main){
+  const md = STATE.monthData;
+  if(!STATE.stagingRooms || STATE.stagingRooms.length!==md.rooms.length){ initStagingFromMonth(); }
+  main.innerHTML = `
+    <div class="panel">
+      <h2>Nhập đầu tháng — <span class="month-highlight">${md.label}</span></h2>
+      <div class="desc">
+        Có thể sửa trực tiếp trong lưới bên dưới, hoặc xuất file Excel mẫu để điền rồi nhập lại — <b>ô nào để trống khi nhập lại sẽ giữ nguyên giá trị hiện tại</b>,
+        ô nào có số sẽ ghi đè. Dữ liệu trong lưới <b>chưa</b> được lưu vào hệ thống cho tới khi bạn bấm nút "Xác nhận, đưa vào hệ thống" ở cuối trang.
+        Phòng 1 mặc định tính nước theo đồng hồ riêng, các phòng khác theo đầu người.
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-outline" onclick="exportInputTemplate()">⬇️ Xuất file mẫu</button>
+        <label class="btn btn-outline" style="margin:0;">📂 Import file mẫu (chỉ xem trước, chưa lưu)
+          <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importInputTemplate(this.files[0]); this.value='';">
+        </label>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="initStagingFromMonth(); renderMain();">↺ Bỏ sửa, tải lại dữ liệu hiện tại</button>
+      </div>
+      <div class="section-title">Lưới dữ liệu (sửa được)</div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th class="text-center sticky-col">Phòng</th><th>Giá phòng</th><th>Số người</th><th>Số xe</th><th>Số điện cũ</th><th>Số điện mới</th><th>Đã SD</th><th>Số nước mới</th></tr></thead>
+          <tbody>
+            ${STATE.stagingRooms.map((r,i)=>`<tr>
+              <td class="text-center sticky-col"><b>${r.stt}</b></td>
+              <td><input type="text" inputmode="numeric" style="width:110px" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="stagingSet(${i},'gia',parseMoneyVal(this))"></td>
+              <td><input type="number" style="width:64px" value="${r.songuoi}" onchange="stagingSet(${i},'songuoi',Number(this.value)||0)"></td>
+              <td><input type="number" style="width:64px" value="${r.soxe}" onchange="stagingSet(${i},'soxe',Number(this.value)||0)"></td>
+              <td class="mono">${fmtNum(r.sodiencu)}</td>
+              <td><input type="number" style="width:90px" value="${r.sodienmoi==null?'':r.sodienmoi}" onchange="stagingSet(${i},'sodienmoi', this.value===''?null:Number(this.value)); updateStagingUsage(${i})"></td>
+              <td class="mono" id="usage-${i}">${fmtNum(Math.max(0,(Number(r.sodienmoi)||0)-(Number(r.sodiencu)||0)))}</td>
+              <td>${r.waterMeter
+                ? `<input type="number" style="width:90px" value="${r.nuocMoi==null?'':r.nuocMoi}" onchange="stagingSet(${i},'nuocMoi', this.value===''?null:Number(this.value))">`
+                : `<span class="mono" style="color:var(--ink-soft);" title="Tính theo đầu người, không sửa ở đây">${fmtNum(r.dongiaNuoc)}đ</span>`}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="sticky-actions no-print">
+        <button class="btn btn-brass" onclick="confirmStagingApply()">✅ Xác nhận, đưa vào hệ thống</button>
+      </div>
+    </div>
+  `;
+}
+function stagingSet(index, field, value){
+  if(!STATE.stagingRooms[index]) return;
+  STATE.stagingRooms[index][field] = value;
+}
+function updateStagingUsage(index){
+  const r = STATE.stagingRooms[index];
+  if(!r) return;
+  const usage = Math.max(0, (Number(r.sodienmoi)||0) - (Number(r.sodiencu)||0));
+  const el = document.getElementById('usage-'+index);
+  if(el) el.textContent = fmtNum(usage);
+}
+function exportInputTemplate(){
+  const md = STATE.monthData;
+  const src = STATE.stagingRooms || md.rooms;
+  const aoa = [['Số phòng','Giá tiền phòng','Số người','Số xe','Số điện mới','Số nước mới (chỉ phòng đồng hồ riêng)']];
+  src.forEach(r=>{
+    aoa.push([r.stt, r.gia||0, r.songuoi||0, r.soxe||0, '', '']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:9},{wch:14},{wch:9},{wch:8},{wch:13},{wch:16}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'MauNhap');
+  XLSX.writeFile(wb, `MauNhapDauThang_${md.key}.xlsx`);
+  showToast('Đã tải file mẫu.');
+}
+function importInputTemplate(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+      let count = 0;
+      for(let i=1;i<rows.length;i++){
+        const row = rows[i];
+        if(!row || !row.length) continue;
+        const stt = Number(row[0]);
+        if(!stt) continue;
+        const idx = STATE.stagingRooms.findIndex(x=>x.stt===stt);
+        if(idx<0) continue;
+        const r = STATE.stagingRooms[idx];
+        if(row[1]!=='' && row[1]!=null) r.gia = Number(row[1])||r.gia;
+        if(row[2]!=='' && row[2]!=null) r.songuoi = Number(row[2])||r.songuoi;
+        if(row[3]!=='' && row[3]!=null) r.soxe = Number(row[3])||r.soxe;
+        if(row[4]!=='' && row[4]!=null) r.sodienmoi = Number(row[4]);
+        if(r.waterMeter && row[5]!=='' && row[5]!=null) r.nuocMoi = Number(row[5]);
+        count++;
+      }
+      renderMain();
+      showToast(`Đã nhập xem trước cho ${count} phòng — kiểm tra rồi bấm "Xác nhận, đưa vào hệ thống".`);
+    }catch(err){ showToast('File không đúng định dạng, vui lòng dùng đúng file mẫu.'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+async function confirmStagingApply(){
+  STATE.stagingRooms.forEach(sr=>{
+    const r = STATE.monthData.rooms.find(x=>x.stt===sr.stt);
+    if(!r) return;
+    r.gia = sr.gia; r.songuoi = sr.songuoi; r.soxe = sr.soxe; r.sodienmoi = sr.sodienmoi;
+    if(r.waterMeter) r.nuocMoi = sr.nuocMoi;
+  });
+  await saveCurrentMonth();
+  await refreshPrevDebts();
+  showToast('Đã đưa dữ liệu vào hệ thống.');
+  renderMain();
+}
+
+/* ============ TAB: LỊCH SỬ ============ */
+async function renderLichSu(main){
+  main.innerHTML = `<div class="panel"><h2>Lịch sử các tháng</h2><div class="desc">Bấm "Mở" để xem/sửa lại một tháng bất kỳ.</div><div id="lsList" class="table-wrap"></div></div>`;
+  const list = document.getElementById('lsList');
+  let rowsHtml = '';
+  for(const mm of [...STATE.monthsIndex].reverse()){
+    const data = mm.key===STATE.currentKey ? STATE.monthData : await stGetJSON('month:'+mm.key);
+    if(!data){ continue; }
+    const cm = computeMonth(data);
+    const activeRooms = cm.rooms.filter(r=>r.active);
+    const daDongDu = activeRooms.filter(r=>calcRoomThieu(r,0)===0 && r.paid).length;
+    rowsHtml += `<tr>
+      <td><b>${mm.label}</b></td>
+      <td class="mono">${fmtVND(cm.totals.tong)}</td>
+      <td class="mono">${fmtVND(cm.tongChi)}</td>
+      <td class="mono">${fmtVND(cm.conDu)}</td>
+      <td>${daDongDu}/${activeRooms.length}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="onChangeMonth('${mm.key}'); setTab('nhap');">Mở</button></td>
+    </tr>`;
+  }
+  list.innerHTML = `<table class="data">
+    <thead><tr><th>Tháng</th><th>Tổng thu</th><th>Tổng chi</th><th>Còn dư</th><th>Đã đóng</th><th></th></tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>`;
+}
+
+/* ============ TAB: CÀI ĐẶT ============ */
+function renderCaiDat(main){
+  const s = STATE.settings;
+  main.innerHTML = `
+    <div class="panel">
+      <h2>Thông tin nhận tiền (in trên phiếu thu)</h2>
+      <div class="form-grid">
+        <div class="f"><label>Tên người nhận</label><input type="text" id="s_ten" value="${escapeAttr(s.tenNguoiNhan)}"></div>
+        <div class="f"><label>Số tài khoản</label><input type="text" id="s_stk" value="${escapeAttr(s.stk)}"></div>
+        <div class="f"><label>Ngân hàng</label><input type="text" id="s_nh" value="${escapeAttr(s.nganHang)}"></div>
+        <div class="f"><label>Momo</label><input type="text" id="s_momo" value="${escapeAttr(s.momo)}"></div>
+        <div class="f"><label>Zalo/SMS xác nhận</label><input type="text" id="s_zalo" value="${escapeAttr(s.zalo)}"></div>
+        <div class="f"><label>Cảnh báo hợp đồng trước (ngày)</label><input type="number" min="1" id="s_warn" value="${s.contractWarnDays||30}"></div>
+        <div class="f"><label>Hạn đóng tiền mặc định (ngày trong tháng)</label><input type="number" min="1" max="28" id="s_handong" value="${s.hanDongNgay||6}"></div>
+      </div>
+      <div class="desc" style="margin-top:6px;">Ví dụ để 6 nghĩa là mỗi tháng mới tạo, hạn đóng tiền sẽ mặc định là ngày 6 — bạn vẫn có thể sửa lại riêng cho từng tháng khi bấm "Bắt đầu tháng mới".</div>
+      <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSettings()">Lưu thông tin</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>Đổi mật khẩu</h2>
+      <div class="form-grid">
+        <div class="f"><label>Mật khẩu hiện tại</label><input type="password" id="pw_old"></div>
+        <div class="f"><label>Mật khẩu mới</label><input type="password" id="pw_new"></div>
+      </div>
+      <div style="margin-top:12px;"><button class="btn btn-outline" onclick="changePassword()">Đổi mật khẩu</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>Khôi phục mật khẩu khi quên</h2>
+      <div class="desc">App này không có máy chủ riêng nên không thể gửi mã qua email/SMS thật. Thay vào đó, thiết lập 2 câu hỏi bảo mật (cần trả lời đúng cả 2) để tự đặt lại mật khẩu khi cần.</div>
+      <div class="form-grid">
+        <div class="f span2"><label>Câu hỏi bảo mật 1</label><input type="text" id="s_rcq1" value="${escapeAttr(s.recoveryQuestion1||'')}" placeholder="VD: Số điện thoại đầu tiên của bạn?"></div>
+        <div class="f span2"><label>Câu trả lời 1</label><input type="text" id="s_rca1" value="${escapeAttr(s.recoveryAnswer1||'')}"></div>
+        <div class="f span2"><label>Câu hỏi bảo mật 2</label><input type="text" id="s_rcq2" value="${escapeAttr(s.recoveryQuestion2||'')}" placeholder="VD: Tên của ông/bà nội bạn?"></div>
+        <div class="f span2"><label>Câu trả lời 2</label><input type="text" id="s_rca2" value="${escapeAttr(s.recoveryAnswer2||'')}"></div>
+      </div>
+      <div style="margin-top:12px;"><button class="btn btn-outline" onclick="saveRecoverySettings()">Lưu câu hỏi bảo mật</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>☁️ Đồng bộ Google Sheet (giữa nhiều thiết bị)</h2>
+      <div class="desc">Dán link Google Apps Script (Web App) sau khi bạn tạo theo hướng dẫn. Sau khi lưu link, mỗi khi bạn nhập/sửa gì đó, app sẽ <b>tự động đồng bộ</b> lên Sheet sau vài giây ngừng gõ (xem huy hiệu ☁️ ở góc trên) — không cần bấm tay. Nút bên dưới dùng khi muốn đẩy/kéo thủ công ngay lập tức.</div>
+      <div class="form-grid">
+        <div class="f span2"><label>Link Web App (Google Apps Script)</label><input type="text" id="s_sheeturl" value="${escapeAttr(s.sheetWebhookUrl||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      </div>
+      <div class="toolbar" style="margin-top:10px;">
+        <button class="btn btn-outline" onclick="saveSheetUrl()">Lưu link</button>
+        <button class="btn btn-brass" onclick="pushFullStateToSheet()">⬆️ Đẩy toàn bộ dữ liệu lên Sheet</button>
+        <button class="btn btn-outline" onclick="pullFullStateFromSheet()">⬇️ Kéo dữ liệu mới nhất về</button>
+      </div>
+      <div class="desc" style="margin-top:6px;">
+        <b>Đẩy lên</b>: gửi toàn bộ dữ liệu trên máy này lên Sheet (dùng sau khi vừa nhập/sửa xong).<br>
+        <b>Kéo về</b>: ghi đè dữ liệu máy này bằng bản mới nhất trên Sheet (dùng khi vừa đẩy từ thiết bị khác lên, muốn đồng bộ về máy này).
+      </div>
+      <div id="sheetSyncStatus" style="font-size:12px;color:var(--ink-soft);margin-top:8px;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Sao lưu / Phục hồi dữ liệu (file JSON trên máy)</h2>
+      <div class="desc">Tải toàn bộ dữ liệu về máy để phòng khi cần khôi phục lại — độc lập với Google Sheet.</div>
+      <div class="toolbar">
+        <button class="btn btn-outline" onclick="exportBackup()">⬇️ Tải file sao lưu</button>
+        <label class="btn btn-outline" style="margin:0;">📂 Phục hồi từ file
+          <input type="file" accept="application/json" style="display:none" onchange="importBackup(this.files[0])">
+        </label>
+      </div>
+    </div>
+  `;
+}
+async function saveSheetUrl(){
+  STATE.settings.sheetWebhookUrl = (document.getElementById('s_sheeturl').value||'').trim();
+  await stSetJSON('settings', STATE.settings);
+  await touchLastModified();
+  setCloudIndicator('', STATE.settings.sheetWebhookUrl ? 'Đã cấu hình' : 'Chưa đồng bộ');
+  showToast('Đã lưu link Google Sheet.');
+}
+async function buildFullStatePayload(){
+  const months = {};
+  for(const mm of STATE.monthsIndex){
+    months[mm.key] = mm.key===STATE.currentKey ? STATE.monthData : await stGetJSON('month:'+mm.key);
+  }
+  const authPassword = (await stGet('auth-password')) || DEFAULT_PASSWORD;
+  const lastModified = Number(await stGet('last-modified')) || Date.now();
+  return {
+    action:'saveState',
+    authPassword,
+    settings: STATE.settings,
+    monthsIndex: STATE.monthsIndex,
+    activeMonth: STATE.currentKey,
+    months,
+    lastModified
+  };
+}
+async function pushFullStateToSheet(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  const statusEl = document.getElementById('sheetSyncStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  if(!url){ showToast('Chưa có link Google Sheet, hãy dán link rồi bấm "Lưu link" trước.'); return; }
+  showToast('Đang đẩy toàn bộ dữ liệu lên Google Sheet…');
+  setStatus('Đang gửi dữ liệu…');
+  try{
+    await saveCurrentMonth();
+    const payload = await buildFullStatePayload();
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok'){
+      showToast('Đã đẩy toàn bộ dữ liệu lên Google Sheet thành công!');
+      setStatus('✅ Đẩy dữ liệu thành công lúc '+fmtDate(todayISO()));
+    } else {
+      showToast('Gửi được nhưng phản hồi không như mong đợi — kiểm tra lại script.');
+      setStatus('⚠️ Phản hồi bất thường: '+text.slice(0,200));
+    }
+  }catch(err){
+    showToast('Không gửi được — xem chi tiết bên dưới.');
+    setStatus('❌ '+describeSyncError(err));
+  }
+}
+function pullFullStateFromSheet(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa có link Google Sheet, hãy dán link rồi bấm "Lưu link" trước.'); return; }
+  showModal(`
+    <h3>Kéo dữ liệu mới nhất về máy này</h3>
+    <div class="desc">Thao tác này sẽ <b>GHI ĐÈ</b> toàn bộ dữ liệu đang có trên máy này bằng dữ liệu mới nhất từ Google Sheet. Chỉ dùng khi chắc chắn Sheet đang có bản mới hơn (ví dụ vừa đẩy từ thiết bị khác lên).</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-danger" onclick="closeModal(); doPullFullState();">Ghi đè, kéo về</button>
+    </div>
+  `);
+}
+let _pendingRemoteState = null;
+async function checkRemoteForNewerData(){
+  const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
+  if(!url) return;
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(!(json && json.status==='ok' && json.data)) return;
+    const remote = JSON.parse(json.data);
+    const remoteTime = Number(remote.lastModified)||0;
+    const localTime = Number(await stGet('last-modified'))||0;
+    if(remoteTime > localTime + 5000){ // chừa vài giây tránh lệch đồng hồ vặt
+      _pendingRemoteState = remote;
+      showNewerDataModal(remoteTime);
+    }
+  }catch(err){
+    // âm thầm bỏ qua — không làm phiền lúc đăng nhập nếu không kết nối được
+  }
+}
+function showNewerDataModal(remoteTime){
+  const timeStr = new Date(remoteTime).toLocaleString('vi-VN');
+  showModal(`
+    <h3>☁️ Có dữ liệu mới hơn</h3>
+    <div class="desc">Google Sheet đang có dữ liệu được cập nhật lúc <b>${timeStr}</b> — mới hơn dữ liệu trên máy này (có thể do bạn vừa sửa ở thiết bị khác). Tải bản mới về? (Dữ liệu trên máy này sẽ bị thay thế)</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="_pendingRemoteState=null; closeModal();">Bỏ qua, dùng bản trên máy này</button>
+      <button class="btn btn-primary" onclick="applyPendingRemoteState()">Tải bản mới về</button>
+    </div>
+  `);
+}
+async function applyPendingRemoteState(){
+  const state = _pendingRemoteState;
+  if(!state){ closeModal(); return; }
+  await absorbRemoteState(state);
+  _pendingRemoteState = null;
+  closeModal();
+  showToast('Đã tải dữ liệu mới nhất — đang tải lại…');
+  setTimeout(()=>loadAll(), 500);
+}
+async function absorbRemoteState(state){
+  await stSet('auth-password', state.authPassword||DEFAULT_PASSWORD);
+  const settings = Object.assign({}, DEFAULT_SETTINGS, state.settings||{});
+  if(!settings.sheetWebhookUrl){ settings.sheetWebhookUrl = (STATE.settings&&STATE.settings.sheetWebhookUrl)||''; }
+  await stSetJSON('settings', settings);
+  await stSetJSON('months-index', state.monthsIndex||[]);
+  const months = state.months||{};
+  for(const k in months){ await stSetJSON('month:'+k, months[k]); }
+  if(state.activeMonth){ await stSet('active-month', state.activeMonth); }
+  await stSet('last-modified', String(state.lastModified||Date.now()));
+}
+async function doPullFullState(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  const statusEl = document.getElementById('sheetSyncStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  showToast('Đang tải dữ liệu từ Google Sheet…');
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok' && json.data){
+      const state = JSON.parse(json.data);
+      await absorbRemoteState(state);
+      showToast('Đã kéo dữ liệu mới nhất về — đang tải lại…');
+      setStatus('✅ Đã kéo về lúc '+fmtDate(todayISO()));
+      setTimeout(()=>loadAll(), 800);
+    } else {
+      showToast('Không có dữ liệu trên Sheet, hoặc phản hồi lỗi.');
+      setStatus('⚠️ Không lấy được dữ liệu: '+text.slice(0,200));
+    }
+  }catch(err){
+    showToast('Không tải được — xem chi tiết bên dưới.');
+    setStatus('❌ '+describeSyncError(err));
+  }
+}
+async function saveSettings(){
+  STATE.settings.tenNguoiNhan = document.getElementById('s_ten').value;
+  STATE.settings.stk = document.getElementById('s_stk').value;
+  STATE.settings.nganHang = document.getElementById('s_nh').value;
+  STATE.settings.momo = document.getElementById('s_momo').value;
+  STATE.settings.zalo = document.getElementById('s_zalo').value;
+  STATE.settings.contractWarnDays = Number(document.getElementById('s_warn').value)||30;
+  STATE.settings.hanDongNgay = Math.min(28, Math.max(1, Number(document.getElementById('s_handong').value)||6));
+  await stSetJSON('settings', STATE.settings);
+  await touchLastModified();
+  showToast('Đã lưu thông tin.');
+}
+async function saveRecoverySettings(){
+  STATE.settings.recoveryQuestion1 = document.getElementById('s_rcq1').value;
+  STATE.settings.recoveryAnswer1 = document.getElementById('s_rca1').value;
+  STATE.settings.recoveryQuestion2 = document.getElementById('s_rcq2').value;
+  STATE.settings.recoveryAnswer2 = document.getElementById('s_rca2').value;
+  await stSetJSON('settings', STATE.settings);
+  await touchLastModified();
+  showToast('Đã lưu câu hỏi bảo mật.');
+}
+function openFirstDeviceSyncModal(){
+  showModal(`
+    <h3>Đồng bộ dữ liệu từ Google Sheet</h3>
+    <div class="desc">Dùng khi bạn mở app lần đầu trên thiết bị mới (điện thoại/máy tính khác), để lấy đúng mật khẩu và toàn bộ dữ liệu đã lưu từ Google Sheet về máy này. <b>Lưu ý: sẽ ghi đè dữ liệu đang có trên máy này (nếu có).</b></div>
+    <div class="field"><label>Link Web App (Google Apps Script)</label><input type="text" id="fd_url" placeholder="https://script.google.com/macros/s/.../exec"></div>
+    <div class="err-msg" id="fd_err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="doFirstDeviceSync()">Tải dữ liệu về máy này</button>
+    </div>
+  `);
+}
+async function doFirstDeviceSync(){
+  const url = (document.getElementById('fd_url').value||'').trim();
+  const errEl = document.getElementById('fd_err');
+  if(!url){ errEl.textContent = 'Vui lòng dán link Web App.'; return; }
+  errEl.textContent = 'Đang tải dữ liệu…';
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok' && json.data){
+      const state = JSON.parse(json.data);
+      await stSet('auth-password', state.authPassword || DEFAULT_PASSWORD);
+      const settings = Object.assign({}, DEFAULT_SETTINGS, state.settings||{});
+      settings.sheetWebhookUrl = url;
+      await stSetJSON('settings', settings);
+      await stSetJSON('months-index', state.monthsIndex||[]);
+      const months = state.months||{};
+      for(const k in months){ await stSetJSON('month:'+k, months[k]); }
+      if(state.activeMonth){ await stSet('active-month', state.activeMonth); }
+      await stSet('last-modified', String(state.lastModified||Date.now()));
+      closeModal();
+      showToast('Đã đồng bộ xong — nhập mật khẩu để đăng nhập.');
+    } else {
+      errEl.textContent = 'Không tìm thấy dữ liệu — kiểm tra lại link, hoặc Sheet chưa có dữ liệu nào được lưu.';
+    }
+  }catch(err){
+    errEl.textContent = describeSyncError(err);
+  }
+}
+async function openForgotPasswordModal(){
+  const settings = (await stGetJSON('settings')) || {};
+  const q1 = settings.recoveryQuestion1, q2 = settings.recoveryQuestion2;
+  const ready = q1 && q2 && settings.recoveryAnswer1 && settings.recoveryAnswer2;
+  if(!ready){
+    showModal(`
+      <h3>Quên mật khẩu</h3>
+      <div class="desc">Bạn chưa thiết lập đủ 2 câu hỏi bảo mật để tự khôi phục. App này không có máy chủ riêng nên không thể gửi mã qua email/SMS thật.</div>
+      <div class="desc">Mật khẩu mặc định ban đầu là <b>187nshl</b> — hãy thử mật khẩu này nếu bạn chưa từng đổi. Nếu đã đổi và quên, hãy đăng nhập lại khi nhớ ra, rồi vào mục Cài đặt để thiết lập đủ 2 câu hỏi bảo mật cho lần sau.</div>
+      <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
+    `);
+    return;
+  }
+  showModal(`
+    <h3>Khôi phục mật khẩu</h3>
+    <div class="desc">Trả lời đúng cả 2 câu hỏi bảo mật để đặt lại mật khẩu.</div>
+    <div class="field"><label>${q1}</label><input type="text" id="rc_answer1"></div>
+    <div class="field"><label>${q2}</label><input type="text" id="rc_answer2"></div>
+    <div class="field"><label>Mật khẩu mới</label><input type="password" id="rc_newpw"></div>
+    <div class="err-msg" id="rc_err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmRecovery()">Đặt lại mật khẩu</button>
+    </div>
+  `);
+}
+async function confirmRecovery(){
+  const settings = (await stGetJSON('settings')) || {};
+  const ans1 = (document.getElementById('rc_answer1').value||'').trim().toLowerCase();
+  const ans2 = (document.getElementById('rc_answer2').value||'').trim().toLowerCase();
+  const newPw = document.getElementById('rc_newpw').value;
+  const errEl = document.getElementById('rc_err');
+  if(ans1 !== (settings.recoveryAnswer1||'').trim().toLowerCase() || ans2 !== (settings.recoveryAnswer2||'').trim().toLowerCase()){
+    errEl.textContent = 'Câu trả lời chưa đúng, vui lòng kiểm tra lại cả 2 câu.';
+    return;
+  }
+  if(!newPw){ errEl.textContent = 'Vui lòng nhập mật khẩu mới.'; return; }
+  await stSet('auth-password', newPw);
+  closeModal();
+  showToast('Đã đặt lại mật khẩu, hãy đăng nhập lại.');
+}
+async function changePassword(){
+  const oldPw = document.getElementById('pw_old').value;
+  const newPw = document.getElementById('pw_new').value;
+  const savedPw = (await stGet('auth-password')) || DEFAULT_PASSWORD;
+  if(oldPw !== savedPw){ showToast('Mật khẩu hiện tại không đúng.'); return; }
+  if(!newPw){ showToast('Vui lòng nhập mật khẩu mới.'); return; }
+  await stSet('auth-password', newPw);
+  await touchLastModified();
+  showToast('Đã đổi mật khẩu.');
+  document.getElementById('pw_old').value=''; document.getElementById('pw_new').value='';
+}
+async function exportBackup(){
+  const backup = {settings: STATE.settings, monthsIndex: STATE.monthsIndex, months:{}};
+  for(const mm of STATE.monthsIndex){
+    backup.months[mm.key] = mm.key===STATE.currentKey ? STATE.monthData : await stGetJSON('month:'+mm.key);
+  }
+  const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'saoluu_187nshl_'+(new Date().toISOString().slice(0,10))+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Đã tải file sao lưu.');
+}
+function importBackup(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.settings) { STATE.settings = data.settings; await stSetJSON('settings', data.settings); }
+      if(data.monthsIndex) { STATE.monthsIndex = data.monthsIndex; await stSetJSON('months-index', data.monthsIndex); }
+      if(data.months){
+        for(const k in data.months){ await stSetJSON('month:'+k, data.months[k]); }
+      }
+      await touchLastModified();
+      showToast('Phục hồi thành công. Đang tải lại…');
+      setTimeout(()=>loadAll(), 800);
+    }catch(e){ showToast('File sao lưu không hợp lệ.'); }
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
