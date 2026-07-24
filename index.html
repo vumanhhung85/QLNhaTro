@@ -224,6 +224,11 @@ table.receipt-tbl th{text-align:left; border-bottom:1px solid var(--ink); paddin
 table.receipt-tbl td{padding:4px 3px; border-bottom:1px dotted var(--line); vertical-align:top;}
 table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); border-bottom:none; font-size:13.5px; color:var(--navy);}
 .receipt-note{font-size:10.5px; color:var(--ink-soft); margin-top:8px; white-space:pre-wrap; line-height:1.5;}
+.qr-block{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; gap:12px; align-items:center;}
+.qr-block img{width:110px; height:110px; border-radius:6px; border:1px solid var(--line); flex-shrink:0; background:#fff;}
+.qr-block .qr-text{font-size:10.5px; color:var(--ink-soft); line-height:1.5;}
+.qr-block .qr-text b{color:var(--navy);}
+.qr-caption{font-size:9.5px; color:var(--brass-dark); font-weight:700; margin-top:3px;}
 .stamp{
   position:absolute; top:14px; right:16px; width:74px; height:74px; border:3px solid var(--brick); border-radius:50%;
   color:var(--brick); display:flex; align-items:center; justify-content:center; text-align:center; font-weight:800;
@@ -306,7 +311,7 @@ table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); bo
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.1</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.3</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -318,7 +323,7 @@ table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); bo
 /* ============ SEED / DEFAULT DATA ============ */
 const SEED_ROOMS = [{"stt": 1, "gia": 8500000, "songuoi": 3, "dongiaNuoc": 26000, "waterMeter": true, "nuocMoi": 1523, "nuocCu": 1493, "soxe": 0, "dongiaXe": 100000, "sodienmoi": 45166, "sodiencu": 44507, "dongiaDien": 3300, "racmode": "fixed", "dongiaRac": 0, "coc": 0, "ghichu": "hẹn đầu tháng 4 | tiền điện 3k/kw, nước 26k", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 2, "gia": 0, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck8", "paid": false, "paidDate": "", "paidNote": "", "active": false, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 3, "gia": 2300000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 0, "sodiencu": 0, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dời lên phòng 24", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 4, "gia": 2200000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2551, "sodiencu": 2428, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "gửi cô hòa, đã ck lại | bà ở nhà, sợ tống rác xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 5, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 7457, "sodiencu": 7375, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 6, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 4611, "sodiencu": 4597, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3 | Nước 100k/người", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 7, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1842, "sodiencu": 1787, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 8, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1773, "sodiencu": 1701, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, dời từ P46 xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 9, "gia": 2200000, "songuoi": 0, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1396, "sodiencu": 1362, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Mới vô đã đóng đủ và cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 10, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2708, "sodiencu": 2626, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "khách đã cọc 2 triệu đống tiền phòng.  | đã nhận 3.260k (đã cọc 1tr) (vào 23/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 11, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 765, "sodiencu": 765, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đủ tiền T3 và cọc đủ 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 12, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1229, "sodiencu": 1203, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, hết tháng 0 xe", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 13, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 912, "sodiencu": 894, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3, p36 đã xuống", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 14, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3258, "sodiencu": 3190, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 15, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 8084, "sodiencu": 8017, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | ko có nắp, nhưng ko cần thay", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 16, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1833, "sodiencu": 1733, "dongiaDien": 3800, "racmode": "fixed", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 17, "gia": 2400000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4261, "sodiencu": 4154, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo6 | có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 18, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2585, "sodiencu": 2485, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, phản ánh sáng đèn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 19, "gia": 2100000, "songuoi": 0, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 192, "sodiencu": 171, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "hết T4 trả", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 20, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3127, "sodiencu": 3114, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5, xin đấu nước máy, đã cọc 2 triệu | có lưới lọc", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 21, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 715, "sodiencu": 667, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Khách đã vô, đóng đủ tiền T4 và cọc 2tr, kiểm tra lại", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 22, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 799, "sodiencu": 770, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20. muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 23, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 50000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6329, "sodiencu": 6302, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4, Phòng 21 dời qua, ở ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 24, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5682, "sodiencu": 5505, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck10", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 25, "gia": 2400000, "songuoi": 2, "dongiaNuoc": 100000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 1944, "sodiencu": 1908, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck7", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 26, "gia": 2500000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 3103, "sodiencu": 3076, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mời vô, đã cọc 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 27, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 1849, "sodiencu": 1695, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck 4, gửi phiếu muộn", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 28, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 2482, "sodiencu": 2324, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck20", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 29, "gia": 2200000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4173, "sodiencu": 4072, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4 | 2.1", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 30, "gia": 1900000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4568, "sodiencu": 4530, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 31, "gia": 2300000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5190, "sodiencu": 5085, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo5,p39 qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 32, "gia": 2700000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 4853, "sodiencu": 4804, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,đã thuê giá 2.7tr kèm máy lạnh, it xài, cọc 2.5tr)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 33, "gia": 2300000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4987, "sodiencu": 4941, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck5", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 34, "gia": 2300000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 6203, "sodiencu": 6108, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck14 | ko có nắp", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 35, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 5774, "sodiencu": 5763, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck4", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 36, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4840, "sodiencu": 4546, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "giá 2.5 triệu, đã gắn ML. C2 tháng sau thêm 1tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 37, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 644, "sodiencu": 634, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck17", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 38, "gia": 2200000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 8643, "sodiencu": 8478, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck23", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 39, "gia": 2100000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 5948, "sodiencu": 5808, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã cọc 2 triệu, hẹn tuần 20/4 dọn dần vô", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 40, "gia": 1800000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 384, "sodiencu": 372, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "mo9, dự kiến tăng giá lên 2 triệu", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 41, "gia": 2500000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4128, "sodiencu": 4128, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "dđã đóng 2 triệu, còn thiếu ít", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 42, "gia": 2500000, "songuoi": 2, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 2354, "sodiencu": 2263, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "T01,thuê giá 2.5 triệu, đã cọc 2tr", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 43, "gia": 2600000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 3, "dongiaXe": 150000, "sodienmoi": 789, "sodiencu": 483, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đã thay ĐH, ML, giá 2.5 tr, 12KW T11", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 44, "gia": 2000000, "songuoi": 3, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 2, "dongiaXe": 150000, "sodienmoi": 3333, "sodiencu": 3097, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "Thiếu 100k | ko zalo", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 45, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 0, "dongiaXe": 150000, "sodienmoi": 1958, "sodiencu": 1898, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck6, đã cọc 2 triệu, ck3 | đã có khách cọc 1 triệu, P48 cũ", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 46, "gia": 2100000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4459, "sodiencu": 4438, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "đóng tiền 22, xin cọc 50%, chưa gửi pheie xin ở tới ngày 5/5 | Đã nhận 4.430k (vô 22/2)", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 47, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 4551, "sodiencu": 4513, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3,Phòng 45 chuyển qua", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}, {"stt": 48, "gia": 2000000, "songuoi": 1, "dongiaNuoc": 70000, "waterMeter": false, "nuocMoi": null, "nuocCu": null, "soxe": 1, "dongiaXe": 150000, "sodienmoi": 883, "sodiencu": 866, "dongiaDien": 3800, "racmode": "nguoi", "dongiaRac": 10000, "coc": 0, "ghichu": "ck3", "paid": false, "paidDate": "", "paidNote": "", "active": true, "dieuchinh": 0, "soThangHopDong": 6, "ngayVaoO": "", "mayLanh": false, "mayLanhGhiChu": "", "soTienDaDong": null, "khachMoi": false, "soDienThoai": ""}];
 const DEFAULT_CHIPHI = {"luongBaoVe": 12000000, "internet": 500000, "dienChung": 12000000, "racChung": 850000, "nuocChung": 3000000, "ca": 2000000, "suaChua": 2000000, "chuaChay": 1000000, "chiKhac": 0, "tienNha": 55000000};
-const DEFAULT_SETTINGS = {"tenNguoiNhan": "Vũ Mạnh Hưng", "stk": "101004138575", "nganHang": "NH Công Thương Vietinbank", "momo": "0983642606", "zalo": "0904.883.252", "contractWarnDays": 30, "hanDongNgay": 6, "recoveryQuestion1": "Số điện thoại đầu tiên của bạn?", "recoveryAnswer1": "", "recoveryQuestion2": "Tên của ông/bà nội bạn?", "recoveryAnswer2": "", "sheetWebhookUrl": "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec"};
+const DEFAULT_SETTINGS = {"tenNguoiNhan": "Vũ Mạnh Hưng", "stk": "101004138575", "nganHang": "NH Công Thương Vietinbank", "momo": "0983642606", "zalo": "0904.883.252", "contractWarnDays": 30, "hanDongNgay": 6, "recoveryQuestion1": "Số điện thoại đầu tiên của bạn?", "recoveryAnswer1": "", "recoveryQuestion2": "Tên của ông/bà nội bạn?", "recoveryAnswer2": "", "sheetWebhookUrl": "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec", "vietQRBankBin": "970415"};
 const SEED_MONTH_KEY = "2026-07";
 const SEED_MONTH_LABEL = "Tháng 7/2026";
 const DEFAULT_PASSWORD = "187nshl";
@@ -699,6 +704,70 @@ function fmtVND(n){
   return n.toLocaleString('vi-VN') + ' đ';
 }
 function fmtNum(n){ return (Number(n)||0).toLocaleString('vi-VN'); }
+
+/* ============ VIETQR HELPERS ============ */
+const VIETQR_BANKS = [
+  ["970436","Vietcombank"], ["970415","VietinBank"], ["970418","BIDV"], ["970405","Agribank"],
+  ["970407","Techcombank"], ["970422","MB Bank"], ["970416","ACB"], ["970432","VPBank"],
+  ["970423","TPBank"], ["970403","Sacombank"], ["970443","SHB"], ["970437","HDBank"],
+  ["970441","VIB"], ["970426","MSB"], ["970448","OCB"], ["970440","SeABank"],
+  ["970431","Eximbank"], ["970429","SCB"], ["970449","LienVietPostBank"], ["970425","ABBANK"]
+];
+function vietQRBankOptionsHtml(selectedBin){
+  const known = VIETQR_BANKS.some(b=>b[0]===selectedBin);
+  let html = '<option value="">— Chọn ngân hàng —</option>';
+  html += VIETQR_BANKS.map(([bin,name])=>`<option value="${bin}" ${selectedBin===bin?'selected':''}>${name}</option>`).join('');
+  html += `<option value="custom" ${(!known && selectedBin)?'selected':''}>Khác (tự nhập mã bên dưới)</option>`;
+  return html;
+}
+function updateQRPreview(){
+  const box = document.getElementById('qrPreviewBox');
+  if(!box) return;
+  const sel = document.getElementById('s_vietqrbank');
+  const customEl = document.getElementById('s_vietqrbank_custom');
+  const bankBin = sel.value==='custom' ? (customEl?customEl.value.trim():'') : sel.value;
+  const stk = (document.getElementById('s_stk').value||'').trim();
+  const ten = (document.getElementById('s_ten').value||'').trim();
+  if(!bankBin || !stk){
+    box.innerHTML = '<div class="desc" style="margin:0;">Chọn ngân hàng và nhập số tài khoản ở trên để xem thử mã QR.</div>';
+    return;
+  }
+  const url = vietQRImageUrl(bankBin, stk, 1000000, 'Vi du', ten);
+  box.innerHTML = `<img src="${url}" alt="Xem trước QR" style="width:130px;height:130px;border-radius:8px;border:1px solid var(--line);">
+    <div class="desc" style="margin:0;">Ví dụ QR với số tiền giả định 1.000.000đ — trên phiếu thật sẽ tự thay đúng số tiền của từng phòng, từng tháng.</div>`;
+}
+function stripDiacritics(str){
+  return String(str||'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d').replace(/Đ/g,'D')
+    .replace(/[^a-zA-Z0-9 .-]/g,'').trim();
+}
+function vietQRImageUrl(bankBin, accountNo, amount, addInfo, accountName, template){
+  if(!bankBin || !accountNo) return null;
+  const t = template || 'qr_only';
+  const params = new URLSearchParams();
+  if(amount>0) params.set('amount', Math.round(amount));
+  if(addInfo) params.set('addInfo', stripDiacritics(addInfo).slice(0,50));
+  if(accountName) params.set('accountName', stripDiacritics(accountName));
+  return `https://img.vietqr.io/image/${encodeURIComponent(bankBin)}-${encodeURIComponent(accountNo)}-${t}.png?${params.toString()}`;
+}
+function buildQRBlockHtml(r, s, md){
+  const bankBin = (s.vietQRBankBin||'').trim();
+  if(!bankBin || !s.stk) return '';
+  const amount = roomTotalWithDebt(r);
+  const addInfo = `P${r.stt} T${md.key.split('-')[1]}-${md.key.split('-')[0]}`;
+  const url = vietQRImageUrl(bankBin, s.stk, amount, addInfo, s.tenNguoiNhan);
+  if(!url) return '';
+  return `
+  <div class="qr-block">
+    <img src="${url}" alt="QR chuyển khoản phòng ${r.stt}">
+    <div class="qr-text">
+      <b>Quét mã để chuyển khoản</b><br>
+      Đã điền sẵn số tiền &amp; nội dung — mở app ngân hàng, quét, kiểm tra rồi xác nhận.
+      <div class="qr-caption">Không cần nhập tay số tài khoản/số tiền</div>
+    </div>
+  </div>`;
+}
 function fmtDate(iso){
   if(!iso) return '—';
   const parts = String(iso).split('-');
@@ -1364,7 +1433,7 @@ function renderPhieu(main){
   sel.value = STATE.phieuSelected || 'ALL';
   renderReceiptsList(sel.value);
 }
-function renderReceiptsList(selectedVal){
+function renderReceiptsList(selectedVal, forceShowQR){
   const wrap = document.getElementById('receiptsWrap');
   if(!wrap) return;
   const {rooms} = computeMonth(STATE.monthData);
@@ -1373,9 +1442,12 @@ function renderReceiptsList(selectedVal){
   if(selectedVal && selectedVal!=='ALL'){
     list = list.filter(r=>String(r.stt)===String(selectedVal));
   }
-  wrap.innerHTML = list.map(r=>receiptHtml(r,s)).join('') || '<div class="empty-state">Không có phiếu để hiển thị.</div>';
+  const showQR = forceShowQR!==undefined ? forceShowQR : (selectedVal !== 'ALL');
+  wrap.innerHTML = list.map(r=>receiptHtml(r,s,{showQR})).join('') || '<div class="empty-state">Không có phiếu để hiển thị.</div>';
 }
-function receiptHtml(r, s){
+function receiptHtml(r, s, options){
+  options = options || {};
+  const showQR = options.showQR !== false;
   const c = r._c;
   const md = STATE.monthData;
   const noteDien = `Lưu ý: Thu chuyển khoản: ${s.tenNguoiNhan}\n- STK: ${s.stk} — ${s.nganHang} (Momo: ${s.momo})\n- Đề nghị đóng tiền trước ${fmtDate(md.hanDong)}. Thanks\n- Zalo/SMS: ${s.zalo} xác nhận đã đóng tiền.`;
@@ -1384,6 +1456,7 @@ function receiptHtml(r, s){
   ` : `
     <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.songuoi||0)}</td><td>Người</td><td></td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
   `;
+  const qrHtml = (showQR && r.active && !r.paid) ? buildQRBlockHtml(r, s, md) : '';
   return `
   <div class="receipt" data-stt="${r.stt}">
     ${r.paid?'<div class="stamp">ĐÃ ĐÓNG<br>TIỀN</div>':''}
@@ -1403,6 +1476,7 @@ function receiptHtml(r, s){
       </tbody>
       <tfoot><tr><td colspan="5">Tổng cộng</td><td class="mono">${fmtVND(c.tong)}</td></tr></tfoot>
     </table>
+    ${qrHtml}
     <div class="receipt-note">${noteDien}</div>
   </div>`;
 }
@@ -1414,11 +1488,34 @@ async function exportOneReceiptImage(){
   const el = document.querySelector(`#receiptsWrap .receipt[data-stt="${sel}"]`);
   if(!el){ showToast('Không tìm thấy phiếu.'); return; }
   showToast('Đang tạo ảnh…');
-  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+  await inlineImagesForCapture(el);
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download=`Phong_${sel}_${STATE.monthData.key}.png`; a.click();
   URL.revokeObjectURL(url);
+}
+/* Chuyển ảnh QR (tải từ img.vietqr.io, khác domain) thành data URL nhúng sẵn,
+   để html2canvas chụp được đầy đủ thay vì bị trống do giới hạn CORS ảnh chéo domain. */
+async function inlineImagesForCapture(container){
+  const imgs = container.querySelectorAll('.qr-block img');
+  for(const img of imgs){
+    if(img.dataset.inlined==='1') continue;
+    try{
+      const res = await fetch(img.src, {mode:'cors'});
+      const blob = await res.blob();
+      const dataUrl = await new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      img.src = dataUrl;
+      img.dataset.inlined = '1';
+    }catch(err){
+      // giữ nguyên URL cũ nếu lỗi — html2canvas với useCORS:true sẽ thử tải trực tiếp
+    }
+  }
 }
 async function shareReceipt(){
   const sel = document.getElementById('phieuRoomSelect').value;
@@ -1426,7 +1523,8 @@ async function shareReceipt(){
   const el = document.querySelector(`#receiptsWrap .receipt[data-stt="${sel}"]`);
   if(!el){ showToast('Không tìm thấy phiếu.'); return; }
   showToast('Đang chuẩn bị ảnh để chia sẻ…');
-  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+  await inlineImagesForCapture(el);
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
   const fileName = `Phong_${sel}_${STATE.monthData.key}.png`;
   const file = new File([blob], fileName, {type:'image/png'});
@@ -1464,17 +1562,18 @@ function openExportAllModal(){
 function doPrintAll(){
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
-  renderReceiptsList('ALL');
+  renderReceiptsList('ALL', true);
   setTimeout(()=>window.print(), 150);
 }
 async function doExportAllImages(){
   showToast('Đang tạo ảnh, vui lòng đợi…');
   const prevSel = STATE.phieuSelected;
-  renderReceiptsList('ALL');
+  renderReceiptsList('ALL', true);
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const zip = new JSZip();
   for(const el of els){
-    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+    await inlineImagesForCapture(el);
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
     const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
     zip.file(`Phong_${el.dataset.stt}.png`, blob);
   }
@@ -1488,13 +1587,14 @@ async function doExportAllImages(){
 async function doExportAllPDF(){
   showToast('Đang tạo PDF, vui lòng đợi…');
   const prevSel = STATE.phieuSelected;
-  renderReceiptsList('ALL');
+  renderReceiptsList('ALL', true);
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:'px', format:'a5'});
   let first = true;
   for(const el of els){
-    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
+    await inlineImagesForCapture(el);
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
     const imgData = canvas.toDataURL('image/png');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
@@ -1830,8 +1930,8 @@ function renderCaiDat(main){
     <div class="panel">
       <h2>Thông tin nhận tiền (in trên phiếu thu)</h2>
       <div class="form-grid">
-        <div class="f"><label>Tên người nhận</label><input type="text" id="s_ten" value="${escapeAttr(s.tenNguoiNhan)}"></div>
-        <div class="f"><label>Số tài khoản</label><input type="text" id="s_stk" value="${escapeAttr(s.stk)}"></div>
+        <div class="f"><label>Tên người nhận</label><input type="text" id="s_ten" value="${escapeAttr(s.tenNguoiNhan)}" oninput="updateQRPreview();"></div>
+        <div class="f"><label>Số tài khoản</label><input type="text" id="s_stk" value="${escapeAttr(s.stk)}" oninput="updateQRPreview();"></div>
         <div class="f"><label>Ngân hàng</label><input type="text" id="s_nh" value="${escapeAttr(s.nganHang)}"></div>
         <div class="f"><label>Momo</label><input type="text" id="s_momo" value="${escapeAttr(s.momo)}"></div>
         <div class="f"><label>Zalo/SMS xác nhận</label><input type="text" id="s_zalo" value="${escapeAttr(s.zalo)}"></div>
@@ -1839,6 +1939,26 @@ function renderCaiDat(main){
         <div class="f"><label>Hạn đóng tiền mặc định (ngày trong tháng)</label><input type="number" min="1" max="28" id="s_handong" value="${s.hanDongNgay||6}"></div>
       </div>
       <div class="desc" style="margin-top:6px;">Ví dụ để 6 nghĩa là mỗi tháng mới tạo, hạn đóng tiền sẽ mặc định là ngày 6 — bạn vẫn có thể sửa lại riêng cho từng tháng khi bấm "Bắt đầu tháng mới".</div>
+      <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSettings()">Lưu thông tin</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>🇶🇷 Mã QR nhận tiền (VietQR)</h2>
+      <div class="desc">Hiện mã QR chuyển khoản (đã điền sẵn số tiền + nội dung) trên phiếu thu của các phòng <b>chưa đóng tiền</b>. Dùng chung STK/tên ở mục phía trên — chỉ cần chọn đúng ngân hàng bên dưới.</div>
+      <div class="form-grid">
+        <div class="f span2"><label>Ngân hàng dùng để tạo mã QR</label>
+          <select id="s_vietqrbank" onchange="document.getElementById('s_vietqrbank_custom_wrap').style.display=(this.value==='custom'?'block':'none'); updateQRPreview();">
+            ${vietQRBankOptionsHtml(s.vietQRBankBin)}
+          </select>
+        </div>
+        <div class="f span2" id="s_vietqrbank_custom_wrap" style="display:${(s.vietQRBankBin && !VIETQR_BANKS.some(b=>b[0]===s.vietQRBankBin))?'block':'none'};">
+          <label>Mã ngân hàng tuỳ chỉnh (mã BIN hoặc tên viết tắt VietQR)</label>
+          <input type="text" id="s_vietqrbank_custom" placeholder="VD: 970437 hoặc HDBank" value="${escapeAttr((s.vietQRBankBin && !VIETQR_BANKS.some(b=>b[0]===s.vietQRBankBin))?s.vietQRBankBin:'')}" oninput="updateQRPreview();">
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">Không tìm thấy ngân hàng của bạn trong danh sách? Tra cứu mã BIN tại <span class="mono">vietqr.io</span> rồi nhập vào đây.</div>
+        </div>
+      </div>
+      <div class="section-title">Xem trước</div>
+      <div id="qrPreviewBox" style="display:flex; align-items:center; gap:12px;"></div>
       <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSettings()">Lưu thông tin</button></div>
     </div>
 
@@ -1873,6 +1993,7 @@ function renderCaiDat(main){
         <button class="btn btn-outline" onclick="saveSheetUrl()">Lưu link</button>
         <button class="btn btn-brass" onclick="pushFullStateToSheet()">⬆️ Đẩy toàn bộ dữ liệu lên Sheet</button>
         <button class="btn btn-outline" onclick="pullFullStateFromSheet()">⬇️ Kéo dữ liệu mới nhất về</button>
+        <button class="btn btn-outline" onclick="checkSyncStatus()">🔍 Kiểm tra đồng bộ</button>
       </div>
       <div class="desc" style="margin-top:6px;">
         <b>Đẩy lên</b>: gửi toàn bộ dữ liệu trên máy này lên Sheet (dùng sau khi vừa nhập/sửa xong).<br>
@@ -1892,6 +2013,7 @@ function renderCaiDat(main){
       </div>
     </div>
   `;
+  updateQRPreview();
 }
 async function saveSheetUrl(){
   STATE.settings.sheetWebhookUrl = (document.getElementById('s_sheeturl').value||'').trim();
@@ -1960,6 +2082,33 @@ function pullFullStateFromSheet(){
   `);
 }
 let _pendingRemoteState = null;
+async function checkSyncStatus(){
+  const statusEl = document.getElementById('sheetSyncStatus');
+  const set = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  const localTime = Number(await stGet('last-modified'))||0;
+  const localStr = localTime ? new Date(localTime).toLocaleString('vi-VN') : 'chưa có lần sửa nào';
+  const localMonths = (STATE.monthsIndex||[]).length;
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ set(`📱 Máy này: ${localStr}, ${localMonths} tháng — chưa cấu hình link Google Sheet.`); return; }
+  set(`📱 Máy này: ${localStr}, ${localMonths} tháng — đang kiểm tra Google Sheet…`);
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok' && json.data){
+      const remote = JSON.parse(json.data);
+      const remoteTime = Number(remote.lastModified)||0;
+      const remoteStr = remoteTime ? new Date(remoteTime).toLocaleString('vi-VN') : 'không rõ (Sheet chưa từng lưu qua bản mới)';
+      const remoteMonths = Object.keys(remote.months||{}).length;
+      set(`📱 Máy này: ${localStr}, ${localMonths} tháng  ·  ☁️ Google Sheet: ${remoteStr}, ${remoteMonths} tháng`);
+    } else {
+      set(`📱 Máy này: ${localStr}, ${localMonths} tháng  ·  ☁️ Sheet chưa có dữ liệu hoặc phản hồi lạ: ${text.slice(0,150)}`);
+    }
+  }catch(err){
+    set(`📱 Máy này: ${localStr}, ${localMonths} tháng  ·  ☁️ Lỗi kiểm tra Sheet: ${describeSyncError(err)}`);
+  }
+}
 async function checkRemoteForNewerData(){
   const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
   if(!url) return;
@@ -2044,6 +2193,12 @@ async function saveSettings(){
   STATE.settings.zalo = document.getElementById('s_zalo').value;
   STATE.settings.contractWarnDays = Number(document.getElementById('s_warn').value)||30;
   STATE.settings.hanDongNgay = Math.min(28, Math.max(1, Number(document.getElementById('s_handong').value)||6));
+  const bankSel = document.getElementById('s_vietqrbank');
+  if(bankSel){
+    STATE.settings.vietQRBankBin = bankSel.value==='custom'
+      ? (document.getElementById('s_vietqrbank_custom').value||'').trim()
+      : bankSel.value;
+  }
   await stSetJSON('settings', STATE.settings);
   await touchLastModified();
   showToast('Đã lưu thông tin.');
