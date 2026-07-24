@@ -1,3 +1,4 @@
+/*file V 1.5 */
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -222,6 +223,11 @@ table.data tfoot td{font-weight:700; background:var(--paper-2); border-top:2px s
 table.receipt-tbl{width:100%; border-collapse:collapse; font-size:12px;}
 table.receipt-tbl th{text-align:left; border-bottom:1px solid var(--ink); padding:4px 3px; font-size:11px;}
 table.receipt-tbl td{padding:4px 3px; border-bottom:1px dotted var(--line); vertical-align:top;}
+table.receipt-tbl thead th:nth-child(1), table.receipt-tbl tbody td:nth-child(1){text-align:center;}
+table.receipt-tbl thead th:nth-child(3), table.receipt-tbl tbody td:nth-child(3){text-align:center;}
+table.receipt-tbl thead th:nth-child(4), table.receipt-tbl tbody td:nth-child(4){text-align:center;}
+table.receipt-tbl thead th:nth-child(5), table.receipt-tbl tbody td:nth-child(5){text-align:center;}
+table.receipt-tbl thead th:nth-child(6), table.receipt-tbl tbody td:nth-child(6){text-align:right;}
 table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); border-bottom:none; font-size:13.5px; color:var(--navy);}
 .receipt-note{font-size:10.5px; color:var(--ink-soft); margin-top:8px; white-space:pre-wrap; line-height:1.5;}
 .qr-block{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; gap:12px; align-items:center;}
@@ -311,7 +317,7 @@ table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); bo
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.3</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.5</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -775,6 +781,13 @@ function fmtDate(iso){
   const [y,m,d] = parts;
   return `${d.padStart(2,'0')}-${m.padStart(2,'0')}-${y}`;
 }
+function fmtDateShort(iso){
+  if(!iso) return '—';
+  const parts = String(iso).split('-');
+  if(parts.length!==3) return iso;
+  const [y,m,d] = parts;
+  return `${d.padStart(2,'0')}-${m.padStart(2,'0')}-${y.slice(-2)}`;
+}
 function todayISO(){
   const n = new Date();
   return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
@@ -851,28 +864,39 @@ function computeRoom(r, monthKey){
     // phòng trống: không tính bất kỳ khoản nào, dù các trường số liệu còn sót giá trị cũ
     return {tienNuoc:0, tienXe:0, dienDaDung:0, tienDien:0, tienRac:0, dieuchinh:0, tienPhong:0, prorated:false, tong:0};
   }
-  const tienNuoc = r.waterMeter ? Math.max(0,(Number(r.nuocMoi||0)-Number(r.nuocCu||0)))*Number(r.dongiaNuoc||0)
-                                 : Number(r.songuoi||0)*Number(r.dongiaNuoc||0);
-  const tienXe = Number(r.soxe||0)*Number(r.dongiaXe||0);
   const dienDaDung = Math.max(0,(Number(r.sodienmoi||0)-Number(r.sodiencu||0)));
-  const tienDien = dienDaDung*Number(r.dongiaDien||0);
-  const tienRac = r.racmode==='nguoi' ? Number(r.songuoi||0)*Number(r.dongiaRac||0) : Number(r.dongiaRac||0);
+  const tienDien = dienDaDung*Number(r.dongiaDien||0); // điện luôn tính theo đúng số đã dùng thực tế, không chia tỷ lệ ngày
   const dieuchinh = Number(r.dieuchinh||0);
 
-  let tienPhong = Number(r.gia||0);
-  let prorated = false;
+  // Xác định có phải tháng đầu tiên ở (mới dọn vào giữa tháng) hay không
+  let dim = null, soNgayConLai = null, prorated = false;
   if(r.ngayVaoO && monthKey){
     const [vy,vm,vd] = r.ngayVaoO.split('-').map(Number);
     const [my,mm] = monthKey.split('-').map(Number);
     if(vy===my && vm===mm){
-      const dim = daysInMonth(my,mm);
-      const soNgayConLai = Math.max(0, dim - vd + 1);
-      tienPhong = Math.round(Number(r.gia||0)/30*soNgayConLai);
+      dim = daysInMonth(my,mm);
+      soNgayConLai = Math.max(0, dim - vd + 1);
       prorated = true;
     }
   }
+  // với các khoản tính theo tháng (phòng, nước-theo-người, xe, rác): nếu là tháng đầu tiên,
+  // tính như thể ở nguyên tháng rồi chia cho số ngày trong tháng, nhân số ngày còn lại thực tế ở.
+  // Nước tính theo đồng hồ riêng thì không chia tỷ lệ (đã tính đúng theo số đã dùng thực tế, giống điện).
+  const tienPhong = prorated ? Math.round(Number(r.gia||0)/dim*soNgayConLai) : Number(r.gia||0);
+
+  const tienNuocDayDu = Number(r.songuoi||0)*Number(r.dongiaNuoc||0);
+  const tienNuoc = r.waterMeter
+    ? Math.max(0,(Number(r.nuocMoi||0)-Number(r.nuocCu||0)))*Number(r.dongiaNuoc||0)
+    : (prorated ? Math.round(tienNuocDayDu/dim*soNgayConLai) : tienNuocDayDu);
+
+  const tienXeDayDu = Number(r.soxe||0)*Number(r.dongiaXe||0);
+  const tienXe = prorated ? Math.round(tienXeDayDu/dim*soNgayConLai) : tienXeDayDu;
+
+  const tienRacDayDu = r.racmode==='nguoi' ? Number(r.songuoi||0)*Number(r.dongiaRac||0) : Number(r.dongiaRac||0);
+  const tienRac = prorated ? Math.round(tienRacDayDu/dim*soNgayConLai) : tienRacDayDu;
+
   const tong = tienPhong + tienNuoc + tienXe + tienDien + tienRac + dieuchinh;
-  return {tienNuoc, tienXe, dienDaDung, tienDien, tienRac, dieuchinh, tienPhong, prorated, tong};
+  return {tienNuoc, tienXe, dienDaDung, tienDien, tienRac, dieuchinh, tienPhong, prorated, soNgayConLai, soNgayTrongThang:dim, tong};
 }
 function computeMonth(md){
   const rooms = md.rooms.map(r=>Object.assign({}, r, {_c: computeRoom(r, md.key)}));
@@ -1100,7 +1124,8 @@ function roomFormHtml(r){
         </select>
       </div>
       <div class="f"><label>${r.racmode==='nguoi'?'Đơn giá / người':'Số tiền cố định'}</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaRac)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaRac',parseMoneyVal(this))"></div>
-      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dieuchinh)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyVal(this))"></div>
+      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dieuchinh)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyVal(this))">
+        <div style="font-size:10px;color:var(--ink-soft);margin-top:3px;">Số tiền cộng thêm (+) hoặc trừ bớt (−) vào tổng tiền phải thu tháng này</div></div>
     </div>
 
     <div class="section-title">Ghi chú</div>
@@ -1183,9 +1208,67 @@ async function applyTenantChange(stt, isNewTenant){
   }
   scheduleSave();
   await refreshPrevDebts();
-  closeModal();
   renderMain();
-  showToast(isNewTenant ? 'Đã nhận khách mới — nợ cũ đã xoá, đã lưu tiền cọc.' : 'Đã khôi phục trạng thái khách cũ ở tiếp.');
+  if(isNewTenant){
+    showNewTenantReceiptModal(stt);
+  } else {
+    closeModal();
+    showToast('Đã khôi phục trạng thái khách cũ ở tiếp.');
+  }
+}
+function showNewTenantReceiptModal(stt){
+  showModal(`
+    <h3>✅ Đã nhận khách mới — Phòng ${stt}</h3>
+    <div class="desc">Xem nhanh hoặc gửi ngay phiếu tạm tính (số tiền còn lại của tháng này) cho khách qua Zalo, để khách biết cần chuyển bao nhiêu.</div>
+    <div class="modal-actions" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <button class="btn btn-outline btn-block" onclick="quickViewReceipt(${stt})">👁 Xem phiếu (xem nhanh)</button>
+      <button class="btn btn-brass btn-block" onclick="quickShareReceipt(${stt})">📤 Chia sẻ qua Zalo</button>
+      <button class="btn btn-outline btn-block" onclick="closeModal();">Đóng</button>
+    </div>
+  `);
+}
+function quickViewReceipt(stt){
+  const m = computeMonth(STATE.monthData);
+  const r = m.rooms.find(x=>x.stt===stt);
+  if(!r){ closeModal(); return; }
+  showModal(`
+    <h3>Xem nhanh phiếu — Phòng ${stt}</h3>
+    <div style="max-height:65vh; overflow-y:auto; margin:0 -6px;">${receiptHtml(r, STATE.settings, {showQR:true})}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal();">Đóng</button>
+      <button class="btn btn-brass" onclick="quickShareReceipt(${stt})">📤 Chia sẻ qua Zalo</button>
+    </div>
+  `);
+}
+async function quickShareReceipt(stt){
+  const m = computeMonth(STATE.monthData);
+  const r = m.rooms.find(x=>x.stt===stt);
+  if(!r){ showToast('Không tìm thấy phòng.'); return; }
+  showToast('Đang chuẩn bị ảnh để chia sẻ…');
+  const temp = document.createElement('div');
+  temp.style.position = 'fixed'; temp.style.left = '-9999px'; temp.style.top = '0';
+  temp.innerHTML = receiptHtml(r, STATE.settings, {showQR:true});
+  document.body.appendChild(temp);
+  const el = temp.querySelector('.receipt');
+  await inlineImagesForCapture(el);
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
+  document.body.removeChild(temp);
+  const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
+  const fileName = `Phong_${stt}_${STATE.monthData.key}_tamtinh.png`;
+  const file = new File([blob], fileName, {type:'image/png'});
+  const shareData = {
+    files:[file],
+    title:`Phiếu tạm tính phòng ${stt}`,
+    text:`Phiếu tạm tính phòng ${stt} — ${STATE.monthData.label}`
+  };
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share(shareData); return; }
+    catch(err){ if(err && err.name==='AbortError'){ return; } }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=fileName; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Trình duyệt chưa hỗ trợ chia sẻ trực tiếp — đã tải ảnh về, mở Zalo và đính kèm gửi khách nhé.');
 }
 
 /* ---- Trả phòng: khách rời đi -> phòng trống, gợi ý chốt số điện ---- */
@@ -1280,7 +1363,7 @@ function openTransferModal(fromStt){
     </div>
     <div class="field"><label>Số điện phòng ${fromStt} lúc dời đi (chốt sổ, tuỳ chọn)</label><input type="number" id="tf_oldreading" placeholder="để trống nếu bỏ qua"></div>
     <div class="field"><label>Số điện phòng mới lúc dọn vào (tuỳ chọn)</label><input type="number" id="tf_newreading" placeholder="để trống = giữ số đầu tháng"></div>
-    <div class="field"><label>Ghi chú</label><input type="text" id="tf_note" value="Dời từ phòng ${fromStt} ngày ${fmtDate(todayISO())}"></div>
+    <div class="field"><label>Ghi chú</label><input type="text" id="tf_note" value="Dời P${fromStt} ${fmtDateShort(todayISO())}"></div>
     <div class="err-msg" id="tf_err"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
@@ -1305,17 +1388,18 @@ async function confirmTransfer(fromStt){
   let dienPhongCu = 0, dienNote = '';
   if(oldReadingVal !== ''){
     const oldReading = Number(oldReadingVal);
-    const daDung = Math.max(0, oldReading - Number(oldRoom.sodiencu||0));
+    const oldCu = Number(oldRoom.sodiencu||0);
+    const daDung = Math.max(0, oldReading - oldCu);
     dienPhongCu = daDung * Number(oldRoom.dongiaDien||0);
     oldRoom.sodienmoi = oldReading;
-    dienNote = ` — điện phòng ${fromStt} chốt: ${daDung} số × ${fmtVND(oldRoom.dongiaDien)} = ${fmtVND(dienPhongCu)}`;
+    dienNote = ` — điện P${fromStt} chốt: ${daDung} số × ${fmtVND(oldRoom.dongiaDien)} = ${fmtVND(dienPhongCu)} (${oldReading} - ${oldCu} = ${daDung} số)`;
   }
 
   // đóng sổ phòng cũ, trả về trạng thái trống
   oldRoom.sodiencu = oldRoom.sodienmoi!=null ? oldRoom.sodienmoi : oldRoom.sodiencu;
   oldRoom.active = false;
   oldRoom.songuoi = 0; oldRoom.soxe = 0; oldRoom.coc = 0; oldRoom.ngayVaoO = ''; oldRoom.soDienThoai = '';
-  oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang phòng ${targetStt} (${fmtDate(todayISO())})`;
+  oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang P${targetStt} (${fmtDateShort(todayISO())})`;
 
   // mở phòng mới cho khách, kế thừa số người/xe/cọc, cộng tiền điện phòng cũ vào điều chỉnh
   newRoom.active = true;
@@ -1327,7 +1411,7 @@ async function confirmTransfer(fromStt){
   newRoom.soDienThoai = tenant.soDienThoai;
   if(newReadingVal !== ''){ newRoom.sodiencu = Number(newReadingVal); }
   newRoom.dieuchinh = Number(newRoom.dieuchinh||0) + dienPhongCu;
-  newRoom.ghichu = (note || `Dời từ phòng ${fromStt} (${fmtDate(todayISO())})`) + dienNote;
+  newRoom.ghichu = (note || `Dời P${fromStt} ${fmtDateShort(todayISO())}`) + dienNote;
 
   scheduleSave();
   await refreshPrevDebts();
@@ -1457,6 +1541,10 @@ function receiptHtml(r, s, options){
     <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.songuoi||0)}</td><td>Người</td><td></td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
   `;
   const qrHtml = (showQR && r.active && !r.paid) ? buildQRBlockHtml(r, s, md) : '';
+  const proratedBanner = c.prorated ? `
+    <div style="background:var(--brass-light); color:var(--brass-dark); font-size:11px; font-weight:700; padding:7px 9px; border-radius:6px; margin-bottom:8px; line-height:1.5;">
+      ⓘ Đây là số tiền còn lại của ${md.label} (dọn vào ngày ${fmtDate(r.ngayVaoO)}, còn ${c.soNgayConLai}/${c.soNgayTrongThang} ngày) — không phải tiền nguyên tháng. Từ tháng sau sẽ tính bình thường như các phòng khác.
+    </div>` : '';
   return `
   <div class="receipt" data-stt="${r.stt}">
     ${r.paid?'<div class="stamp">ĐÃ ĐÓNG<br>TIỀN</div>':''}
@@ -1464,6 +1552,7 @@ function receiptHtml(r, s, options){
       <div><div class="rname">NHÀ TRỌ 187</div><div class="rroom">Phòng số <b>${r.stt}</b></div></div>
       <div class="rdate"><div class="rmonth-big">${md.label}</div>Hạn đóng: ${fmtDate(md.hanDong)}</div>
     </div>
+    ${proratedBanner}
     <div class="receipt-total-hero"><span class="hero-label">Tổng tiền phòng <span class="room-num-big">${r.stt}</span></span><span class="amt mono">${fmtVND(c.tong)}</span></div>
     <table class="receipt-tbl">
       <thead><tr><th>TT</th><th>Danh mục</th><th>Số mới</th><th>Số cũ</th><th>Đã SD</th><th>Số tiền</th></tr></thead>
@@ -1471,8 +1560,8 @@ function receiptHtml(r, s, options){
         <tr><td>1</td><td>Tiền điện</td><td>${fmtNum(r.sodienmoi||0)}</td><td>${fmtNum(r.sodiencu||0)}</td><td>${fmtNum(c.dienDaDung)}</td><td class="mono">${fmtVND(c.tienDien)}</td></tr>
         ${waterRow}
         <tr><td>3</td><td>Tiền phòng${c.prorated?' (theo ngày ở)':''}</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienPhong)}</td></tr>
-        <tr><td>4</td><td>Tiền xe</td><td>${fmtNum(r.soxe||0)}</td><td>Xe</td><td></td><td class="mono">${fmtVND(c.tienXe)}</td></tr>
-        <tr><td>5</td><td>Rác</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienRac)}</td></tr>
+        <tr><td>4</td><td>Tiền xe${c.prorated?' (theo ngày ở)':''}</td><td>${fmtNum(r.soxe||0)}</td><td>Xe</td><td></td><td class="mono">${fmtVND(c.tienXe)}</td></tr>
+        <tr><td>5</td><td>Rác${c.prorated?' (theo ngày ở)':''}</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienRac)}</td></tr>
       </tbody>
       <tfoot><tr><td colspan="5">Tổng cộng</td><td class="mono">${fmtVND(c.tong)}</td></tr></tfoot>
     </table>
