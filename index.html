@@ -317,7 +317,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 1.9</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 2.1</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -347,6 +347,8 @@ const STATE = {
   skipEmptyPrint:true,
   phieuSelected:'ALL',
   tamTruFilter:'all',
+  tamTruShowAddr:false,
+  tamTruColFilters:{phong:'', hoten:'', ngaysinh:'', gioitinh:'', thuongtru:'', nghenghiep:''},
   prevDebts:{},          // stt -> {amount, monthLabel, monthKey} carried from previous unpaid month
   stagingRooms:null,     // editable preview grid for "Nhập đầu tháng" tab
   saveTimer:null
@@ -1253,14 +1255,23 @@ function occupantsListHtml(r){
 function docsListHtml(roomStt, o){
   const types = giayToTypesList();
   const docs = o.documents || {};
-  return `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
-    ${types.map(t=>{
-      const d = docs[t];
-      if(d && d.fileId){
-        return `<button class="btn btn-outline btn-sm" onclick="viewDoc('${d.fileId}')">👁 ${t}</button>` +
-               `<button class="btn btn-outline btn-sm" onclick="deleteDocForOccupant(${roomStt},'${o.id}','${t}')">🗑 ${t}</button>`;
-      }
-      return `<label class="btn btn-outline btn-sm" style="margin:0;">📎 Tải ${t}<input type="file" accept="image/*" style="display:none" onchange="uploadDocForOccupant(${roomStt},'${o.id}','${t}',this.files[0]); this.value='';"></label>`;
+  return `<div style="margin-top:6px;">
+    ${types.map((t,ti)=>{
+      let arr = docs[t] || [];
+      if(!Array.isArray(arr)) arr = [arr]; // tương thích dữ liệu cũ (từng lưu 1 ảnh dạng object đơn)
+      return `<div style="margin-bottom:5px;">
+        <div style="font-size:10px; font-weight:700; color:var(--ink-soft); margin-bottom:3px;">${escapeAttr(t)}${arr.length?` (${arr.length} ảnh)`:''}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          ${arr.map((d,idx)=>`
+            <span style="display:inline-flex; gap:3px;">
+              <button class="btn btn-outline btn-sm" onclick="viewDoc('${d.fileId}')">👁 Ảnh ${idx+1}</button>
+              <button class="btn btn-outline btn-sm" onclick="confirmDeleteDoc(${roomStt},'${o.id}',${ti},${idx})">🗑</button>
+            </span>`).join('')}
+          <label class="btn btn-outline btn-sm" style="margin:0;">📎 Thêm ảnh (VD: mặt trước/sau)
+            <input type="file" accept="image/*" style="display:none" onchange="uploadDocForOccupant(${roomStt},'${o.id}',${ti},this.files[0]); this.value='';">
+          </label>
+        </div>
+      </div>`;
     }).join('')}
   </div>`;
 }
@@ -1326,9 +1337,23 @@ function saveOccupant(roomStt, occupantId){
 }
 function deleteOccupant(roomStt, occupantId){
   const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
-  if(!r || !r.nguoiO) return;
+  const o = r && (r.nguoiO||[]).find(x=>x.id===occupantId);
+  const hoTen = o ? (o.hoTen||'người này') : 'người này';
+  showModal(`
+    <h3>Xoá người ở?</h3>
+    <div class="desc">Xoá <b>${escapeAttr(hoTen)}</b> khỏi danh sách phòng ${roomStt}. Chỉ dùng khi <b>nhập nhầm</b> — nếu khách đã thật sự dọn đi, hãy dùng nút "Phòng trống" / "Dời phòng" ở tab Nhập liệu để tự động giữ lại lịch sử, đừng xoá ở đây.</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-danger" onclick="doDeleteOccupant(${roomStt}, '${occupantId}')">Xoá</button>
+    </div>
+  `);
+}
+function doDeleteOccupant(roomStt, occupantId){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  if(!r || !r.nguoiO){ closeModal(); return; }
   r.nguoiO = r.nguoiO.filter(x=>x.id!==occupantId);
   scheduleSave();
+  closeModal();
   renderMain();
   showToast('Đã xoá người ở khỏi danh sách.');
 }
@@ -1382,15 +1407,17 @@ async function compressImageFile(file, maxDim, quality){
     reader.readAsDataURL(file);
   });
 }
-async function uploadDocForOccupant(roomStt, occupantId, docType, file){
+async function uploadDocForOccupant(roomStt, occupantId, docTypeIndex, file){
   if(!file) return;
+  const docType = giayToTypesList()[docTypeIndex];
+  if(!docType) return;
   const url = (STATE.settings.sheetWebhookUrl||'').trim();
   if(!url){ showToast('Chưa cấu hình link Google Sheet/Apps Script trong Cài đặt.'); return; }
   showToast('Đang nén và tải ảnh lên Google Drive…');
   try{
     const base64 = await compressImageFile(file, 1600, 0.8);
     const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
-      action:'uploadDoc', roomStt, base64Data: base64, mimeType:'image/jpeg', fileName:`Phong${roomStt}_${docType}_${occupantId}.jpg`
+      action:'uploadDoc', roomStt, base64Data: base64, mimeType:'image/jpeg', fileName:`Phong${roomStt}_${docType}_${occupantId}_${Date.now()}.jpg`
     })});
     const text = await res.text();
     let json = null;
@@ -1400,7 +1427,9 @@ async function uploadDocForOccupant(roomStt, occupantId, docType, file){
       const o = r && (r.nguoiO||[]).find(x=>x.id===occupantId);
       if(o){
         if(!o.documents) o.documents = {};
-        o.documents[docType] = {fileId: json.fileId, uploadedAt: Date.now()};
+        if(!o.documents[docType]) o.documents[docType] = [];
+        if(!Array.isArray(o.documents[docType])) o.documents[docType] = [o.documents[docType]];
+        o.documents[docType].push({fileId: json.fileId, uploadedAt: Date.now()});
         scheduleSave();
         renderMain();
       }
@@ -1434,22 +1463,39 @@ async function viewDoc(fileId){
     showToast('Lỗi: '+describeSyncError(err));
   }
 }
-async function deleteDocForOccupant(roomStt, occupantId, docType){
+function confirmDeleteDoc(roomStt, occupantId, docTypeIndex, idx){
+  const docType = giayToTypesList()[docTypeIndex] || '';
+  showModal(`
+    <h3>Xoá ảnh giấy tờ?</h3>
+    <div class="desc">Xoá ảnh "${escapeAttr(docType)}" — Ảnh ${idx+1}. Ảnh sẽ bị xoá khỏi Google Drive (vẫn còn trong Thùng rác Drive 30 ngày nếu lỡ tay).</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-danger" onclick="doDeleteDoc(${roomStt}, '${occupantId}', ${docTypeIndex}, ${idx})">Xoá</button>
+    </div>
+  `);
+}
+async function doDeleteDoc(roomStt, occupantId, docTypeIndex, idx){
+  const docType = giayToTypesList()[docTypeIndex];
   const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
   const o = r && (r.nguoiO||[]).find(x=>x.id===occupantId);
-  if(!o || !o.documents || !o.documents[docType]) return;
-  const fileId = o.documents[docType].fileId;
+  if(!o || !docType || !o.documents || !o.documents[docType]){ closeModal(); return; }
+  let arr = o.documents[docType];
+  if(!Array.isArray(arr)) arr = [arr];
+  const target = arr[idx];
+  if(!target){ closeModal(); return; }
   const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  closeModal();
   showToast('Đang xoá…');
   try{
     if(url){
-      await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'deleteDoc', fileId})});
+      await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'deleteDoc', fileId: target.fileId})});
     }
   }catch(err){ /* vẫn xoá tham chiếu trong app dù lỡ lỗi kết nối tới Drive */ }
-  delete o.documents[docType];
+  arr.splice(idx,1);
+  o.documents[docType] = arr;
   scheduleSave();
   renderMain();
-  showToast('Đã xoá giấy tờ.');
+  showToast('Đã xoá ảnh giấy tờ.');
 }
 
 async function applyTenantChange(stt, isNewTenant){
@@ -2108,7 +2154,7 @@ function renderTamTru(main){
   main.innerHTML = `
     <div class="panel">
       <h2>🪪 Tạm trú</h2>
-      <div class="desc">Danh sách người ở tại các phòng đang có khách. Tick vào ô "Đã đăng ký" ngay khi bên công an xác nhận — không cần vào từng phòng để sửa. Dùng các nút xuất file khi công an yêu cầu cung cấp danh sách.</div>
+      <div class="desc">Danh sách người ở tại các phòng đang có khách. Tick vào ô "Đã đăng ký" ngay khi bên công an xác nhận. Có thể sửa/xoá trực tiếp, lọc theo từng cột, và xuất file khi công an yêu cầu.</div>
       <div class="stat-row">
         <div class="stat"><div class="lbl">Tổng số người</div><div class="val">${all.length}</div></div>
         <div class="stat good"><div class="lbl">Đã đăng ký</div><div class="val">${soDaDK}</div></div>
@@ -2120,6 +2166,7 @@ function renderTamTru(main){
           <option value="yes" ${STATE.tamTruFilter==='yes'?'selected':''}>Đã đăng ký</option>
           <option value="no" ${STATE.tamTruFilter==='no'?'selected':''}>Chưa đăng ký</option>
         </select>
+        <label class="checkbox-row"><input type="checkbox" id="tamTruShowAddrChk" ${STATE.tamTruShowAddr?'checked':''} onchange="STATE.tamTruShowAddr=this.checked; renderTamTruTable();"> Hiện cột Thường trú</label>
         <div class="spacer"></div>
         <button class="btn btn-outline btn-sm" onclick="exportTamTruTemplate()">⬇️ Xuất file mẫu</button>
         <button class="btn btn-outline btn-sm" onclick="exportTamTruList('yes')">⬇️ Xuất DS đã đăng ký</button>
@@ -2131,27 +2178,82 @@ function renderTamTru(main){
   `;
   renderTamTruTable();
 }
+function tamTruSetColFilter(key, val){
+  STATE.tamTruColFilters[key] = val;
+  renderTamTruTable();
+}
 function renderTamTruTable(){
   const el = document.getElementById('tamTruTableWrap');
   if(!el) return;
   let list = getAllOccupantsFlat();
   if(STATE.tamTruFilter==='yes') list = list.filter(x=>x.o.daDangKyTamTru);
   else if(STATE.tamTruFilter==='no') list = list.filter(x=>!x.o.daDangKyTamTru);
-  if(!list.length){ el.innerHTML = '<div class="empty-state">Không có ai khớp bộ lọc này.</div>'; return; }
+
+  const f = STATE.tamTruColFilters;
+  const norm = s => String(s||'').toLowerCase();
+  if(f.phong.trim()) list = list.filter(x=>String(x.r.stt).includes(f.phong.trim()));
+  if(f.hoten.trim()) list = list.filter(x=>norm(x.o.hoTen).includes(norm(f.hoten)));
+  if(f.ngaysinh.trim()) list = list.filter(x=>norm(x.o.ngaySinh?fmtDate(x.o.ngaySinh):'').includes(norm(f.ngaysinh)));
+  if(f.gioitinh.trim()) list = list.filter(x=>norm(x.o.gioiTinh).includes(norm(f.gioitinh)));
+  if(f.thuongtru.trim()) list = list.filter(x=>norm(x.o.diaChiThuongTru).includes(norm(f.thuongtru)));
+  if(f.nghenghiep.trim()) list = list.filter(x=>norm(x.o.ngheNghiep).includes(norm(f.nghenghiep)));
+
+  const showAddr = !!STATE.tamTruShowAddr;
+  const colCount = showAddr ? 8 : 7;
+
+  const filterInput = (key, placeholder)=>`<input type="text" value="${escapeAttr(f[key])}" oninput="tamTruSetColFilter('${key}', this.value)" placeholder="${placeholder}" style="width:100%; font-weight:400;">`;
+
+  if(!list.length){
+    el.innerHTML = `<div class="table-wrap"><table class="data">
+      <thead><tr>
+        <th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th>
+        ${showAddr?'<th>Thường trú</th>':''}
+        <th>Nghề nghiệp</th><th class="text-center">Đã ĐK</th><th>Thao tác</th>
+      </tr>
+      <tr>
+        <th class="sticky-col">${filterInput('phong','VD: 1')}</th>
+        <th>${filterInput('hoten','VD: Sơn')}</th>
+        <th>${filterInput('ngaysinh','dd-mm-yyyy')}</th>
+        <th>${filterInput('gioitinh','Nam/Nữ')}</th>
+        ${showAddr?`<th>${filterInput('thuongtru','Tỉnh/TP…')}</th>`:''}
+        <th>${filterInput('nghenghiep','VD: Sinh viên')}</th>
+        <th></th><th></th>
+      </tr></thead>
+    </table></div><div class="empty-state">Không có ai khớp bộ lọc này.</div>`;
+    return;
+  }
   el.innerHTML = `<div class="table-wrap"><table class="data">
-    <thead><tr>
-      <th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th>
-      <th>Thường trú</th><th>Nghề nghiệp</th><th class="text-center">Đã đăng ký</th>
-    </tr></thead>
+    <thead>
+      <tr>
+        <th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th>
+        ${showAddr?'<th>Thường trú</th>':''}
+        <th>Nghề nghiệp</th><th class="text-center">Đã ĐK</th><th>Thao tác</th>
+      </tr>
+      <tr>
+        <th class="sticky-col">${filterInput('phong','VD: 1')}</th>
+        <th>${filterInput('hoten','VD: Sơn')}</th>
+        <th>${filterInput('ngaysinh','dd-mm-yyyy')}</th>
+        <th>${filterInput('gioitinh','Nam/Nữ')}</th>
+        ${showAddr?`<th>${filterInput('thuongtru','Tỉnh/TP…')}</th>`:''}
+        <th>${filterInput('nghenghiep','VD: Sinh viên')}</th>
+        <th></th><th></th>
+      </tr>
+    </thead>
     <tbody>
       ${list.map(x=>`<tr>
         <td class="text-center sticky-col"><b>${x.r.stt}</b></td>
         <td>${escapeAttr(x.o.hoTen||'(chưa có tên)')}</td>
         <td>${x.o.ngaySinh?fmtDate(x.o.ngaySinh):'—'}</td>
         <td>${x.o.gioiTinh||'—'}</td>
-        <td>${escapeAttr(x.o.diaChiThuongTru||'—')}</td>
+        ${showAddr?`<td>${escapeAttr(x.o.diaChiThuongTru||'—')}</td>`:''}
         <td>${escapeAttr(x.o.ngheNghiep||'—')}</td>
         <td class="text-center"><input type="checkbox" ${x.o.daDangKyTamTru?'checked':''} onchange="toggleTamTruStatus(${x.r.stt}, '${x.o.id}', this.checked)"></td>
+        <td>
+          <div style="display:flex; gap:5px;">
+            <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${x.r.stt}, '${x.o.id}')">Sửa</button>
+            <button class="btn btn-outline btn-sm" onclick="deleteOccupant(${x.r.stt}, '${x.o.id}')">Xoá</button>
+          </div>
+        </td>
       </tr>`).join('')}
     </tbody>
   </table></div>`;
@@ -2653,19 +2755,18 @@ async function exportAllDocsBackup(){
   const url = (STATE.settings.sheetWebhookUrl||'').trim();
   if(!url){ showToast('Chưa cấu hình link Google Sheet/Apps Script.'); return; }
   const items = [];
+  const pushDocs = (r, o, isHistory, historyIndex)=>{
+    Object.keys(o.documents||{}).forEach(docType=>{
+      let arr = o.documents[docType];
+      if(!Array.isArray(arr)) arr = [arr];
+      arr.forEach((d,idx)=>{
+        items.push({stt:r.stt, occupantId:o.id, hoTen:o.hoTen, docType, idx, fileId:d.fileId, isHistory, historyIndex});
+      });
+    });
+  };
   STATE.monthData.rooms.forEach(r=>{
-    (r.nguoiO||[]).forEach(o=>{
-      Object.keys(o.documents||{}).forEach(docType=>{
-        items.push({stt:r.stt, occupantId:o.id, hoTen:o.hoTen, docType, fileId:o.documents[docType].fileId, isHistory:false});
-      });
-    });
-    (r.lichSuKhach||[]).forEach((h,hi)=>{
-      (h.nguoiO||[]).forEach(o=>{
-        Object.keys(o.documents||{}).forEach(docType=>{
-          items.push({stt:r.stt, occupantId:o.id, hoTen:o.hoTen, docType, fileId:o.documents[docType].fileId, isHistory:true, historyIndex:hi});
-        });
-      });
-    });
+    (r.nguoiO||[]).forEach(o=>pushDocs(r, o, false));
+    (r.lichSuKhach||[]).forEach((h,hi)=>{ (h.nguoiO||[]).forEach(o=>pushDocs(r, o, true, hi)); });
   });
   if(!items.length){ showToast('Chưa có ảnh giấy tờ nào để sao lưu.'); return; }
   showToast(`Đang sao lưu ${items.length} ảnh, vui lòng đợi…`);
@@ -2681,7 +2782,7 @@ async function exportAllDocsBackup(){
       try{ json = JSON.parse(text); }catch(e){}
       if(json && json.status==='ok' && json.base64){
         const ext = (json.mimeType||'image/jpeg').split('/')[1] || 'jpg';
-        const path = `Phong_${it.stt}/${it.occupantId}__${it.docType}.${ext}`;
+        const path = `Phong_${it.stt}/${it.occupantId}__${it.docType}__${it.idx}.${ext}`;
         zip.file(path, json.base64, {base64:true});
         manifest.push(Object.assign({}, it, {path, mimeType: json.mimeType}));
       }
@@ -2718,7 +2819,7 @@ async function importDocsBackup(file){
       try{
         const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
           action:'uploadDoc', roomStt:item.stt, base64Data: base64, mimeType:item.mimeType||'image/jpeg',
-          fileName:`Phong${item.stt}_${item.docType}_${item.occupantId}_restore.jpg`
+          fileName:`Phong${item.stt}_${item.docType}_${item.occupantId}_restore_${item.idx||0}.jpg`
         })});
         const text = await res.text();
         const json = JSON.parse(text);
@@ -2731,7 +2832,9 @@ async function importDocsBackup(file){
         }
         if(target){
           if(!target.documents) target.documents = {};
-          target.documents[item.docType] = {fileId: json.fileId, uploadedAt: Date.now(), restored:true};
+          if(!target.documents[item.docType]) target.documents[item.docType] = [];
+          if(!Array.isArray(target.documents[item.docType])) target.documents[item.docType] = [target.documents[item.docType]];
+          target.documents[item.docType].push({fileId: json.fileId, uploadedAt: Date.now(), restored:true});
           restored++;
         }
       }catch(err){ /* bỏ qua ảnh lỗi, tiếp tục phục hồi ảnh còn lại */ }
