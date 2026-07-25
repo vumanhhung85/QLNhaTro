@@ -352,7 +352,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.2</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.3</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -896,7 +896,7 @@ function buildQRBlockHtml(r, s, md){
   if(!url) return '';
   return `
   <div class="qr-block">
-    <img src="${url}" alt="QR chuyển khoản phòng ${r.stt}">
+    <img src="${url}" data-qr-src="${url}" alt="QR chuyển khoản phòng ${r.stt}">
     <div class="qr-text">
       <b>Quét mã để chuyển khoản</b><br>
       Đã điền sẵn số tiền &amp; nội dung — mở app ngân hàng, quét, kiểm tra rồi xác nhận.
@@ -2069,14 +2069,25 @@ async function exportOneReceiptImage(){
 }
 /* Chuyển ảnh QR (tải từ img.vietqr.io, khác domain) thành data URL nhúng sẵn,
    để html2canvas chụp được đầy đủ thay vì bị trống do giới hạn CORS ảnh chéo domain. */
+function blankAllQRImages(container){
+  // Ngăn trình duyệt tự tải hàng loạt 48 ảnh cùng lúc ngay khi vừa render —
+  // đây là nguyên nhân chính gây mất QR khi xuất tất cả, không phải do giãn nhịp chưa đủ.
+  const imgs = container.querySelectorAll('.qr-block img');
+  imgs.forEach(img=>{
+    if(!img.dataset.qrSrc) img.dataset.qrSrc = img.src;
+    img.removeAttribute('src');
+  });
+}
 async function inlineImagesForCapture(container){
   const imgs = container.querySelectorAll('.qr-block img');
   for(const img of imgs){
     if(img.dataset.inlined==='1') continue;
+    const targetSrc = img.dataset.qrSrc || img.src;
+    if(!targetSrc) continue;
     let ok = false;
     for(let attempt=0; attempt<4 && !ok; attempt++){
       try{
-        const res = await fetch(img.src, {mode:'cors'});
+        const res = await fetch(targetSrc, {mode:'cors'});
         if(!res.ok) throw new Error('HTTP '+res.status);
         const blob = await res.blob();
         const dataUrl = await new Promise((resolve,reject)=>{
@@ -2093,21 +2104,9 @@ async function inlineImagesForCapture(container){
         if(attempt<3) await new Promise(r=>setTimeout(r, 1200*(attempt+1)));
       }
     }
-    // giữ nguyên URL cũ nếu vẫn lỗi sau 4 lần — html2canvas với useCORS:true sẽ thử tải trực tiếp
+    if(!ok){ img.src = targetSrc; } // vẫn gán lại URL gốc nếu thất bại hẳn, để html2canvas thử tải trực tiếp qua useCORS
+    await new Promise(r=>setTimeout(r, 400)); // giãn nhịp giữa từng ảnh, kể cả khi thành công — tránh gọi dồn dập
   }
-}
-function waitForImagesToLoad(container, timeoutMs){
-  const imgs = Array.from(container.querySelectorAll('img'));
-  const promises = imgs.map(img=>{
-    if(img.complete && img.naturalWidth>0) return Promise.resolve();
-    return new Promise(resolve=>{
-      img.addEventListener('load', resolve, {once:true});
-      img.addEventListener('error', resolve, {once:true}); // vẫn cho qua để không treo mãi nếu 1 ảnh lỗi
-    });
-  });
-  const all = Promise.all(promises);
-  const timeout = new Promise(resolve=>setTimeout(resolve, timeoutMs||8000));
-  return Promise.race([all, timeout]);
 }
 async function shareReceipt(){
   const sel = document.getElementById('phieuRoomSelect').value;
@@ -2155,14 +2154,17 @@ async function doPrintAll(){
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
   renderReceiptsList('ALL', true);
-  showToast('Đang tải mã QR trước khi in…');
-  await waitForImagesToLoad(document.getElementById('receiptsWrap'), 10000);
+  const wrap = document.getElementById('receiptsWrap');
+  blankAllQRImages(wrap); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc — nguyên nhân chính gây mất QR
+  showToast('Đang tải mã QR lần lượt trước khi in, có thể mất khoảng 30 giây…');
+  await inlineImagesForCapture(wrap);
   window.print();
 }
 async function doExportAllImages(){
   showToast('Đang tạo ảnh, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
   const prevSel = STATE.phieuSelected;
   renderReceiptsList('ALL', true);
+  blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const zip = new JSZip();
   let done = 0;
@@ -2186,6 +2188,7 @@ async function doExportAllPDF(){
   showToast('Đang tạo PDF, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
   const prevSel = STATE.phieuSelected;
   renderReceiptsList('ALL', true);
+  blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:'px', format:'a5'});
