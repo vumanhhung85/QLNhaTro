@@ -146,7 +146,8 @@ footer.appfoot .foot-line{display:block;}
 /* room accordion */
 .room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:#fff; overflow:hidden;}
 .room-card.inactive{opacity:.6;}
-.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none;}
+.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; background:#fff; border-bottom:1px solid transparent;}
+.room-card.open .room-head{border-bottom-color:var(--line); box-shadow:0 2px 4px rgba(22,35,59,.05);}
 .room-head:hover{background:var(--paper-2);}
 .room-num{
   width:34px;height:34px;border-radius:8px;background:var(--navy); color:var(--brass-light); font-weight:800;
@@ -317,6 +318,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
     <div class="field" id="deviceCodeWrap" style="display:none;">
       <label for="deviceCodeInput">Mã xác nhận thiết bị mới</label>
       <input type="password" id="deviceCodeInput" placeholder="Nhập mã bảo mật" autocomplete="off">
+      <button type="button" class="forgot-link" style="text-align:left; padding:0; margin-top:6px;" onclick="openForgotDeviceCodeModal()">Quên mã thiết bị mới?</button>
     </div>
     <div class="field">
       <label for="pwInput">Mật khẩu</label>
@@ -344,7 +346,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 2.6</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.0</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -390,6 +392,8 @@ const STATE = {
   tamTruShowAddr:false,
   tamTruColFilters:{phong:'', hoten:'', ngaysinh:'', gioitinh:'', thuongtru:'', nghenghiep:''},
   movedOutFilter:'pending',
+  tamTruPendingList:[],
+  tamTruWindowInfo:null,
   prevDebts:{},          // stt -> {amount, monthLabel, monthKey} carried from previous unpaid month
   stagingRooms:null,     // editable preview grid for "Nhập đầu tháng" tab
   saveTimer:null
@@ -701,7 +705,7 @@ function chiphiFieldsHtml(c, prefix){
     ['suaChua','Sửa chữa'],['chuaChay','Chữa cháy'],['chiKhac','Chi khác'],['tienNha','Tiền nhà (trả chủ)']
   ];
   return labels.map(([k,lbl])=>
-    `<div class="f"><label>${lbl}</label><input type="text" inputmode="numeric" id="${prefix}${k}" value="${fmtMoneyInputVal(c[k]||0)}" oninput="onMoneyInputFmt(this)"></div>`
+    `<div class="f"><label>${lbl}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" id="${prefix}${k}" value="${fmtMoneyInputVal(c[k]||0)}" oninput="onMoneyInputFmt(this)"></div>`
   ).join('');
 }
 function readChiphiFields(prefix){
@@ -1095,7 +1099,7 @@ function renderNhap(main){
         <div class="stat"><div class="lbl">Phòng đã đóng đủ</div><div class="val">${soPhongDaDongDu} / ${activeRooms.length}</div></div>
       </div>
       <div class="toolbar no-print">
-        <input type="text" placeholder="Lọc theo số phòng / ghi chú…" oninput="STATE.filterText=this.value; applyRoomFilter();" value="${filter}">
+        <input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="Lọc theo số phòng / ghi chú…" oninput="STATE.filterText=this.value; applyRoomFilter();" value="${filter}">
         <div class="spacer"></div>
         <button class="btn btn-outline btn-sm" onclick="toggleAllRooms(true)">Mở tất cả</button>
         <button class="btn btn-outline btn-sm" onclick="toggleAllRooms(false)">Đóng tất cả</button>
@@ -1181,6 +1185,14 @@ function toggleRoom(stt){
   const el = document.getElementById('room-'+stt);
   el.classList.toggle('open');
 }
+function toggleDocsSection(id){
+  const el = document.getElementById(id);
+  const chev = document.getElementById('chev-'+id);
+  if(!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(chev) chev.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+}
 function roomFormHtml(r){
   const end = contractEndDate(r);
   const remain = end ? daysUntil(end) : null;
@@ -1205,22 +1217,22 @@ function roomFormHtml(r){
         <div style="font-weight:700; color:var(--navy); margin-top:2px;">${escapeAttr(p.hoTen||'(chưa có tên)')}</div>
         <div style="font-size:12px;color:var(--green-ok);margin-top:2px;">📞 ${p.soDienThoai? escapeAttr(p.soDienThoai) : 'Chưa có SĐT'}</div>
       </div>` : ''; })()}
-      <div class="f"><label>Giá phòng</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'gia',parseMoneyVal(this))"></div>
+      <div class="f"><label>Giá phòng</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'gia',parseMoneyVal(this))"></div>
       <div class="f"><label>Số người</label><input type="number" value="${r.songuoi||0}" onchange="updRoom(${r.stt},'songuoi',Number(this.value))"></div>
       <div class="f"><label>Số xe</label><input type="number" value="${r.soxe||0}" onchange="updRoom(${r.stt},'soxe',Number(this.value))"></div>
-      <div class="f"><label>Đơn giá / xe</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaXe)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaXe',parseMoneyVal(this))"></div>
-      <div class="f"><label>Tiền cọc</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.coc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'coc',parseMoneyVal(this))"></div>
+      <div class="f"><label>Đơn giá / xe</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaXe)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaXe',parseMoneyVal(this))"></div>
+      <div class="f"><label>Tiền cọc</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.coc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'coc',parseMoneyVal(this))"></div>
       <div class="f"><label>Hợp đồng (tháng)</label><input type="number" min="1" value="${r.soThangHopDong||6}" onchange="updRoom(${r.stt},'soThangHopDong',Number(this.value)||6)">
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${end? ('Hết hạn: '+fmtDate(end)+(remain!=null?` (còn ${remain} ngày)`:'')) : 'Chưa có ngày vào ở'}</div></div>
       <div class="f"><label class="checkbox-row" style="margin-top:6px;"><input type="checkbox" ${r.mayLanh?'checked':''} onchange="updRoom(${r.stt},'mayLanh',this.checked)"> Có máy lạnh</label></div>
-      <div class="f span2"><label>Ghi chú máy lạnh</label><input type="text" placeholder="VD: Casper, cũ..." value="${escapeAttr(r.mayLanhGhiChu||'')}" onchange="updRoom(${r.stt},'mayLanhGhiChu', this.value)"></div>
+      <div class="f span2"><label>Ghi chú máy lạnh</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="VD: Casper, cũ..." value="${escapeAttr(r.mayLanhGhiChu||'')}" onchange="updRoom(${r.stt},'mayLanhGhiChu', this.value)"></div>
     </div>
 
     <div class="section-title">Điện</div>
     <div class="form-grid">
       <div class="f"><label>Số điện cũ</label><input type="number" value="${r.sodiencu||0}" onchange="updRoom(${r.stt},'sodiencu',Number(this.value))"></div>
       <div class="f"><label>Số điện mới</label><input type="number" value="${r.sodienmoi==null?'':r.sodienmoi}" onchange="updRoom(${r.stt},'sodienmoi', this.value===''?null:Number(this.value))"></div>
-      <div class="f"><label>Đơn giá / kWh</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaDien)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaDien',parseMoneyVal(this))"></div>
+      <div class="f"><label>Đơn giá / kWh</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaDien)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaDien',parseMoneyVal(this))"></div>
     </div>
 
     <div class="section-title">Nước</div>
@@ -1234,9 +1246,9 @@ function roomFormHtml(r){
       ${r.waterMeter ? `
         <div class="f"><label>Số nước cũ</label><input type="number" value="${r.nuocCu||0}" onchange="updRoom(${r.stt},'nuocCu',Number(this.value))"></div>
         <div class="f"><label>Số nước mới</label><input type="number" value="${r.nuocMoi==null?'':r.nuocMoi}" onchange="updRoom(${r.stt},'nuocMoi', this.value===''?null:Number(this.value))"></div>
-        <div class="f"><label>Đơn giá / m³</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaNuoc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaNuoc',parseMoneyVal(this))"></div>
+        <div class="f"><label>Đơn giá / m³</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaNuoc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaNuoc',parseMoneyVal(this))"></div>
       ` : `
-        <div class="f"><label>Đơn giá / người</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaNuoc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaNuoc',parseMoneyVal(this))"></div>
+        <div class="f"><label>Đơn giá / người</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaNuoc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaNuoc',parseMoneyVal(this))"></div>
       `}
     </div>
 
@@ -1248,14 +1260,14 @@ function roomFormHtml(r){
           <option value="fixed" ${r.racmode==='fixed'?'selected':''}>Cố định / phòng</option>
         </select>
       </div>
-      <div class="f"><label>${r.racmode==='nguoi'?'Đơn giá / người':'Số tiền cố định'}</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaRac)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaRac',parseMoneyVal(this))"></div>
-      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dieuchinh)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyVal(this))">
+      <div class="f"><label>${r.racmode==='nguoi'?'Đơn giá / người':'Số tiền cố định'}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaRac)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaRac',parseMoneyVal(this))"></div>
+      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dieuchinh)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyVal(this))">
         <div style="font-size:10px;color:var(--ink-soft);margin-top:3px;">Số tiền cộng thêm (+) hoặc trừ bớt (−) vào tổng tiền phải thu tháng này</div></div>
     </div>
 
     <div class="section-title">Ghi chú</div>
     <div class="form-grid">
-      <div class="f span2"><label>Ghi chú phòng</label><input type="text" value="${escapeAttr(r.ghichu||'')}" onchange="updRoom(${r.stt},'ghichu', this.value)"></div>
+      <div class="f span2"><label>Ghi chú phòng</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" value="${escapeAttr(r.ghichu||'')}" onchange="updRoom(${r.stt},'ghichu', this.value)"></div>
     </div>
 
     ${r.active ? `
@@ -1322,7 +1334,7 @@ function openNewTenantModal(stt){
     <h3>Phòng ${stt} — Nhận khách</h3>
     <div class="desc">Đây là khách <b>mới</b>, hay khách <b>cũ đang ở tiếp</b> (chỉ sửa lại trạng thái, ví dụ tick nhầm)?</div>
     <div class="field"><label>Tiền cọc nhận lúc vào ở (chỉ áp dụng nếu là khách mới)</label>
-      <input type="text" inputmode="numeric" id="nt_coc" placeholder="VD: 2.000.000" value="${fmtMoneyInputVal(r?r.coc:0)}" oninput="onMoneyInputFmt(this)">
+      <input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" id="nt_coc" placeholder="VD: 2.000.000" value="${fmtMoneyInputVal(r?r.coc:0)}" oninput="onMoneyInputFmt(this)">
     </div>
     <div class="modal-actions" style="flex-direction:column; align-items:stretch; gap:8px;">
       <button class="btn btn-outline btn-block" onclick="applyTenantChange(${stt}, false)">Khách cũ ở tiếp — giữ nguyên nợ cũ (nếu có)</button>
@@ -1380,25 +1392,36 @@ function occupantsListHtml(r){
 function docsListHtml(roomStt, o){
   const types = giayToTypesList();
   const docs = o.documents || {};
-  return `<div style="margin-top:6px;">
-    ${types.map((t,ti)=>{
-      let arr = docs[t] || [];
-      if(!Array.isArray(arr)) arr = [arr]; // tương thích dữ liệu cũ (từng lưu 1 ảnh dạng object đơn)
-      return `<div style="margin-bottom:5px;">
-        <div style="font-size:10px; font-weight:700; color:var(--ink-soft); margin-bottom:3px;">${escapeAttr(t)}${arr.length?` (${arr.length} ảnh)`:''}</div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px;">
-          ${arr.map((d,idx)=>`
-            <span style="display:inline-flex; gap:3px;">
-              <button class="btn btn-outline btn-sm" onclick="viewDoc('${d.fileId}')">👁 Ảnh ${idx+1}</button>
-              <button class="btn btn-outline btn-sm" onclick="confirmDeleteDoc(${roomStt},'${o.id}',${ti},${idx})">🗑</button>
-            </span>`).join('')}
-          <label class="btn btn-outline btn-sm" style="margin:0;">📎 Thêm ảnh (VD: mặt trước/sau)
-            <input type="file" accept="image/*" style="display:none" onchange="uploadDocForOccupant(${roomStt},'${o.id}',${ti},this.files[0]); this.value='';">
-          </label>
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`;
+  let totalPhotos = 0;
+  const sections = types.map((t,ti)=>{
+    let arr = docs[t] || [];
+    if(!Array.isArray(arr)) arr = [arr]; // tương thích dữ liệu cũ (từng lưu 1 ảnh dạng object đơn)
+    totalPhotos += arr.length;
+    return `<div style="margin-bottom:5px;">
+      <div style="font-size:10px; font-weight:700; color:var(--ink-soft); margin-bottom:3px;">${escapeAttr(t)}${arr.length?` (${arr.length} ảnh)`:''}</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        ${arr.map((d,idx)=>`
+          <span style="display:inline-flex; gap:3px;">
+            <button class="btn btn-outline btn-sm" onclick="viewDoc('${d.fileId}')">👁 Ảnh ${idx+1}</button>
+            <button class="btn btn-outline btn-sm" onclick="confirmDeleteDoc(${roomStt},'${o.id}',${ti},${idx})">🗑</button>
+          </span>`).join('')}
+        <label class="btn btn-outline btn-sm" style="margin:0;">📎 Thêm ảnh (VD: mặt trước/sau)
+          <input type="file" accept="image/*" style="display:none" onchange="uploadDocForOccupant(${roomStt},'${o.id}',${ti},this.files[0]); this.value='';">
+        </label>
+      </div>
+    </div>`;
+  }).join('');
+  const openByDefault = totalPhotos > 0;
+  const docsId = 'docs-'+o.id;
+  return `
+    <div class="docs-toggle" onclick="toggleDocsSection('${docsId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:6px; font-size:11px; font-weight:700; color:var(--brass-dark); user-select:none;">
+      <span id="chev-${docsId}" style="display:inline-block; transition:transform .15s; transform:rotate(${openByDefault?90:0}deg);">▶</span>
+      <span>📎 Giấy tờ${totalPhotos?` (${totalPhotos} ảnh)`:' (chưa có ảnh)'}</span>
+    </div>
+    <div id="${docsId}" style="display:${openByDefault?'block':'none'}; margin-top:4px;">
+      ${sections}
+    </div>
+  `;
 }
 function openOccupantModal(roomStt, occupantId){
   const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
@@ -1406,8 +1429,8 @@ function openOccupantModal(roomStt, occupantId){
   showModal(`
     <h3>${occupantId?'Sửa':'Thêm'} người ở — Phòng ${roomStt}</h3>
     <div class="form-grid">
-      <div class="f span2"><label>Họ và tên</label><input type="text" id="oc_hoten" value="${escapeAttr(o.hoTen||'')}"></div>
-      <div class="f"><label>Số điện thoại</label><input type="tel" id="oc_sdt" value="${escapeAttr(o.soDienThoai||'')}"></div>
+      <div class="f span2"><label>Họ và tên</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="oc_hoten" value="${escapeAttr(o.hoTen||'')}"></div>
+      <div class="f"><label>Số điện thoại</label><input type="tel" spellcheck="false" autocorrect="off" autocapitalize="off" id="oc_sdt" value="${escapeAttr(o.soDienThoai||'')}"></div>
       <div class="f"><label>Giới tính</label>
         <select id="oc_gioitinh">
           <option value="" ${!o.gioiTinh?'selected':''}>—</option>
@@ -1416,11 +1439,11 @@ function openOccupantModal(roomStt, occupantId){
         </select>
       </div>
       <div class="f"><label>Ngày sinh</label><input type="date" id="oc_ngaysinh" value="${o.ngaySinh||''}"></div>
-      <div class="f"><label>Nghề nghiệp</label><input type="text" id="oc_nghe" value="${escapeAttr(o.ngheNghiep||'')}"></div>
-      <div class="f"><label>Số CCCD</label><input type="text" id="oc_cccd" value="${escapeAttr(o.cccd||'')}"></div>
+      <div class="f"><label>Nghề nghiệp</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="oc_nghe" value="${escapeAttr(o.ngheNghiep||'')}"></div>
+      <div class="f"><label>Số CCCD</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="oc_cccd" value="${escapeAttr(o.cccd||'')}"></div>
       <div class="f"><label>Ngày cấp CCCD</label><input type="date" id="oc_ngaycap" value="${o.ngayCapCccd||''}"></div>
-      <div class="f"><label>Nơi cấp</label><input type="text" id="oc_noicap" value="${escapeAttr(o.noiCapCccd||'')}"></div>
-      <div class="f span2"><label>Địa chỉ thường trú (theo CCCD)</label><input type="text" id="oc_diachi" value="${escapeAttr(o.diaChiThuongTru||'')}"></div>
+      <div class="f"><label>Nơi cấp</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="oc_noicap" value="${escapeAttr(o.noiCapCccd||'')}"></div>
+      <div class="f span2"><label>Địa chỉ thường trú (theo CCCD)</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="oc_diachi" value="${escapeAttr(o.diaChiThuongTru||'')}"></div>
       <div class="f span2"><label class="checkbox-row"><input type="checkbox" id="oc_tamtru" ${o.daDangKyTamTru?'checked':''}> Đã đăng ký tạm trú</label></div>
       <div class="f"><label>Ngày đăng ký tạm trú</label><input type="date" id="oc_ngaydk" value="${o.ngayDangKyTamTru||''}"></div>
     </div>
@@ -1720,9 +1743,9 @@ function openVacateModal(stt){
     <div class="desc">Nhập số điện hiện tại (lúc khách rời đi) để chốt sổ điện — tiền điện kỳ cuối sẽ tự trừ vào tiền cọc. Bỏ trống nếu không muốn chốt/trừ tiền điện.</div>
     <div class="field"><label>Số điện lúc rời đi (tuỳ chọn)</label><input type="number" id="vc_dien" placeholder="để trống nếu bỏ qua" oninput="updateVacatePreview(${stt})"></div>
     <div class="field"><label>Trừ cọc thêm — hư hỏng, chưa dọn dẹp... (tuỳ chọn)</label>
-      <input type="text" inputmode="numeric" id="vc_tru" placeholder="0" oninput="onMoneyInputFmt(this); updateVacatePreview(${stt})">
+      <input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" id="vc_tru" placeholder="0" oninput="onMoneyInputFmt(this); updateVacatePreview(${stt})">
     </div>
-    <div class="field"><label>Lý do trừ thêm</label><input type="text" id="vc_lydo" placeholder="VD: làm hư tủ lạnh, chưa dọn phòng..."></div>
+    <div class="field"><label>Lý do trừ thêm</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="vc_lydo" placeholder="VD: làm hư tủ lạnh, chưa dọn phòng..."></div>
     <div class="breakdown" id="vc_preview" style="border-top:1px dashed var(--line); padding-top:8px;">
       ${vacatePreviewHtml(r, '', 0)}
     </div>
@@ -1805,7 +1828,7 @@ function openTransferModal(fromStt){
     </div>
     <div class="field"><label>Số điện phòng ${fromStt} lúc dời đi (chốt sổ, tuỳ chọn)</label><input type="number" id="tf_oldreading" placeholder="để trống nếu bỏ qua"></div>
     <div class="field"><label>Số điện phòng mới lúc dọn vào (tuỳ chọn)</label><input type="number" id="tf_newreading" placeholder="để trống = giữ số đầu tháng"></div>
-    <div class="field"><label>Ghi chú</label><input type="text" id="tf_note" value="Dời P${fromStt} ${fmtDateShort(todayISO())}"></div>
+    <div class="field"><label>Ghi chú</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="tf_note" value="Dời P${fromStt} ${fmtDateShort(todayISO())}"></div>
     <div class="err-msg" id="tf_err"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
@@ -1897,7 +1920,7 @@ function renderThuTien(main){
               <td class="text-center sticky-col"><b>${r.stt}</b></td>
               <td class="mono" style="font-weight:800; color:var(--brick); font-size:13.5px;">${fmtVND(totalWithDebt)}${debt?`<div style="font-size:10px;font-weight:600;color:var(--ink-soft);">gồm nợ ${debt.monthLabel}: ${fmtVND(debt.amount)}</div>`:''}</td>
               <td><input type="checkbox" ${r.paid?'checked':''} onchange="onTogglePaid(${r.stt}, this.checked)"></td>
-              <td><input type="text" inputmode="numeric" style="width:120px" placeholder="để trống = đủ" value="${fmtMoneyInputVal(r.soTienDaDong)}" oninput="onMoneyInputFmt(this)" onchange="onSoTienDaDongChange(${r.stt}, this)"></td>
+              <td><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" style="width:120px" placeholder="để trống = đủ" value="${fmtMoneyInputVal(r.soTienDaDong)}" oninput="onMoneyInputFmt(this)" onchange="onSoTienDaDongChange(${r.stt}, this)"></td>
               <td>${thieu>0 ? `<span class="pill pill-red mono">${fmtVND(thieu)}</span>` : `<span class="pill pill-muted">Đủ</span>`}</td>
               <td>
                 <input type="date" style="width:130px" value="${r.paidDate||''}" onchange="updRoom(${r.stt},'paidDate',this.value)">
@@ -1905,7 +1928,7 @@ function renderThuTien(main){
               </td>
               <td>
                 <div style="display:flex; gap:5px; align-items:center;">
-                  <input type="text" id="note-${r.stt}" style="width:170px" value="${escapeAttr(r.paidNote||'')}">
+                  <input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="note-${r.stt}" style="width:170px" value="${escapeAttr(r.paidNote||'')}">
                   <button class="btn btn-outline btn-sm" onclick="savePaidNote(${r.stt})">Ghi</button>
                 </div>
               </td>
@@ -2316,6 +2339,19 @@ function renderTamTru(main){
   const soChuaDK = all.length - soDaDK;
   main.innerHTML = `
     <div class="panel">
+      <h2>🆕 Đăng ký chờ xác nhận (link cho khách tự điền)</h2>
+      <div class="desc">Gửi link cho khách qua Zalo để họ tự điền thông tin tạm trú (kèm ảnh CCCD/hợp đồng) — bạn xem lại, sửa nếu cần rồi mới xác nhận thêm vào danh sách người ở. Link tự đóng sau 48 giờ hoặc khi đủ 3 người, để tránh bị lợi dụng.</div>
+      <div class="toolbar">
+        <div id="tamTruWindowStatus"><div class="desc" style="margin:0;">Đang kiểm tra…</div></div>
+        <div class="spacer"></div>
+        <button class="btn btn-brass btn-sm" onclick="shareTamTruLink()">📤 Chia sẻ link cho khách</button>
+        <button class="btn btn-outline btn-sm" onclick="extendTamTruWindow()">🔄 Gia hạn thêm 48h</button>
+        <button class="btn btn-outline btn-sm" onclick="loadPendingTamTru()">🔄 Làm mới</button>
+      </div>
+      <div id="pendingTamTruList"><div class="empty-state">Đang tải…</div></div>
+    </div>
+
+    <div class="panel">
       <h2>🪪 Tạm trú</h2>
       <div class="desc">Danh sách người ở tại các phòng đang có khách. Tick vào ô "Đã đăng ký" ngay khi bên công an xác nhận. Có thể sửa/xoá trực tiếp, lọc theo từng cột, và xuất file khi công an yêu cầu.</div>
       <div class="stat-row">
@@ -2363,6 +2399,9 @@ function renderTamTru(main){
   renderTamTruTable();
   renderMissingOccupantList();
   renderMovedOutList();
+  loadTamTruWindowStatus();
+  loadPendingTamTru();
+  startTamTruCountdown();
 }
 function renderMissingOccupantList(){
   const el = document.getElementById('missingOccupantList');
@@ -2442,6 +2481,219 @@ function exportMovedOutTamTruList(){
   XLSX.writeFile(wb, `DSDaDonDi_CanBaoXoaTamTru_187NSHL_${todayISO()}.xlsx`);
   showToast(`Đã xuất danh sách đã dọn đi (${list.length} người).`);
 }
+
+/* ============ ĐĂNG KÝ TẠM TRÚ CÔNG KHAI (link cho khách tự điền) ============ */
+async function loadTamTruWindowStatus(){
+  const el = document.getElementById('tamTruWindowStatus');
+  if(!el) return;
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ el.innerHTML = '<div class="desc" style="margin:0;">Chưa cấu hình Google Sheet trong Cài đặt.</div>'; return; }
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'checkTamTruWindow'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok'){
+      STATE.tamTruWindowInfo = json;
+      renderTamTruWindowStatus();
+    } else {
+      el.innerHTML = '<div class="desc" style="margin:0;">Không kiểm tra được trạng thái liên kết.</div>';
+    }
+  }catch(err){
+    el.innerHTML = '<div class="desc" style="margin:0;">Lỗi: '+describeSyncError(err)+'</div>';
+  }
+}
+function renderTamTruWindowStatus(){
+  const el = document.getElementById('tamTruWindowStatus');
+  const info = STATE.tamTruWindowInfo;
+  if(!el || !info) return;
+  if(info.open){
+    const remainMs = Math.max(0, info.deadline - Date.now());
+    const h = Math.floor(remainMs/3600000);
+    const m = Math.floor((remainMs%3600000)/60000);
+    el.innerHTML = `<div class="stat good" style="max-width:240px;"><div class="lbl">⏳ Link còn hiệu lực</div><div class="val" style="font-size:14px;">${h}h ${m}p · còn ${info.max-info.count}/${info.max} lượt</div></div>`;
+  } else {
+    el.innerHTML = `<div class="stat bad" style="max-width:200px;"><div class="lbl">Trạng thái link</div><div class="val" style="font-size:14px;">🔒 Đã đóng</div></div>`;
+  }
+}
+let tamTruCountdownTimer = null;
+function startTamTruCountdown(){
+  if(tamTruCountdownTimer) clearInterval(tamTruCountdownTimer);
+  tamTruCountdownTimer = setInterval(()=>{
+    if(STATE.activeTab==='tamtru' && STATE.tamTruWindowInfo && STATE.tamTruWindowInfo.open){
+      renderTamTruWindowStatus();
+    } else if(STATE.activeTab!=='tamtru'){
+      clearInterval(tamTruCountdownTimer);
+    }
+  }, 60000); // cập nhật mỗi phút — đủ cho đồng hồ đếm ngược, không cần gọi liên tục cho nhẹ
+}
+async function shareTamTruLink(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình Google Sheet trong Cài đặt.'); return; }
+  if(!STATE.tamTruWindowInfo || !STATE.tamTruWindowInfo.open){
+    try{
+      showToast('Đang mở lại liên kết đăng ký…');
+      await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'openTamTruWindow'})});
+      await loadTamTruWindowStatus();
+    }catch(err){ showToast('Lỗi mở liên kết: '+describeSyncError(err)); return; }
+  }
+  const link = new URL('dangky.html', location.href).href;
+  const shareData = {title:'Đăng ký tạm trú — Nhà Trọ 187', text:'Bạn vào link này điền giúp mình thông tin đăng ký tạm trú nhé:', url: link};
+  if(navigator.share){
+    try{ await navigator.share(shareData); return; }catch(err){ if(err && err.name==='AbortError') return; }
+  }
+  try{
+    await navigator.clipboard.writeText(link);
+    showToast('Đã copy link — dán vào Zalo để gửi cho khách.');
+  }catch(err){
+    showModal(`<h3>Link đăng ký</h3><div class="field"><input type="text" readonly value="${escapeAttr(link)}" onclick="this.select();"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>`);
+  }
+}
+async function extendTamTruWindow(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình Google Sheet trong Cài đặt.'); return; }
+  try{
+    showToast('Đang gia hạn…');
+    await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'openTamTruWindow'})});
+    await loadTamTruWindowStatus();
+    showToast('Đã gia hạn thêm 48 giờ, đủ lại 3 lượt đăng ký.');
+  }catch(err){ showToast('Lỗi: '+describeSyncError(err)); }
+}
+async function loadPendingTamTru(){
+  const el = document.getElementById('pendingTamTruList');
+  if(!el) return;
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ el.innerHTML = '<div class="empty-state">Chưa cấu hình Google Sheet trong Cài đặt.</div>'; return; }
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'listTamTruPending'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok'){
+      STATE.tamTruPendingList = json.rows||[];
+      renderPendingTamTruList();
+    } else {
+      el.innerHTML = '<div class="empty-state">Không tải được danh sách chờ.</div>';
+    }
+  }catch(err){
+    el.innerHTML = '<div class="empty-state">Lỗi: '+describeSyncError(err)+'</div>';
+  }
+}
+function renderPendingTamTruList(){
+  const el = document.getElementById('pendingTamTruList');
+  if(!el) return;
+  const list = STATE.tamTruPendingList||[];
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Không có đăng ký nào đang chờ xác nhận.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>CCCD</th><th>Thời gian gửi</th><th>Thao tác</th></tr></thead>
+    <tbody>
+      ${list.map(row=>`<tr>
+        <td class="text-center sticky-col"><b>${row.phong}</b></td>
+        <td>${escapeAttr(row.hoTen||'')}</td>
+        <td>${escapeAttr(row.cccd||'')}</td>
+        <td>${row.timestamp?String(row.timestamp).slice(0,16).replace('T',' '):''}</td>
+        <td>
+          <div style="display:flex; gap:5px;">
+            <button class="btn btn-brass btn-sm" onclick="openConfirmPendingModalById('${row.id}')">✅ Xác nhận</button>
+            <button class="btn btn-outline btn-sm" onclick="rejectPendingTamTru('${row.id}')">🗑 Xoá</button>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+function openConfirmPendingModalById(id){
+  const row = (STATE.tamTruPendingList||[]).find(x=>x.id===id);
+  if(!row){ showToast('Không tìm thấy đăng ký này (có thể đã được xử lý ở thiết bị khác).'); return; }
+  openConfirmPendingModal(row);
+}
+function openConfirmPendingModal(row){
+  const roomOptions = STATE.monthData.rooms.filter(r=>r.active).map(r=>`<option value="${r.stt}" ${r.stt===Number(row.phong)?'selected':''}>Phòng ${r.stt}</option>`).join('');
+  showModal(`
+    <h3>Xác nhận đăng ký — ${escapeAttr(row.hoTen||'')}</h3>
+    <div class="desc">Kiểm tra/sửa lại thông tin trước khi thêm vào danh sách người ở. Sau khi xác nhận, người này sẽ vào phòng đã chọn với trạng thái <b>"chưa đăng ký tạm trú"</b> — bạn tick xác nhận thật ở bảng bên dưới sau khi làm thủ tục với công an.</div>
+    <div class="form-grid">
+      <div class="f span2"><label>Phòng (kiểm tra lại cho đúng)</label><select id="cp_phong">${roomOptions}</select></div>
+      <div class="f span2"><label>Họ và tên</label><input type="text" id="cp_hoten" value="${escapeAttr(row.hoTen||'')}"></div>
+      <div class="f"><label>Số điện thoại</label><input type="tel" id="cp_sdt" value="${escapeAttr(row.soDienThoai||'')}"></div>
+      <div class="f"><label>Giới tính</label>
+        <select id="cp_gioitinh"><option value="" ${!row.gioiTinh?'selected':''}>—</option><option value="Nam" ${row.gioiTinh==='Nam'?'selected':''}>Nam</option><option value="Nữ" ${row.gioiTinh==='Nữ'?'selected':''}>Nữ</option></select>
+      </div>
+      <div class="f"><label>Ngày sinh</label><input type="date" id="cp_ngaysinh" value="${row.ngaySinh?String(row.ngaySinh).slice(0,10):''}"></div>
+      <div class="f"><label>Nghề nghiệp</label><input type="text" id="cp_nghe" value="${escapeAttr(row.ngheNghiep||'')}"></div>
+      <div class="f"><label>Số CCCD</label><input type="text" id="cp_cccd" value="${escapeAttr(row.cccd||'')}"></div>
+      <div class="f"><label>Ngày cấp CCCD</label><input type="date" id="cp_ngaycap" value="${row.ngayCap?String(row.ngayCap).slice(0,10):''}"></div>
+      <div class="f"><label>Nơi cấp</label><input type="text" id="cp_noicap" value="${escapeAttr(row.noiCap||'')}"></div>
+      <div class="f span2"><label>Địa chỉ thường trú</label><input type="text" id="cp_diachi" value="${escapeAttr(row.thuongTru||'')}"></div>
+    </div>
+    <div class="section-title">Ảnh khách đã gửi</div>
+    <div class="toolbar">
+      ${row.cccdFileId?`<button class="btn btn-outline btn-sm" onclick="viewDoc('${row.cccdFileId}')">👁 Xem CCCD</button>`:'<span class="desc" style="margin:0;">Không có ảnh CCCD</span>'}
+      ${row.hopDongFileId?`<button class="btn btn-outline btn-sm" onclick="viewDoc('${row.hopDongFileId}')">👁 Xem hợp đồng</button>`:''}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmPendingTamTru('${row.id}')">✅ Xác nhận, thêm vào phòng</button>
+    </div>
+  `);
+}
+async function confirmPendingTamTru(id){
+  const row = (STATE.tamTruPendingList||[]).find(x=>x.id===id);
+  if(!row){ closeModal(); return; }
+  const stt = Number(document.getElementById('cp_phong').value);
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  if(!r){ showToast('Không tìm thấy phòng.'); return; }
+  const occ = {
+    id: 'occ_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    hoTen: document.getElementById('cp_hoten').value,
+    soDienThoai: document.getElementById('cp_sdt').value,
+    gioiTinh: document.getElementById('cp_gioitinh').value,
+    ngaySinh: document.getElementById('cp_ngaysinh').value,
+    ngheNghiep: document.getElementById('cp_nghe').value,
+    cccd: document.getElementById('cp_cccd').value,
+    ngayCapCccd: document.getElementById('cp_ngaycap').value,
+    noiCapCccd: document.getElementById('cp_noicap').value,
+    diaChiThuongTru: document.getElementById('cp_diachi').value,
+    daDangKyTamTru: false,
+    documents: {}
+  };
+  const types = giayToTypesList();
+  if(row.cccdFileId && types.includes('CCCD')){ occ.documents['CCCD'] = [{fileId: row.cccdFileId, uploadedAt: Date.now()}]; }
+  if(row.hopDongFileId && types.includes('Hợp đồng')){ occ.documents['Hợp đồng'] = [{fileId: row.hopDongFileId, uploadedAt: Date.now()}]; }
+  if(!r.nguoiO) r.nguoiO = [];
+  occ.laNguoiChinh = (r.nguoiO.length===0);
+  r.nguoiO.push(occ);
+  scheduleSave();
+
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(url){
+    try{ await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'resolveTamTruPending', id, status:'confirmed'})}); }catch(err){}
+  }
+  STATE.tamTruPendingList = (STATE.tamTruPendingList||[]).filter(x=>x.id!==id);
+  closeModal();
+  renderMain();
+  showToast('Đã thêm người vào phòng '+stt+'.');
+}
+function rejectPendingTamTru(id){
+  showModal(`
+    <h3>Xoá đăng ký chờ xác nhận?</h3>
+    <div class="desc">Xoá đăng ký này khỏi danh sách chờ, không thêm vào phòng nào.</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
+      <button class="btn btn-danger" onclick="doRejectPendingTamTru('${id}')">Xoá</button>
+    </div>
+  `);
+}
+async function doRejectPendingTamTru(id){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  closeModal();
+  if(url){
+    try{ await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'resolveTamTruPending', id, status:'rejected'})}); }catch(err){}
+  }
+  STATE.tamTruPendingList = (STATE.tamTruPendingList||[]).filter(x=>x.id!==id);
+  renderMain();
+  showToast('Đã xoá đăng ký khỏi danh sách chờ.');
+}
 function tamTruSetColFilter(key, val){
   STATE.tamTruColFilters[key] = val;
   renderTamTruRows(); // chỉ vẽ lại phần thân bảng, không đụng tới ô lọc đang gõ dở để không mất focus
@@ -2451,7 +2703,7 @@ function renderTamTruTable(){
   if(!el) return;
   const f = STATE.tamTruColFilters;
   const showAddr = !!STATE.tamTruShowAddr;
-  const filterInput = (key, placeholder)=>`<input type="text" value="${escapeAttr(f[key])}" oninput="tamTruSetColFilter('${key}', this.value)" placeholder="${placeholder}" style="width:100%; font-weight:400;">`;
+  const filterInput = (key, placeholder)=>`<input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" value="${escapeAttr(f[key])}" oninput="tamTruSetColFilter('${key}', this.value)" placeholder="${placeholder}" style="width:100%; font-weight:400;">`;
   el.innerHTML = `<div class="table-wrap"><table class="data">
     <thead>
       <tr>
@@ -2670,7 +2922,7 @@ function renderNhapDauThang(main){
           <tbody>
             ${STATE.stagingRooms.map((r,i)=>`<tr>
               <td class="text-center sticky-col"><b>${r.stt}</b></td>
-              <td><input type="text" inputmode="numeric" style="width:110px" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="stagingSet(${i},'gia',parseMoneyVal(this))"></td>
+              <td><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" style="width:110px" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="stagingSet(${i},'gia',parseMoneyVal(this))"></td>
               <td><input type="number" style="width:64px" value="${r.songuoi}" onchange="stagingSet(${i},'songuoi',Number(this.value)||0)"></td>
               <td><input type="number" style="width:64px" value="${r.soxe}" onchange="stagingSet(${i},'soxe',Number(this.value)||0)"></td>
               <td class="mono">${fmtNum(r.sodiencu)}</td>
@@ -2791,11 +3043,11 @@ function renderCaiDat(main){
     <div class="panel">
       <h2>Thông tin nhận tiền (in trên phiếu thu)</h2>
       <div class="form-grid">
-        <div class="f"><label>Tên người nhận</label><input type="text" id="s_ten" value="${escapeAttr(s.tenNguoiNhan)}" oninput="updateQRPreview();"></div>
-        <div class="f"><label>Số tài khoản</label><input type="text" id="s_stk" value="${escapeAttr(s.stk)}" oninput="updateQRPreview();"></div>
-        <div class="f"><label>Ngân hàng</label><input type="text" id="s_nh" value="${escapeAttr(s.nganHang)}"></div>
-        <div class="f"><label>Momo</label><input type="text" id="s_momo" value="${escapeAttr(s.momo)}"></div>
-        <div class="f"><label>Zalo/SMS xác nhận</label><input type="text" id="s_zalo" value="${escapeAttr(s.zalo)}"></div>
+        <div class="f"><label>Tên người nhận</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_ten" value="${escapeAttr(s.tenNguoiNhan)}" oninput="updateQRPreview();"></div>
+        <div class="f"><label>Số tài khoản</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_stk" value="${escapeAttr(s.stk)}" oninput="updateQRPreview();"></div>
+        <div class="f"><label>Ngân hàng</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_nh" value="${escapeAttr(s.nganHang)}"></div>
+        <div class="f"><label>Momo</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_momo" value="${escapeAttr(s.momo)}"></div>
+        <div class="f"><label>Zalo/SMS xác nhận</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_zalo" value="${escapeAttr(s.zalo)}"></div>
         <div class="f"><label>Cảnh báo hợp đồng trước (ngày)</label><input type="number" min="1" id="s_warn" value="${s.contractWarnDays||30}"></div>
         <div class="f"><label>Hạn đóng tiền mặc định (ngày trong tháng)</label><input type="number" min="1" max="28" id="s_handong" value="${s.hanDongNgay||6}"></div>
       </div>
@@ -2814,7 +3066,7 @@ function renderCaiDat(main){
         </div>
         <div class="f span2" id="s_vietqrbank_custom_wrap" style="display:${(s.vietQRBankBin && !VIETQR_BANKS.some(b=>b[0]===s.vietQRBankBin))?'block':'none'};">
           <label>Mã ngân hàng tuỳ chỉnh (mã BIN hoặc tên viết tắt VietQR)</label>
-          <input type="text" id="s_vietqrbank_custom" placeholder="VD: 970437 hoặc HDBank" value="${escapeAttr((s.vietQRBankBin && !VIETQR_BANKS.some(b=>b[0]===s.vietQRBankBin))?s.vietQRBankBin:'')}" oninput="updateQRPreview();">
+          <input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_vietqrbank_custom" placeholder="VD: 970437 hoặc HDBank" value="${escapeAttr((s.vietQRBankBin && !VIETQR_BANKS.some(b=>b[0]===s.vietQRBankBin))?s.vietQRBankBin:'')}" oninput="updateQRPreview();">
           <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">Không tìm thấy ngân hàng của bạn trong danh sách? Tra cứu mã BIN tại <span class="mono">vietqr.io</span> rồi nhập vào đây.</div>
         </div>
       </div>
@@ -2828,7 +3080,7 @@ function renderCaiDat(main){
       <div class="desc">Danh sách loại giấy tờ sẽ hiện ra để tải ảnh lên cho mỗi người ở trong phòng (mục "👥 Người ở &amp; Tạm trú" ở tab Nhập liệu). Ảnh lưu riêng tư trong Google Drive của bạn qua đúng link Apps Script đã cấu hình bên dưới.</div>
       <div id="giayToTypesList" style="margin:8px 0;"></div>
       <div class="toolbar">
-        <input type="text" id="newGiayToType" placeholder="Tên loại giấy tờ mới, VD: Hộ khẩu">
+        <input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="newGiayToType" placeholder="Tên loại giấy tờ mới, VD: Hộ khẩu">
         <button class="btn btn-outline btn-sm" onclick="addGiayToType()">+ Thêm loại</button>
       </div>
     </div>
@@ -2883,10 +3135,10 @@ function renderCaiDat(main){
       <h2>Khôi phục mật khẩu khi quên</h2>
       <div class="desc">App này không có máy chủ riêng nên không thể gửi mã qua email/SMS thật. Thay vào đó, thiết lập 2 câu hỏi bảo mật (cần trả lời đúng cả 2) để tự đặt lại mật khẩu khi cần.</div>
       <div class="form-grid">
-        <div class="f span2"><label>Câu hỏi bảo mật 1</label><input type="text" id="s_rcq1" value="${escapeAttr(s.recoveryQuestion1||'')}" placeholder="VD: Số điện thoại đầu tiên của bạn?"></div>
-        <div class="f span2"><label>Câu trả lời 1</label><input type="text" id="s_rca1" value="${escapeAttr(s.recoveryAnswer1||'')}"></div>
-        <div class="f span2"><label>Câu hỏi bảo mật 2</label><input type="text" id="s_rcq2" value="${escapeAttr(s.recoveryQuestion2||'')}" placeholder="VD: Tên của ông/bà nội bạn?"></div>
-        <div class="f span2"><label>Câu trả lời 2</label><input type="text" id="s_rca2" value="${escapeAttr(s.recoveryAnswer2||'')}"></div>
+        <div class="f span2"><label>Câu hỏi bảo mật 1</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_rcq1" value="${escapeAttr(s.recoveryQuestion1||'')}" placeholder="VD: Số điện thoại đầu tiên của bạn?"></div>
+        <div class="f span2"><label>Câu trả lời 1</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_rca1" value="${escapeAttr(s.recoveryAnswer1||'')}"></div>
+        <div class="f span2"><label>Câu hỏi bảo mật 2</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_rcq2" value="${escapeAttr(s.recoveryQuestion2||'')}" placeholder="VD: Tên của ông/bà nội bạn?"></div>
+        <div class="f span2"><label>Câu trả lời 2</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_rca2" value="${escapeAttr(s.recoveryAnswer2||'')}"></div>
       </div>
       <div style="margin-top:12px;"><button class="btn btn-outline" onclick="saveRecoverySettings()">Lưu câu hỏi bảo mật</button></div>
     </div>
@@ -2895,7 +3147,7 @@ function renderCaiDat(main){
       <h2>☁️ Đồng bộ Google Sheet (giữa nhiều thiết bị)</h2>
       <div class="desc">Dán link Google Apps Script (Web App) sau khi bạn tạo theo hướng dẫn. Sau khi lưu link, mỗi khi bạn nhập/sửa gì đó, app sẽ <b>tự động đồng bộ</b> lên Sheet sau vài giây ngừng gõ (xem huy hiệu ☁️ ở góc trên) — không cần bấm tay. Nút bên dưới dùng khi muốn đẩy/kéo thủ công ngay lập tức.</div>
       <div class="form-grid">
-        <div class="f span2"><label>Link Web App (Google Apps Script)</label><input type="text" id="s_sheeturl" value="${escapeAttr(s.sheetWebhookUrl||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div class="f span2"><label>Link Web App (Google Apps Script)</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_sheeturl" value="${escapeAttr(s.sheetWebhookUrl||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div>
       </div>
       <div class="toolbar" style="margin-top:10px;">
         <button class="btn btn-outline" onclick="saveSheetUrl()">Lưu link</button>
@@ -3316,6 +3568,61 @@ async function saveRecoverySettings(){
   await touchLastModified();
   showToast('Đã lưu câu hỏi bảo mật.');
 }
+let _remoteRecoverySettings = null;
+function openForgotDeviceCodeModal(){
+  showModal(`
+    <h3>Quên mã thiết bị mới?</h3>
+    <div class="desc" id="fdc_intro">Đang tải câu hỏi bảo mật từ Google Sheet để xác minh bạn đúng là chủ app…</div>
+    <div id="fdc_body"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
+  `);
+  loadRemoteRecoveryQuestions();
+}
+async function loadRemoteRecoveryQuestions(){
+  const url = DEFAULT_SETTINGS.sheetWebhookUrl;
+  const intro = document.getElementById('fdc_intro');
+  const body = document.getElementById('fdc_body');
+  if(!url){ if(intro) intro.textContent = 'App chưa gắn sẵn link Google Sheet, không thể xác minh từ xa.'; return; }
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(!(json && json.status==='ok' && json.data)){ if(intro) intro.textContent = 'Chưa có dữ liệu nào trên Google Sheet để xác minh.'; return; }
+    const remote = JSON.parse(json.data);
+    const s = remote.settings || {};
+    if(!s.recoveryQuestion1 || !s.recoveryQuestion2 || !s.recoveryAnswer1 || !s.recoveryAnswer2){
+      if(intro) intro.textContent = 'Bạn chưa thiết lập đủ 2 câu hỏi bảo mật từ trước (mục Cài đặt), nên không thể khôi phục theo cách này.';
+      return;
+    }
+    _remoteRecoverySettings = s;
+    if(intro) intro.textContent = 'Trả lời đúng cả 2 câu hỏi bên dưới để xem lại mã thiết bị mới hiện tại.';
+    if(body) body.innerHTML = `
+      <div class="field"><label>${escapeAttr(s.recoveryQuestion1)}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="fdc_a1"></div>
+      <div class="field"><label>${escapeAttr(s.recoveryQuestion2)}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="fdc_a2"></div>
+      <div class="err-msg" id="fdc_err"></div>
+      <button class="btn btn-primary btn-block" onclick="confirmForgotDeviceCode()">Xác nhận</button>
+    `;
+  }catch(err){
+    if(intro) intro.textContent = 'Lỗi kết nối: '+describeSyncError(err);
+  }
+}
+function confirmForgotDeviceCode(){
+  const a1 = (document.getElementById('fdc_a1').value||'').trim().toLowerCase();
+  const a2 = (document.getElementById('fdc_a2').value||'').trim().toLowerCase();
+  const errEl = document.getElementById('fdc_err');
+  const s = _remoteRecoverySettings;
+  if(!s){ closeModal(); return; }
+  if(a1 !== (s.recoveryAnswer1||'').trim().toLowerCase() || a2 !== (s.recoveryAnswer2||'').trim().toLowerCase()){
+    errEl.textContent = 'Câu trả lời chưa đúng, thử lại.';
+    return;
+  }
+  const code = s.deviceCode || DEFAULT_SETTINGS.deviceCode;
+  closeModal();
+  const codeInput = document.getElementById('deviceCodeInput');
+  if(codeInput){ codeInput.type = 'text'; codeInput.value = code; }
+  showToast('Đúng rồi! Mã thiết bị mới đã tự điền phía trên, bấm Đăng nhập luôn được.');
+}
 async function openForgotPasswordModal(){
   const settings = (await stGetJSON('settings')) || {};
   const q1 = settings.recoveryQuestion1, q2 = settings.recoveryQuestion2;
@@ -3332,8 +3639,8 @@ async function openForgotPasswordModal(){
   showModal(`
     <h3>Khôi phục mật khẩu</h3>
     <div class="desc">Trả lời đúng cả 2 câu hỏi bảo mật để đặt lại mật khẩu.</div>
-    <div class="field"><label>${q1}</label><input type="text" id="rc_answer1"></div>
-    <div class="field"><label>${q2}</label><input type="text" id="rc_answer2"></div>
+    <div class="field"><label>${q1}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="rc_answer1"></div>
+    <div class="field"><label>${q2}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="rc_answer2"></div>
     <div class="field"><label>Mật khẩu mới</label><input type="password" id="rc_newpw"></div>
     <div class="err-msg" id="rc_err"></div>
     <div class="modal-actions">
