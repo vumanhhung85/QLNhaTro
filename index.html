@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
 <title>Sổ Thu Tiền — Nhà Trọ 187 NSHL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -256,6 +256,30 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 }
 .toast.show{opacity:1;}
 
+.img-viewer-overlay{
+  position:fixed; inset:0; background:rgba(10,12,10,.94); z-index:300;
+  display:none; flex-direction:column;
+}
+.img-viewer-overlay.show{display:flex;}
+.img-viewer-toolbar{
+  flex-shrink:0; display:flex; align-items:center; gap:8px; padding:10px 14px;
+  background:rgba(0,0,0,.5); color:#fff;
+}
+.img-viewer-toolbar button{
+  background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.25);
+  border-radius:6px; padding:7px 12px; font-size:14px; font-weight:700; min-width:40px;
+}
+.img-viewer-toolbar button:hover{background:rgba(255,255,255,.22);}
+.img-viewer-toolbar span{font-size:13px; font-weight:700; min-width:48px; text-align:center;}
+.img-viewer-scroll{
+  flex:1; overflow:auto; display:flex; align-items:center; justify-content:center;
+  -webkit-overflow-scrolling:touch; touch-action:pinch-zoom pan-x pan-y;
+}
+.img-viewer-scroll img{
+  max-width:none; transition:transform .15s ease; transform-origin:center center;
+  cursor:zoom-in;
+}
+
 @media print{
   header.topbar, nav.tabs, .no-print, footer.appfoot{display:none !important;}
   body{background:#fff;}
@@ -290,6 +314,10 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
     <div class="login-seal">187</div>
     <h1>Nhà Trọ 187 NSHL</h1>
     <p class="sub">Sổ thu tiền phòng trọ — chỉ dành cho quản lý</p>
+    <div class="field" id="deviceCodeWrap" style="display:none;">
+      <label for="deviceCodeInput">Mã xác nhận thiết bị mới</label>
+      <input type="text" id="deviceCodeInput" placeholder="Ngày hôm nay, dạng ddmmyyyy" autocomplete="off" inputmode="numeric">
+    </div>
     <div class="field">
       <label for="pwInput">Mật khẩu</label>
       <input type="password" id="pwInput" placeholder="Nhập mật khẩu" autocomplete="off">
@@ -297,8 +325,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
     <button class="btn btn-primary btn-block" onclick="tryLogin()">Đăng nhập</button>
     <div class="err-msg" id="loginErr"></div>
     <button class="forgot-link" onclick="openForgotPasswordModal()">Quên mật khẩu?</button>
-    <button class="forgot-link" onclick="openFirstDeviceSyncModal()">Thiết bị mới? Đồng bộ dữ liệu từ Google Sheet</button>
-    <p class="hint">Dữ liệu lưu ngay trên trình duyệt này. Dùng Google Sheet để đồng bộ giữa nhiều thiết bị.</p>
+    <p class="hint">Dữ liệu lưu ngay trên trình duyệt này, tự đồng bộ qua Google Sheet sau khi đăng nhập.</p>
   </div>
 </div>
 
@@ -317,13 +344,26 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 2.1</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 2.5</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box" id="modalBox"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="img-viewer-overlay" id="imgViewerOverlay">
+  <div class="img-viewer-toolbar">
+    <button onclick="imgViewerZoom(-0.25)">−</button>
+    <span id="imgViewerZoomLabel">100%</span>
+    <button onclick="imgViewerZoom(0.25)">+</button>
+    <button onclick="imgViewerReset()">Đặt lại</button>
+    <div class="spacer"></div>
+    <button onclick="closeImgViewer()">✕ Đóng</button>
+  </div>
+  <div class="img-viewer-scroll" id="imgViewerScroll">
+    <img id="imgViewerImg" src="" alt="Xem ảnh giấy tờ">
+  </div>
+</div>
 
 <script>
 /* ============ SEED / DEFAULT DATA ============ */
@@ -349,6 +389,7 @@ const STATE = {
   tamTruFilter:'all',
   tamTruShowAddr:false,
   tamTruColFilters:{phong:'', hoten:'', ngaysinh:'', gioitinh:'', thuongtru:'', nghenghiep:''},
+  movedOutFilter:'pending',
   prevDebts:{},          // stt -> {amount, monthLabel, monthKey} carried from previous unpaid month
   stagingRooms:null,     // editable preview grid for "Nhập đầu tháng" tab
   saveTimer:null
@@ -378,9 +419,20 @@ async function stSetJSON(key,obj){
 }
 
 /* ============ INIT ============ */
+function isKnownDevice(){
+  try{ return localStorage.getItem(LS_PREFIX+'auth-password') !== null; }catch(e){ return true; } // lỗi đọc thì coi như máy quen, tránh chặn oan
+}
+function todayCodeDDMMYYYY(){
+  const n = new Date();
+  return String(n.getDate()).padStart(2,'0') + String(n.getMonth()+1).padStart(2,'0') + n.getFullYear();
+}
 async function boot(){
+  const known = isKnownDevice(); // phải kiểm tra TRƯỚC khi ghi mật khẩu mặc định bên dưới
+  STATE.isNewDevice = !known;
   const savedPw = await stGet('auth-password');
   if(savedPw===null){ await stSet('auth-password', DEFAULT_PASSWORD); }
+  const codeWrap = document.getElementById('deviceCodeWrap');
+  if(codeWrap) codeWrap.style.display = known ? 'none' : '';
   document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
 }
 boot();
@@ -402,6 +454,13 @@ setInterval(()=>{
 async function tryLogin(){
   const input = document.getElementById('pwInput').value;
   const errEl = document.getElementById('loginErr');
+  if(STATE.isNewDevice){
+    const code = (document.getElementById('deviceCodeInput').value||'').trim();
+    if(code !== todayCodeDDMMYYYY()){
+      errEl.textContent = 'Mã xác nhận chưa đúng — mã là ngày hôm nay, dạng ddmmyyyy (VD: '+todayCodeDDMMYYYY()+').';
+      return;
+    }
+  }
   const savedPw = (await stGet('auth-password')) || DEFAULT_PASSWORD;
   if(input === savedPw){
     errEl.textContent='';
@@ -707,6 +766,57 @@ function showModal(html){
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
 document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
 
+/* ============ ẢNH GIẤY TỜ: KHUNG XEM CÓ THỂ ZOOM ============ */
+let imgViewerScale = 1;
+let imgViewerBaseFitWidth = null; // px — kích cỡ "vừa khung" đo được lúc ảnh vừa hiện ra
+function openImgViewer(dataUrl){
+  const img = document.getElementById('imgViewerImg');
+  imgViewerScale = 1;
+  imgViewerBaseFitWidth = null;
+  img.style.maxWidth = '100%';
+  img.style.maxHeight = '100%';
+  img.style.width = '';
+  img.onload = ()=>{ imgViewerBaseFitWidth = img.getBoundingClientRect().width; };
+  img.src = dataUrl;
+  const label = document.getElementById('imgViewerZoomLabel');
+  if(label) label.textContent = '100%';
+  document.getElementById('imgViewerOverlay').classList.add('show');
+}
+function closeImgViewer(){
+  document.getElementById('imgViewerOverlay').classList.remove('show');
+  document.getElementById('imgViewerImg').src = '';
+}
+function applyImgScale(){
+  const img = document.getElementById('imgViewerImg');
+  if(imgViewerScale<=1 || !imgViewerBaseFitWidth){
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '100%';
+    img.style.width = '';
+  } else {
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+    img.style.width = Math.round(imgViewerBaseFitWidth*imgViewerScale)+'px';
+  }
+  const label = document.getElementById('imgViewerZoomLabel');
+  if(label) label.textContent = Math.round(imgViewerScale*100)+'%';
+}
+function imgViewerZoom(delta){
+  imgViewerScale = Math.max(1, Math.min(5, Math.round((imgViewerScale+delta)*100)/100));
+  applyImgScale();
+}
+function imgViewerReset(){
+  imgViewerScale = 1;
+  applyImgScale();
+}
+document.getElementById('imgViewerImg').addEventListener('click', ()=>{
+  // bấm vào ảnh: phóng to nhanh 1 nấc, đang phóng to rồi thì quay lại vừa khung
+  imgViewerScale = (imgViewerScale >= 2) ? 1 : imgViewerScale+1;
+  applyImgScale();
+});
+document.getElementById('imgViewerOverlay').addEventListener('click', e=>{
+  if(e.target.id==='imgViewerOverlay') closeImgViewer();
+});
+
 /* ============ FORMAT HELPERS ============ */
 function fmtVND(n){
   n = Number(n)||0;
@@ -979,7 +1089,6 @@ function renderNhap(main){
   main.innerHTML = `
     <div class="panel">
       <h2><span class="month-highlight">${STATE.monthData.label}</span></h2>
-      <div class="desc">Hạn đóng tiền: <b>${STATE.monthData.hanDong? fmtDate(STATE.monthData.hanDong) : '—'}</b> · Cập nhật đầu tháng: số điện mới → số cũ, sửa giá phòng / số người / số xe nếu có thay đổi.</div>
       ${vacantRooms.length ? `<div style="background:var(--danger-bg); color:var(--danger); font-weight:700; font-size:12.5px; padding:8px 10px; border-radius:7px; margin-bottom:10px;">🏚 Phòng đang trống: ${vacantRooms.join(', ')}</div>` : ''}
       <div class="stat-row">
         <div class="stat"><div class="lbl">Tổng thu dự kiến</div><div class="val mono" id="stat-tongthu">${fmtVND(totals.tong)}</div></div>
@@ -1059,7 +1168,7 @@ function roomCardHtml(r){
       <div class="room-num ${contractCls}" title="${end?('Hết hạn HĐ: '+fmtDate(end)):''}">${r.stt}</div>
       <div class="room-mid">
         <div class="room-total mono ${urgency}">${fmtVND(totalWithDebt)}${debt?' <span style="font-weight:600;font-size:10.5px;">(gồm nợ)</span>':''}</div>
-        <div class="note">${r.active? (r.ghichu||'—') : 'Phòng trống'}${r.mayLanh?' · ❄️':''}${r.active && !r.ngayVaoO? ' · <span style="color:var(--brass-dark);">chưa có ngày vào</span>':''}</div>
+        <div class="note">${r.active? (r.ghichu||'—') : 'Phòng trống'}${r.mayLanh?' · ❄️':''}${r.active && !r.ngayVaoO? ' · <span style="color:var(--brass-dark);">chưa có ngày vào</span>':''}${(()=>{ const p=getPrimaryOccupant(r); return (r.active && p && p.soDienThoai) ? ` · ⭐📞 ${escapeAttr(p.soDienThoai)}` : ''; })()}</div>
       </div>
       <span class="paid-pill ${r.paid?'yes':'no'}">${r.paid?'Đã đóng':'Chưa đóng'}</span>
       <span class="chev">▶</span>
@@ -1092,12 +1201,17 @@ function roomFormHtml(r){
         <input type="date" value="${r.ngayVaoO||''}" onchange="updRoom(${r.stt},'ngayVaoO', this.value)">
         <div style="font-size:10.5px;color:var(--brass-dark);margin-top:3px;">${r.ngayVaoO? fmtDate(r.ngayVaoO) : 'Chưa nhập — bổ sung sau'}</div>
       </div>
+      ${(()=>{ const p = r.active ? getPrimaryOccupant(r) : null; return p ? `
+      <div class="f" style="background:var(--green-bg); border-radius:7px; padding:6px 8px 8px;">
+        <label style="color:var(--green-ok);">⭐ Người chính (liên hệ Zalo)</label>
+        <div style="font-weight:700; color:var(--navy); margin-top:2px;">${escapeAttr(p.hoTen||'(chưa có tên)')}</div>
+        <div style="font-size:12px;color:var(--green-ok);margin-top:2px;">📞 ${p.soDienThoai? escapeAttr(p.soDienThoai) : 'Chưa có SĐT'}</div>
+      </div>` : ''; })()}
       <div class="f"><label>Giá phòng</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'gia',parseMoneyVal(this))"></div>
       <div class="f"><label>Số người</label><input type="number" value="${r.songuoi||0}" onchange="updRoom(${r.stt},'songuoi',Number(this.value))"></div>
       <div class="f"><label>Số xe</label><input type="number" value="${r.soxe||0}" onchange="updRoom(${r.stt},'soxe',Number(this.value))"></div>
       <div class="f"><label>Đơn giá / xe</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaXe)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaXe',parseMoneyVal(this))"></div>
       <div class="f"><label>Tiền cọc</label><input type="text" inputmode="numeric" value="${fmtMoneyInputVal(r.coc)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'coc',parseMoneyVal(this))"></div>
-      <div class="f"><label>SĐT khách (Zalo)</label><input type="tel" value="${escapeAttr(r.soDienThoai||'')}" placeholder="09xxxxxxxx" onchange="updRoom(${r.stt},'soDienThoai', this.value)"></div>
       <div class="f"><label>Hợp đồng (tháng)</label><input type="number" min="1" value="${r.soThangHopDong||6}" onchange="updRoom(${r.stt},'soThangHopDong',Number(this.value)||6)">
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${end? ('Hết hạn: '+fmtDate(end)+(remain!=null?` (còn ${remain} ngày)`:'')) : 'Chưa có ngày vào ở'}</div></div>
       <div class="f"><label class="checkbox-row" style="margin-top:6px;"><input type="checkbox" ${r.mayLanh?'checked':''} onchange="updRoom(${r.stt},'mayLanh',this.checked)"> Có máy lạnh</label></div>
@@ -1228,23 +1342,36 @@ function archiveCurrentTenancy(r, denNgay){
   if(!r.lichSuKhach) r.lichSuKhach = [];
   r.lichSuKhach.push({
     tuNgay: r.ngayVaoO || '', denNgay: denNgay || todayISO(),
-    soDienThoai: r.soDienThoai || '', nguoiO: JSON.parse(JSON.stringify(r.nguoiO))
+    nguoiO: JSON.parse(JSON.stringify(r.nguoiO))
   });
   r.nguoiO = [];
+}
+function getPrimaryOccupant(r){
+  return (r.nguoiO||[]).find(o=>o.laNguoiChinh) || null;
+}
+function setPrimaryOccupant(roomStt, occupantId){
+  const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
+  if(!r || !r.nguoiO) return;
+  r.nguoiO.forEach(o=>{ o.laNguoiChinh = (o.id===occupantId); });
+  scheduleSave();
+  renderMain();
 }
 function occupantsListHtml(r){
   const list = r.nguoiO || [];
   if(!list.length) return '<div class="empty-state" style="padding:10px;">Chưa có thông tin người ở.</div>';
   return list.map(o => `
-    <div style="border:1px solid var(--line); border-radius:7px; padding:8px 10px; margin-bottom:6px; background:#fff;">
+    <div style="border:1px solid ${o.laNguoiChinh?'var(--brass)':'var(--line)'}; border-radius:7px; padding:8px 10px; margin-bottom:6px; background:#fff;">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-        <div><b>${escapeAttr(o.hoTen||'(chưa có tên)')}</b>${o.gioiTinh?(' · '+o.gioiTinh):''}${o.soDienThoai?(' · '+escapeAttr(o.soDienThoai)):''}</div>
+        <div>${o.laNguoiChinh?'⭐ ':''}<b>${escapeAttr(o.hoTen||'(chưa có tên)')}</b>${o.gioiTinh?(' · '+o.gioiTinh):''}${o.soDienThoai?(' · '+escapeAttr(o.soDienThoai)):''}</div>
         <span class="pill ${o.daDangKyTamTru?'pill-green':'pill-yellow'}">${o.daDangKyTamTru?'Đã đăng ký TT':'Chưa đăng ký TT'}</span>
       </div>
       <div style="font-size:11px; color:var(--ink-soft); margin-top:3px;">CCCD: ${escapeAttr(o.cccd||'—')}${o.ngayCapCccd?(' · Cấp '+fmtDate(o.ngayCapCccd)):''}${o.noiCapCccd?(' · '+escapeAttr(o.noiCapCccd)):''}</div>
       ${o.diaChiThuongTru?`<div style="font-size:11px;color:var(--ink-soft);">Thường trú: ${escapeAttr(o.diaChiThuongTru)}</div>`:''}
       ${o.ngheNghiep?`<div style="font-size:11px;color:var(--ink-soft);">Nghề nghiệp: ${escapeAttr(o.ngheNghiep)}</div>`:''}
       <div class="toolbar" style="margin-top:6px; gap:6px;">
+        ${o.laNguoiChinh
+          ? `<span class="pill pill-muted">⭐ Người chính</span>`
+          : `<button class="btn btn-outline btn-sm" onclick="setPrimaryOccupant(${r.stt}, '${o.id}')">⭐ Đặt làm người chính</button>`}
         <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${r.stt}, '${o.id}')">Sửa</button>
         <button class="btn btn-outline btn-sm" onclick="deleteOccupant(${r.stt}, '${o.id}')">Xoá</button>
       </div>
@@ -1328,6 +1455,7 @@ function saveOccupant(roomStt, occupantId){
   } else {
     data.id = 'occ_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     data.documents = {};
+    data.laNguoiChinh = (r.nguoiO.length===0); // người đầu tiên của phòng tự động là người chính
     r.nguoiO.push(data);
   }
   scheduleSave();
@@ -1370,7 +1498,7 @@ function openTenantHistoryModal(roomStt){
       ${hist.slice().reverse().map(h=>`
         <div style="border:1px solid var(--line); border-radius:7px; padding:8px 10px; margin-bottom:8px;">
           <div style="font-weight:700; color:var(--navy);">${fmtDate(h.tuNgay)} → ${fmtDate(h.denNgay)}</div>
-          <div style="font-size:11px; color:var(--ink-soft);">SĐT: ${escapeAttr(h.soDienThoai||'—')}</div>
+          <div style="font-size:11px; color:var(--ink-soft);">Số người ở: ${(h.nguoiO||[]).length}</div>
           ${(h.nguoiO||[]).map(o=>`
             <div style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);">
               <b>${escapeAttr(o.hoTen||'—')}</b>${o.gioiTinh?(' · '+o.gioiTinh):''}<br>
@@ -1451,11 +1579,7 @@ async function viewDoc(fileId){
     let json = null;
     try{ json = JSON.parse(text); }catch(e){}
     if(json && json.status==='ok' && json.base64){
-      showModal(`
-        <h3>Xem giấy tờ</h3>
-        <img src="data:${json.mimeType};base64,${json.base64}" style="width:100%; border-radius:8px; border:1px solid var(--line);">
-        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
-      `);
+      openImgViewer(`data:${json.mimeType};base64,${json.base64}`);
     } else {
       showToast('Không tải được ảnh: '+describeSyncError({message:text.slice(0,150)}));
     }
@@ -1509,8 +1633,20 @@ async function applyTenantChange(stt, isNewTenant){
     r.ngayVaoO = todayISO();
     const cocEl = document.getElementById('nt_coc');
     if(cocEl){ r.coc = parseMoneyVal(cocEl); }
-  } else if(!r.ngayVaoO){
-    r.ngayVaoO = todayISO();
+  } else {
+    // khách cũ ở tiếp: nếu vừa lỡ bấm "Phòng trống" trong chính hôm nay rồi đổi ý,
+    // khôi phục lại đúng người ở + ngày vào ở gốc đã lưu vào lịch sử, thay vì để trống phải nhập lại từ đầu
+    let restored = false;
+    if((!r.nguoiO || !r.nguoiO.length) && r.lichSuKhach && r.lichSuKhach.length){
+      const last = r.lichSuKhach[r.lichSuKhach.length-1];
+      if(last.denNgay === todayISO()){
+        r.nguoiO = last.nguoiO || [];
+        r.ngayVaoO = last.tuNgay || todayISO();
+        r.lichSuKhach.pop(); // không tính là đã dọn đi thật, bỏ khỏi lịch sử
+        restored = true;
+      }
+    }
+    if(!restored && !r.ngayVaoO){ r.ngayVaoO = todayISO(); }
   }
   scheduleSave();
   await refreshPrevDebts();
@@ -1639,7 +1775,7 @@ async function applyVacate(stt){
 
   archiveCurrentTenancy(r, todayISO());
   r.active = false;
-  r.songuoi = 0; r.soxe = 0; r.coc = 0; r.soDienThoai = '';
+  r.songuoi = 0; r.soxe = 0; r.coc = 0;
   r.ngayVaoO = '';
   r.ngayTrong = todayISO();
 
@@ -1691,7 +1827,7 @@ async function confirmTransfer(fromStt){
   if(newRoom.active){ errEl.textContent = 'Phòng đích không còn trống, vui lòng chọn lại.'; return; }
 
   // giữ lại thông tin khách trước khi xoá ở phòng cũ
-  const tenant = {songuoi:oldRoom.songuoi||0, soxe:oldRoom.soxe||0, coc:oldRoom.coc||0, soDienThoai:oldRoom.soDienThoai||'', nguoiO: JSON.parse(JSON.stringify(oldRoom.nguoiO||[]))};
+  const tenant = {songuoi:oldRoom.songuoi||0, soxe:oldRoom.soxe||0, coc:oldRoom.coc||0, nguoiO: JSON.parse(JSON.stringify(oldRoom.nguoiO||[]))};
 
   let dienPhongCu = 0, dienNote = '';
   if(oldReadingVal !== ''){
@@ -1707,7 +1843,7 @@ async function confirmTransfer(fromStt){
   archiveCurrentTenancy(oldRoom, todayISO());
   oldRoom.sodiencu = oldRoom.sodienmoi!=null ? oldRoom.sodienmoi : oldRoom.sodiencu;
   oldRoom.active = false;
-  oldRoom.songuoi = 0; oldRoom.soxe = 0; oldRoom.coc = 0; oldRoom.ngayVaoO = ''; oldRoom.soDienThoai = '';
+  oldRoom.songuoi = 0; oldRoom.soxe = 0; oldRoom.coc = 0; oldRoom.ngayVaoO = '';
   oldRoom.ngayTrong = todayISO();
   oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang P${targetStt} (${fmtDateShort(todayISO())})`;
 
@@ -1719,7 +1855,6 @@ async function confirmTransfer(fromStt){
   newRoom.songuoi = tenant.songuoi;
   newRoom.soxe = tenant.soxe;
   newRoom.coc = tenant.coc;
-  newRoom.soDienThoai = tenant.soDienThoai;
   newRoom.nguoiO = tenant.nguoiO;
   if(newReadingVal !== ''){ newRoom.sodiencu = Number(newReadingVal); }
   newRoom.dieuchinh = Number(newRoom.dieuchinh||0) + dienPhongCu;
@@ -1902,21 +2037,41 @@ async function inlineImagesForCapture(container){
   const imgs = container.querySelectorAll('.qr-block img');
   for(const img of imgs){
     if(img.dataset.inlined==='1') continue;
-    try{
-      const res = await fetch(img.src, {mode:'cors'});
-      const blob = await res.blob();
-      const dataUrl = await new Promise((resolve,reject)=>{
-        const reader = new FileReader();
-        reader.onload = ()=>resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      img.src = dataUrl;
-      img.dataset.inlined = '1';
-    }catch(err){
-      // giữ nguyên URL cũ nếu lỗi — html2canvas với useCORS:true sẽ thử tải trực tiếp
+    let ok = false;
+    for(let attempt=0; attempt<3 && !ok; attempt++){
+      try{
+        const res = await fetch(img.src, {mode:'cors'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const blob = await res.blob();
+        const dataUrl = await new Promise((resolve,reject)=>{
+          const reader = new FileReader();
+          reader.onload = ()=>resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        img.src = dataUrl;
+        img.dataset.inlined = '1';
+        ok = true;
+      }catch(err){
+        // thử lại sau 1 nhịp ngắn — có thể do gửi liên tục quá nhanh bị tạm chặn
+        if(attempt<2) await new Promise(r=>setTimeout(r, 350*(attempt+1)));
+      }
     }
+    // giữ nguyên URL cũ nếu vẫn lỗi sau 3 lần — html2canvas với useCORS:true sẽ thử tải trực tiếp
   }
+}
+function waitForImagesToLoad(container, timeoutMs){
+  const imgs = Array.from(container.querySelectorAll('img'));
+  const promises = imgs.map(img=>{
+    if(img.complete && img.naturalWidth>0) return Promise.resolve();
+    return new Promise(resolve=>{
+      img.addEventListener('load', resolve, {once:true});
+      img.addEventListener('error', resolve, {once:true}); // vẫn cho qua để không treo mãi nếu 1 ảnh lỗi
+    });
+  });
+  const all = Promise.all(promises);
+  const timeout = new Promise(resolve=>setTimeout(resolve, timeoutMs||8000));
+  return Promise.race([all, timeout]);
 }
 async function shareReceipt(){
   const sel = document.getElementById('phieuRoomSelect').value;
@@ -1960,11 +2115,13 @@ function openExportAllModal(){
     </div>
   `);
 }
-function doPrintAll(){
+async function doPrintAll(){
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
   renderReceiptsList('ALL', true);
-  setTimeout(()=>window.print(), 150);
+  showToast('Đang tải mã QR trước khi in…');
+  await waitForImagesToLoad(document.getElementById('receiptsWrap'), 10000);
+  window.print();
 }
 async function doExportAllImages(){
   showToast('Đang tạo ảnh, vui lòng đợi…');
@@ -1972,11 +2129,15 @@ async function doExportAllImages(){
   renderReceiptsList('ALL', true);
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const zip = new JSZip();
+  let done = 0;
   for(const el of els){
     await inlineImagesForCapture(el);
     const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
     const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
     zip.file(`Phong_${el.dataset.stt}.png`, blob);
+    done++;
+    showToast(`Đang tạo ảnh… (${done}/${els.length})`);
+    await new Promise(r=>setTimeout(r, 150)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
   }
   const content = await zip.generateAsync({type:'blob'});
   const url = URL.createObjectURL(content);
@@ -1993,6 +2154,7 @@ async function doExportAllPDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:'px', format:'a5'});
   let first = true;
+  let done = 0;
   for(const el of els){
     await inlineImagesForCapture(el);
     const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
@@ -2004,6 +2166,9 @@ async function doExportAllPDF(){
     if(!first) pdf.addPage();
     pdf.addImage(imgData, 'PNG', (pageW-w)/2, 10, w, h);
     first = false;
+    done++;
+    showToast(`Đang tạo PDF… (${done}/${els.length})`);
+    await new Promise(r=>setTimeout(r, 150)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
   }
   pdf.save(`PhieuThu_${STATE.monthData.key}.pdf`);
   renderReceiptsList(prevSel);
@@ -2156,9 +2321,9 @@ function renderTamTru(main){
       <h2>🪪 Tạm trú</h2>
       <div class="desc">Danh sách người ở tại các phòng đang có khách. Tick vào ô "Đã đăng ký" ngay khi bên công an xác nhận. Có thể sửa/xoá trực tiếp, lọc theo từng cột, và xuất file khi công an yêu cầu.</div>
       <div class="stat-row">
-        <div class="stat"><div class="lbl">Tổng số người</div><div class="val">${all.length}</div></div>
-        <div class="stat good"><div class="lbl">Đã đăng ký</div><div class="val">${soDaDK}</div></div>
-        <div class="stat bad"><div class="lbl">Chưa đăng ký</div><div class="val">${soChuaDK}</div></div>
+        <div class="stat"><div class="lbl">Tổng số người</div><div class="val" id="tamtru-stat-total">${all.length}</div></div>
+        <div class="stat good"><div class="lbl">Đã đăng ký</div><div class="val" id="tamtru-stat-yes">${soDaDK}</div></div>
+        <div class="stat bad"><div class="lbl">Chưa đăng ký</div><div class="val" id="tamtru-stat-no">${soChuaDK}</div></div>
       </div>
       <div class="toolbar">
         <select id="tamTruFilterSelect" onchange="STATE.tamTruFilter=this.value; renderMain();">
@@ -2175,53 +2340,120 @@ function renderTamTru(main){
       </div>
       <div id="tamTruTableWrap"></div>
     </div>
+
+    <div class="panel">
+      <h2>⚠️ Phòng chưa có thông tin người ở</h2>
+      <div class="desc">Phòng đang có khách nhưng chưa nhập tên/CCCD gì cả — cần lấy thông tin để đăng ký tạm trú. (Phòng trống được bỏ qua.)</div>
+      <div id="missingOccupantList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>🚪 Đã dọn đi — cần báo xoá tạm trú</h2>
+      <div class="desc">Người từng đăng ký tạm trú nhưng đã dọn đi — cần báo công an xoá đăng ký. Tick "Đã báo xoá" sau khi đã xử lý xong.</div>
+      <div class="toolbar">
+        <select id="movedOutFilterSelect" onchange="STATE.movedOutFilter=this.value; renderMovedOutList();">
+          <option value="pending" ${STATE.movedOutFilter==='pending'?'selected':''}>Chưa báo xoá</option>
+          <option value="done" ${STATE.movedOutFilter==='done'?'selected':''}>Đã báo xoá</option>
+          <option value="all" ${STATE.movedOutFilter==='all'?'selected':''}>— Tất cả —</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="exportMovedOutTamTruList()">⬇️ Xuất danh sách</button>
+      </div>
+      <div id="movedOutList"></div>
+    </div>
   `;
   renderTamTruTable();
+  renderMissingOccupantList();
+  renderMovedOutList();
+}
+function renderMissingOccupantList(){
+  const el = document.getElementById('missingOccupantList');
+  if(!el) return;
+  const list = STATE.monthData.rooms.filter(r=>r.active && (!r.nguoiO || !r.nguoiO.length));
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Phòng nào có khách cũng đã có thông tin người ở.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Ghi chú phòng</th><th></th></tr></thead>
+    <tbody>
+      ${list.map(r=>`<tr>
+        <td class="text-center sticky-col"><b>${r.stt}</b></td>
+        <td>${escapeAttr(r.ghichu||'—')}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="openOccupantModal(${r.stt}, null)">+ Thêm người ở</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+function getMovedOutTamTruFlat(){
+  const list = [];
+  STATE.monthData.rooms.forEach(r=>{
+    (r.lichSuKhach||[]).forEach((h,hi)=>{
+      (h.nguoiO||[]).forEach((o,oi)=>{
+        if(o.daDangKyTamTru){ list.push({r, h, hi, o, oi}); }
+      });
+    });
+  });
+  return list.sort((a,b)=> (b.h.denNgay||'').localeCompare(a.h.denNgay||''));
+}
+function renderMovedOutList(){
+  const el = document.getElementById('movedOutList');
+  if(!el) return;
+  let list = getMovedOutTamTruFlat();
+  const filter = STATE.movedOutFilter||'pending';
+  if(filter==='pending') list = list.filter(x=>!x.o.daBaoXoaTamTru);
+  else if(filter==='done') list = list.filter(x=>x.o.daBaoXoaTamTru);
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Không có ai trong danh sách này.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data">
+    <thead><tr><th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>CCCD</th><th>Ngày dọn đi</th><th class="text-center">Đã báo xoá</th></tr></thead>
+    <tbody>
+      ${list.map(x=>`<tr>
+        <td class="text-center sticky-col"><b>${x.r.stt}</b></td>
+        <td>${escapeAttr(x.o.hoTen||'(chưa có tên)')}</td>
+        <td>${escapeAttr(x.o.cccd||'—')}</td>
+        <td>${x.h.denNgay?fmtDate(x.h.denNgay):'—'}</td>
+        <td class="text-center"><input type="checkbox" ${x.o.daBaoXoaTamTru?'checked':''} onchange="toggleBaoXoaTamTru(${x.r.stt}, ${x.hi}, ${x.oi}, this.checked)"></td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+function toggleBaoXoaTamTru(stt, historyIndex, occupantIndex, checked){
+  const r = STATE.monthData.rooms.find(x=>x.stt===stt);
+  const h = r && r.lichSuKhach && r.lichSuKhach[historyIndex];
+  const o = h && h.nguoiO && h.nguoiO[occupantIndex];
+  if(!o) return;
+  o.daBaoXoaTamTru = checked;
+  if(checked && !o.ngayBaoXoaTamTru) o.ngayBaoXoaTamTru = todayISO();
+  scheduleSave();
+  renderMovedOutList();
+}
+function exportMovedOutTamTruList(){
+  const list = getMovedOutTamTruFlat();
+  if(!list.length){ showToast('Không có ai trong danh sách này để xuất.'); return; }
+  const header = TAM_TRU_HEADER.concat(['Ngày dọn đi']);
+  const aoa = [[`DANH SÁCH ĐÃ DỌN ĐI — CẦN BÁO XOÁ TẠM TRÚ — Nhà trọ 187 NSHL`], [], header];
+  list.forEach(x=>{
+    aoa.push([
+      x.o.hoTen||'', x.o.soDienThoai||'', x.r.stt, x.o.ngaySinh||'', x.o.cccd||'',
+      x.o.daDangKyTamTru?'Có':'Không', x.o.ngayCapCccd||'', x.o.noiCapCccd||'',
+      x.o.diaChiThuongTru||'', x.o.ngheNghiep||'', x.o.gioiTinh||'', x.h.denNgay?fmtDate(x.h.denNgay):''
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [22,16,14,14,18,14,14,20,32,18,14,16].map(w=>({wch:w}));
+  ws['!merges'] = [{s:{r:0,c:0}, e:{r:0,c:header.length-1}}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DaDonDi');
+  XLSX.writeFile(wb, `DSDaDonDi_CanBaoXoaTamTru_187NSHL_${todayISO()}.xlsx`);
+  showToast(`Đã xuất danh sách đã dọn đi (${list.length} người).`);
 }
 function tamTruSetColFilter(key, val){
   STATE.tamTruColFilters[key] = val;
-  renderTamTruTable();
+  renderTamTruRows(); // chỉ vẽ lại phần thân bảng, không đụng tới ô lọc đang gõ dở để không mất focus
 }
 function renderTamTruTable(){
   const el = document.getElementById('tamTruTableWrap');
   if(!el) return;
-  let list = getAllOccupantsFlat();
-  if(STATE.tamTruFilter==='yes') list = list.filter(x=>x.o.daDangKyTamTru);
-  else if(STATE.tamTruFilter==='no') list = list.filter(x=>!x.o.daDangKyTamTru);
-
   const f = STATE.tamTruColFilters;
-  const norm = s => String(s||'').toLowerCase();
-  if(f.phong.trim()) list = list.filter(x=>String(x.r.stt).includes(f.phong.trim()));
-  if(f.hoten.trim()) list = list.filter(x=>norm(x.o.hoTen).includes(norm(f.hoten)));
-  if(f.ngaysinh.trim()) list = list.filter(x=>norm(x.o.ngaySinh?fmtDate(x.o.ngaySinh):'').includes(norm(f.ngaysinh)));
-  if(f.gioitinh.trim()) list = list.filter(x=>norm(x.o.gioiTinh).includes(norm(f.gioitinh)));
-  if(f.thuongtru.trim()) list = list.filter(x=>norm(x.o.diaChiThuongTru).includes(norm(f.thuongtru)));
-  if(f.nghenghiep.trim()) list = list.filter(x=>norm(x.o.ngheNghiep).includes(norm(f.nghenghiep)));
-
   const showAddr = !!STATE.tamTruShowAddr;
-  const colCount = showAddr ? 8 : 7;
-
   const filterInput = (key, placeholder)=>`<input type="text" value="${escapeAttr(f[key])}" oninput="tamTruSetColFilter('${key}', this.value)" placeholder="${placeholder}" style="width:100%; font-weight:400;">`;
-
-  if(!list.length){
-    el.innerHTML = `<div class="table-wrap"><table class="data">
-      <thead><tr>
-        <th class="text-center sticky-col">Phòng</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th>
-        ${showAddr?'<th>Thường trú</th>':''}
-        <th>Nghề nghiệp</th><th class="text-center">Đã ĐK</th><th>Thao tác</th>
-      </tr>
-      <tr>
-        <th class="sticky-col">${filterInput('phong','VD: 1')}</th>
-        <th>${filterInput('hoten','VD: Sơn')}</th>
-        <th>${filterInput('ngaysinh','dd-mm-yyyy')}</th>
-        <th>${filterInput('gioitinh','Nam/Nữ')}</th>
-        ${showAddr?`<th>${filterInput('thuongtru','Tỉnh/TP…')}</th>`:''}
-        <th>${filterInput('nghenghiep','VD: Sinh viên')}</th>
-        <th></th><th></th>
-      </tr></thead>
-    </table></div><div class="empty-state">Không có ai khớp bộ lọc này.</div>`;
-    return;
-  }
   el.innerHTML = `<div class="table-wrap"><table class="data">
     <thead>
       <tr>
@@ -2239,24 +2471,48 @@ function renderTamTruTable(){
         <th></th><th></th>
       </tr>
     </thead>
-    <tbody>
-      ${list.map(x=>`<tr>
-        <td class="text-center sticky-col"><b>${x.r.stt}</b></td>
-        <td>${escapeAttr(x.o.hoTen||'(chưa có tên)')}</td>
-        <td>${x.o.ngaySinh?fmtDate(x.o.ngaySinh):'—'}</td>
-        <td>${x.o.gioiTinh||'—'}</td>
-        ${showAddr?`<td>${escapeAttr(x.o.diaChiThuongTru||'—')}</td>`:''}
-        <td>${escapeAttr(x.o.ngheNghiep||'—')}</td>
-        <td class="text-center"><input type="checkbox" ${x.o.daDangKyTamTru?'checked':''} onchange="toggleTamTruStatus(${x.r.stt}, '${x.o.id}', this.checked)"></td>
-        <td>
-          <div style="display:flex; gap:5px;">
-            <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${x.r.stt}, '${x.o.id}')">Sửa</button>
-            <button class="btn btn-outline btn-sm" onclick="deleteOccupant(${x.r.stt}, '${x.o.id}')">Xoá</button>
-          </div>
-        </td>
-      </tr>`).join('')}
-    </tbody>
+    <tbody id="tamTruTbody"></tbody>
   </table></div>`;
+  renderTamTruRows();
+}
+function renderTamTruRows(){
+  const tbody = document.getElementById('tamTruTbody');
+  if(!tbody) return;
+  let list = getAllOccupantsFlat();
+  if(STATE.tamTruFilter==='yes') list = list.filter(x=>x.o.daDangKyTamTru);
+  else if(STATE.tamTruFilter==='no') list = list.filter(x=>!x.o.daDangKyTamTru);
+
+  const f = STATE.tamTruColFilters;
+  const norm = s => String(s||'').toLowerCase();
+  if(f.phong.trim()) list = list.filter(x=>String(x.r.stt).includes(f.phong.trim()));
+  if(f.hoten.trim()) list = list.filter(x=>norm(x.o.hoTen).includes(norm(f.hoten)));
+  if(f.ngaysinh.trim()) list = list.filter(x=>norm(x.o.ngaySinh?fmtDate(x.o.ngaySinh):'').includes(norm(f.ngaysinh)));
+  if(f.gioitinh.trim()) list = list.filter(x=>norm(x.o.gioiTinh).includes(norm(f.gioitinh)));
+  if(f.thuongtru.trim()) list = list.filter(x=>norm(x.o.diaChiThuongTru).includes(norm(f.thuongtru)));
+  if(f.nghenghiep.trim()) list = list.filter(x=>norm(x.o.ngheNghiep).includes(norm(f.nghenghiep)));
+
+  const showAddr = !!STATE.tamTruShowAddr;
+  const colCount = showAddr ? 8 : 7;
+
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="${colCount}"><div class="empty-state">Không có ai khớp bộ lọc này.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(x=>`<tr>
+    <td class="text-center sticky-col"><b>${x.r.stt}</b></td>
+    <td>${escapeAttr(x.o.hoTen||'(chưa có tên)')}</td>
+    <td>${x.o.ngaySinh?fmtDate(x.o.ngaySinh):'—'}</td>
+    <td>${x.o.gioiTinh||'—'}</td>
+    ${showAddr?`<td>${escapeAttr(x.o.diaChiThuongTru||'—')}</td>`:''}
+    <td>${escapeAttr(x.o.ngheNghiep||'—')}</td>
+    <td class="text-center"><input type="checkbox" ${x.o.daDangKyTamTru?'checked':''} onchange="toggleTamTruStatus(${x.r.stt}, '${x.o.id}', this.checked)"></td>
+    <td>
+      <div style="display:flex; gap:5px;">
+        <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${x.r.stt}, '${x.o.id}')">Sửa</button>
+        <button class="btn btn-outline btn-sm" onclick="deleteOccupant(${x.r.stt}, '${x.o.id}')">Xoá</button>
+      </div>
+    </td>
+  </tr>`).join('');
 }
 function toggleTamTruStatus(stt, occupantId, checked){
   const r = STATE.monthData.rooms.find(x=>x.stt===stt);
@@ -2265,8 +2521,16 @@ function toggleTamTruStatus(stt, occupantId, checked){
   o.daDangKyTamTru = checked;
   if(checked && !o.ngayDangKyTamTru) o.ngayDangKyTamTru = todayISO();
   scheduleSave();
-  renderTamTruTable();
-  renderTabsNav(); // không bắt buộc, giữ giao diện đồng nhất nếu sau này thêm huy hiệu số lượng
+  renderTamTruRows();
+  refreshTamTruStats();
+}
+function refreshTamTruStats(){
+  const all = getAllOccupantsFlat();
+  const soDaDK = all.filter(x=>x.o.daDangKyTamTru).length;
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent = val; };
+  set('tamtru-stat-total', all.length);
+  set('tamtru-stat-yes', soDaDK);
+  set('tamtru-stat-no', all.length-soDaDK);
 }
 function normalizeCCCD(cccd){
   const digits = String(cccd||'').replace(/\D/g,'');
@@ -3043,48 +3307,6 @@ async function saveRecoverySettings(){
   await stSetJSON('settings', STATE.settings);
   await touchLastModified();
   showToast('Đã lưu câu hỏi bảo mật.');
-}
-function openFirstDeviceSyncModal(){
-  showModal(`
-    <h3>Đồng bộ dữ liệu từ Google Sheet</h3>
-    <div class="desc">Dùng khi bạn mở app lần đầu trên thiết bị mới (điện thoại/máy tính khác), để lấy đúng mật khẩu và toàn bộ dữ liệu đã lưu từ Google Sheet về máy này. <b>Lưu ý: sẽ ghi đè dữ liệu đang có trên máy này (nếu có).</b></div>
-    <div class="field"><label>Link Web App (Google Apps Script)</label><input type="text" id="fd_url" placeholder="https://script.google.com/macros/s/.../exec"></div>
-    <div class="err-msg" id="fd_err"></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
-      <button class="btn btn-primary" onclick="doFirstDeviceSync()">Tải dữ liệu về máy này</button>
-    </div>
-  `);
-}
-async function doFirstDeviceSync(){
-  const url = (document.getElementById('fd_url').value||'').trim();
-  const errEl = document.getElementById('fd_err');
-  if(!url){ errEl.textContent = 'Vui lòng dán link Web App.'; return; }
-  errEl.textContent = 'Đang tải dữ liệu…';
-  try{
-    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
-    const text = await res.text();
-    let json = null;
-    try{ json = JSON.parse(text); }catch(e){}
-    if(json && json.status==='ok' && json.data){
-      const state = JSON.parse(json.data);
-      await stSet('auth-password', state.authPassword || DEFAULT_PASSWORD);
-      const settings = Object.assign({}, DEFAULT_SETTINGS, state.settings||{});
-      settings.sheetWebhookUrl = url;
-      await stSetJSON('settings', settings);
-      await stSetJSON('months-index', state.monthsIndex||[]);
-      const months = state.months||{};
-      for(const k in months){ await stSetJSON('month:'+k, months[k]); }
-      if(state.activeMonth){ await stSet('active-month', state.activeMonth); }
-      await stSet('last-modified', String(state.lastModified||Date.now()));
-      closeModal();
-      showToast('Đã đồng bộ xong — nhập mật khẩu để đăng nhập.');
-    } else {
-      errEl.textContent = 'Không tìm thấy dữ liệu — kiểm tra lại link, hoặc Sheet chưa có dữ liệu nào được lưu.';
-    }
-  }catch(err){
-    errEl.textContent = describeSyncError(err);
-  }
 }
 async function openForgotPasswordModal(){
   const settings = (await stGetJSON('settings')) || {};
