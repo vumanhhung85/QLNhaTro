@@ -352,7 +352,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.3</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.4</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -394,6 +394,7 @@ const STATE = {
   filterText:'',
   skipEmptyPrint:true,
   phieuSelected:'ALL',
+  qrPreviewAll:false,
   tamTruFilter:'all',
   tamTruShowAddr:false,
   tamTruColFilters:{phong:'', hoten:'', ngaysinh:'', gioitinh:'', thuongtru:'', nghenghiep:''},
@@ -1980,16 +1981,18 @@ function renderPhieu(main){
   main.innerHTML = `
     <div class="panel no-print">
       <h2>Phiếu thu tiền phòng</h2>
-      <div class="desc">Chọn 1 phòng để chỉ xem/tải phiếu đó, hoặc để "Tất cả" để xem/in toàn bộ.</div>
+      <div class="desc">Chọn 1 phòng để chỉ xem/tải phiếu đó, hoặc để "Tất cả" để xem/in toàn bộ. Nếu chọn "Tất cả": bấm <b>"🔄 Tải mã QR cho tất cả"</b> và đợi tải xong hẳn (xem số đếm bên dưới) <b>trước khi</b> bấm Xuất/In, để hạn chế thiếu mã QR.</div>
       <div class="toolbar">
-        <label class="checkbox-row"><input type="checkbox" id="skipEmptyChk" ${STATE.skipEmptyPrint?'checked':''} onchange="STATE.skipEmptyPrint=this.checked; renderReceiptsList(STATE.phieuSelected);"> Bỏ qua phòng trống</label>
+        <label class="checkbox-row"><input type="checkbox" id="skipEmptyChk" ${STATE.skipEmptyPrint?'checked':''} onchange="STATE.skipEmptyPrint=this.checked; STATE.qrPreviewAll=false; renderReceiptsList(STATE.phieuSelected);"> Bỏ qua phòng trống</label>
         <div class="spacer"></div>
-        <select id="phieuRoomSelect" onchange="STATE.phieuSelected=this.value; renderReceiptsList(this.value);"></select>
+        <select id="phieuRoomSelect" onchange="STATE.phieuSelected=this.value; STATE.qrPreviewAll=false; renderReceiptsList(this.value);"></select>
         <button class="btn btn-outline btn-sm" onclick="exportOneReceiptImage()">🖼️ Tải ảnh phòng này</button>
         <button class="btn btn-outline btn-sm" onclick="shareReceipt()">📤 Chia sẻ (Zalo...)</button>
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ In phiếu đang xem</button>
+        <button class="btn btn-outline btn-sm" onclick="preloadAllQR()">🔄 Tải mã QR cho tất cả</button>
         <button class="btn btn-brass btn-sm" onclick="openExportAllModal()">⬇️ Xuất tất cả ▾</button>
       </div>
+      <div id="qrPreloadStatus"></div>
     </div>
     <div id="receiptsWrap"></div>
   `;
@@ -2000,6 +2003,28 @@ function renderPhieu(main){
   sel.value = STATE.phieuSelected || 'ALL';
   renderReceiptsList(sel.value);
 }
+function preloadAllQR(){
+  document.getElementById('phieuRoomSelect').value = 'ALL';
+  STATE.phieuSelected = 'ALL';
+  STATE.qrPreviewAll = true;
+  renderReceiptsList('ALL', true);
+  const wrap = document.getElementById('receiptsWrap');
+  const imgs = Array.from(wrap.querySelectorAll('.qr-block img'));
+  const statusEl = document.getElementById('qrPreloadStatus');
+  let loaded = 0, failed = 0;
+  const total = imgs.length;
+  const updateStatus = ()=>{
+    if(!statusEl) return;
+    const done = loaded+failed;
+    statusEl.innerHTML = `<div class="desc" style="margin-top:8px;">Đang tải mã QR tự nhiên qua trình duyệt (không giới hạn tốc độ như trước): <b>${loaded}/${total}</b> đã có ảnh${failed?`, ${failed} chưa tải được`:''}. ${done<total?'Cứ để yên trang, đợi vài chục giây tới khi số này không tăng nữa rồi hẵng bấm Xuất/In.':'<b>Xong — có thể bấm Xuất/In tất cả.</b>'}</div>`;
+  };
+  updateStatus();
+  imgs.forEach(img=>{
+    if(img.complete && img.naturalWidth>0){ loaded++; updateStatus(); return; }
+    img.addEventListener('load', ()=>{ loaded++; updateStatus(); }, {once:true});
+    img.addEventListener('error', ()=>{ failed++; updateStatus(); }, {once:true});
+  });
+}
 function renderReceiptsList(selectedVal, forceShowQR){
   const wrap = document.getElementById('receiptsWrap');
   if(!wrap) return;
@@ -2009,7 +2034,7 @@ function renderReceiptsList(selectedVal, forceShowQR){
   if(selectedVal && selectedVal!=='ALL'){
     list = list.filter(r=>String(r.stt)===String(selectedVal));
   }
-  const showQR = forceShowQR!==undefined ? forceShowQR : (selectedVal !== 'ALL');
+  const showQR = forceShowQR!==undefined ? forceShowQR : (STATE.qrPreviewAll && selectedVal==='ALL' ? true : selectedVal !== 'ALL');
   wrap.innerHTML = list.map(r=>receiptHtml(r,s,{showQR})).join('') || '<div class="empty-state">Không có phiếu để hiển thị.</div>';
 }
 function receiptHtml(r, s, options){
@@ -2084,6 +2109,19 @@ async function inlineImagesForCapture(container){
     if(img.dataset.inlined==='1') continue;
     const targetSrc = img.dataset.qrSrc || img.src;
     if(!targetSrc) continue;
+
+    // Ưu tiên dùng ảnh đã tải sẵn (ví dụ vừa bấm "Tải mã QR cho tất cả" trước đó) — không cần gọi mạng lại nữa
+    if(img.src === targetSrc && img.complete && img.naturalWidth>0){
+      try{
+        const tmp = document.createElement('canvas');
+        tmp.width = img.naturalWidth; tmp.height = img.naturalHeight;
+        tmp.getContext('2d').drawImage(img, 0, 0);
+        img.src = tmp.toDataURL('image/png');
+        img.dataset.inlined = '1';
+        continue; // xong ảnh này, không cần fetch lại
+      }catch(err){ /* bị chặn đọc pixel (CORS) dù ảnh hiển thị được — rơi xuống tải lại bên dưới */ }
+    }
+
     let ok = false;
     for(let attempt=0; attempt<4 && !ok; attempt++){
       try{
@@ -2150,21 +2188,38 @@ function openExportAllModal(){
     </div>
   `);
 }
+function waitForImagesToLoad(container, timeoutMs){
+  const imgs = Array.from(container.querySelectorAll('img'));
+  const promises = imgs.map(img=>{
+    if(img.complete && img.naturalWidth>0) return Promise.resolve();
+    return new Promise(resolve=>{
+      img.addEventListener('load', resolve, {once:true});
+      img.addEventListener('error', resolve, {once:true}); // vẫn cho qua để không treo mãi nếu 1 ảnh lỗi
+    });
+  });
+  return Promise.race([Promise.all(promises), new Promise(r=>setTimeout(r, timeoutMs||15000))]);
+}
 async function doPrintAll(){
+  const alreadyPreloaded = document.getElementById('phieuRoomSelect').value==='ALL' && STATE.qrPreviewAll;
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
-  renderReceiptsList('ALL', true);
-  const wrap = document.getElementById('receiptsWrap');
-  blankAllQRImages(wrap); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc — nguyên nhân chính gây mất QR
-  showToast('Đang tải mã QR lần lượt trước khi in, có thể mất khoảng 30 giây…');
-  await inlineImagesForCapture(wrap);
+  if(!alreadyPreloaded){
+    renderReceiptsList('ALL', true);
+    showToast('Đang tải mã QR trước khi in — mẹo: lần sau bấm "Tải mã QR cho tất cả" trước rồi mới In, sẽ nhanh và chắc hơn.');
+    await waitForImagesToLoad(document.getElementById('receiptsWrap'), 15000);
+  }
   window.print();
 }
 async function doExportAllImages(){
-  showToast('Đang tạo ảnh, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
+  const alreadyPreloaded = document.getElementById('phieuRoomSelect').value==='ALL' && STATE.qrPreviewAll;
+  showToast(alreadyPreloaded ? 'Đang tạo ảnh từ mã QR đã tải sẵn…' : 'Đang tạo ảnh, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
   const prevSel = STATE.phieuSelected;
-  renderReceiptsList('ALL', true);
-  blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
+  document.getElementById('phieuRoomSelect').value = 'ALL';
+  STATE.phieuSelected = 'ALL';
+  if(!alreadyPreloaded){
+    renderReceiptsList('ALL', true);
+    blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
+  }
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const zip = new JSZip();
   let done = 0;
@@ -2175,7 +2230,7 @@ async function doExportAllImages(){
     zip.file(`Phong_${el.dataset.stt}.png`, blob);
     done++;
     showToast(`Đang tạo ảnh… (${done}/${els.length})`);
-    await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
+    if(!alreadyPreloaded) await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
   }
   const content = await zip.generateAsync({type:'blob'});
   const url = URL.createObjectURL(content);
@@ -2185,10 +2240,15 @@ async function doExportAllImages(){
   showToast('Đã tải file zip.');
 }
 async function doExportAllPDF(){
-  showToast('Đang tạo PDF, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
+  const alreadyPreloaded = document.getElementById('phieuRoomSelect').value==='ALL' && STATE.qrPreviewAll;
+  showToast(alreadyPreloaded ? 'Đang tạo PDF từ mã QR đã tải sẵn…' : 'Đang tạo PDF, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
   const prevSel = STATE.phieuSelected;
-  renderReceiptsList('ALL', true);
-  blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
+  document.getElementById('phieuRoomSelect').value = 'ALL';
+  STATE.phieuSelected = 'ALL';
+  if(!alreadyPreloaded){
+    renderReceiptsList('ALL', true);
+    blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
+  }
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:'px', format:'a5'});
@@ -2207,7 +2267,7 @@ async function doExportAllPDF(){
     first = false;
     done++;
     showToast(`Đang tạo PDF… (${done}/${els.length})`);
-    await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
+    if(!alreadyPreloaded) await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
   }
   pdf.save(`PhieuThu_${STATE.monthData.key}.pdf`);
   renderReceiptsList(prevSel);
