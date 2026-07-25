@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
+<title>Đăng ký tạm trú — Nhà Trọ 187 NSHL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF5E9; --card:#FFFDF8; --ink:#22241F; --ink-soft:#5B5A4E;
+  --navy:#16233B; --brass:#B8863B; --brass-dark:#8C6526; --brass-light:#E6C989;
+  --brick:#A8442B; --green-ok:#2F6B4F; --green-bg:#E3EFE6; --line:#DCCFAE; --danger:#B23A3A; --danger-bg:#F6E4E1;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--paper); color:var(--ink); font-family:'Be Vietnam Pro',-apple-system,sans-serif; font-size:15px; line-height:1.5; min-height:100vh;}
+.wrap{max-width:480px; margin:0 auto; padding:18px 16px 40px;}
+.seal{width:52px;height:52px;border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; background:var(--navy); color:var(--brass-light); font-weight:800; font-size:19px; border:2px solid var(--brass);}
+h1{font-size:18px; text-align:center; margin:0 0 2px; color:var(--navy); font-weight:800;}
+p.sub{text-align:center; color:var(--ink-soft); margin:0 0 20px; font-size:13px;}
+.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 2px 10px rgba(22,35,59,.06); margin-bottom:14px;}
+.room-banner{background:var(--brass-light); color:var(--brass-dark); border-radius:10px; padding:12px 14px; font-weight:800; font-size:14px; text-align:center; margin-bottom:14px; border:2px dashed var(--brass-dark);}
+.field{margin-bottom:13px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+.field input, .field select{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); font-size:15px;}
+.field select{font-weight:700;}
+.field input:focus, .field select:focus{outline:2px solid var(--brass-light); border-color:var(--brass);}
+.req{color:var(--brick);}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:12px 16px; border-radius:9px; border:1px solid transparent; font-weight:700; font-size:14.5px; width:100%; cursor:pointer;}
+.btn-primary{background:var(--navy); color:#fff;}
+.btn-outline{background:transparent; border-color:var(--line); color:var(--ink);}
+.btn-sm{width:auto; padding:8px 12px; font-size:13px;}
+.photo-box{border:1px dashed var(--line); border-radius:10px; padding:12px; text-align:center;}
+.photo-box img{max-width:100%; border-radius:8px; margin-bottom:8px; display:block;}
+.photo-actions{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px;}
+.msg-box{text-align:center; padding:30px 16px;}
+.msg-box .big{font-size:40px; margin-bottom:10px;}
+.err-msg{color:var(--brick); font-size:13px; text-align:center; margin-top:10px; min-height:16px;}
+.hint{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+.spinner{display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="seal">187</div>
+  <h1>Đăng ký tạm trú</h1>
+  <p class="sub">Nhà Trọ 187 NSHL — điền thông tin để chủ trọ đăng ký tạm trú giúp bạn</p>
+  <div id="content"><div class="card"><div class="msg-box">Đang kiểm tra liên kết…</div></div></div>
+</div>
+
+<script>
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec";
+let selectedCccdFile = null, selectedHopDongFile = null;
+let cccdRotation = 0, hopDongRotation = 0;
+
+async function boot(){
+  const content = document.getElementById('content');
+  if(!WEBHOOK_URL){
+    content.innerHTML = `<div class="card"><div class="msg-box"><div class="big">⚠️</div>Trang chưa được cấu hình đầy đủ. Vui lòng liên hệ chủ trọ.</div></div>`;
+    return;
+  }
+  try{
+    const res = await fetch(WEBHOOK_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'checkTamTruWindow'})});
+    const json = await res.json();
+    if(json && json.status==='ok' && json.open){
+      renderForm(json);
+    } else {
+      content.innerHTML = `<div class="card"><div class="msg-box"><div class="big">🔒</div><b>Liên kết này hiện đã đóng</b><br><br>Vui lòng liên hệ chủ trọ để nhận liên kết đăng ký mới.</div></div>`;
+    }
+  }catch(err){
+    content.innerHTML = `<div class="card"><div class="msg-box"><div class="big">⚠️</div>Không kết nối được. Vui lòng thử lại sau, hoặc liên hệ chủ trọ.</div></div>`;
+  }
+}
+
+function renderForm(){
+  const content = document.getElementById('content');
+  let roomOptions = '<option value="">— Chọn số phòng —</option>';
+  for(let i=1;i<=48;i++){ roomOptions += `<option value="${i}">Phòng ${i}</option>`; }
+  content.innerHTML = `
+    <div class="room-banner">⚠️ Vui lòng chọn ĐÚNG số phòng bạn đang ở trước khi điền tiếp bên dưới</div>
+    <div class="card">
+      <div class="field">
+        <label>Số phòng đang ở <span class="req">*</span></label>
+        <select id="f_phong">${roomOptions}</select>
+      </div>
+      <div class="field"><label>Họ và tên <span class="req">*</span></label><input type="text" id="f_hoten" spellcheck="false" autocorrect="off"></div>
+      <div class="field"><label>Số điện thoại</label><input type="tel" id="f_sdt" spellcheck="false"></div>
+      <div class="field"><label>Ngày sinh</label><input type="date" id="f_ngaysinh"></div>
+      <div class="field"><label>Giới tính</label>
+        <select id="f_gioitinh"><option value="">—</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option></select>
+      </div>
+      <div class="field"><label>Số CCCD <span class="req">*</span></label><input type="text" id="f_cccd" inputmode="numeric" spellcheck="false"></div>
+      <div class="field"><label>Ngày cấp CCCD</label><input type="date" id="f_ngaycap"></div>
+      <div class="field"><label>Nơi cấp</label><input type="text" id="f_noicap" spellcheck="false"></div>
+      <div class="field"><label>Địa chỉ thường trú (theo CCCD)</label><input type="text" id="f_thuongtru" spellcheck="false"></div>
+      <div class="field"><label>Nghề nghiệp</label><input type="text" id="f_nghenghiep" spellcheck="false"></div>
+    </div>
+
+    <div class="card">
+      <div class="field" style="margin-bottom:8px;"><label>📷 Ảnh CCCD (mặt trước hoặc gộp cả 2 mặt)</label></div>
+      <div class="photo-box" id="cccdBox">
+        <label class="btn btn-outline" style="margin:0;">📎 Chọn ảnh / Chụp ảnh
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'cccd')">
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field" style="margin-bottom:8px;"><label>📄 Ảnh hợp đồng (nếu có)</label></div>
+      <div class="photo-box" id="hopDongBox">
+        <label class="btn btn-outline" style="margin:0;">📎 Chọn ảnh / Chụp ảnh
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'hopdong')">
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">Gửi đăng ký</button>
+    <div class="err-msg" id="formErr"></div>
+    <p class="hint" style="text-align:center;">Thông tin của bạn sẽ được chủ trọ xem lại và xác nhận trước khi hoàn tất đăng ký tạm trú.</p>
+  `;
+}
+
+function onPickPhoto(file, kind){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      if(kind==='cccd'){ selectedCccdFile = img; cccdRotation = 0; renderPhotoPreview('cccd'); }
+      else { selectedHopDongFile = img; hopDongRotation = 0; renderPhotoPreview('hopdong'); }
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function renderPhotoPreview(kind){
+  const box = document.getElementById(kind==='cccd'?'cccdBox':'hopDongBox');
+  const img = kind==='cccd'?selectedCccdFile:selectedHopDongFile;
+  const rot = kind==='cccd'?cccdRotation:hopDongRotation;
+  const dataUrl = rotatedDataUrl(img, rot, 0.6);
+  box.innerHTML = `
+    <img src="${dataUrl}" style="transform:none;">
+    <div class="photo-actions">
+      <button class="btn btn-outline btn-sm" onclick="rotatePhoto('${kind}',-90)">↺ Xoay trái</button>
+      <button class="btn btn-outline btn-sm" onclick="rotatePhoto('${kind}',90)">↻ Xoay phải</button>
+      <label class="btn btn-outline btn-sm" style="margin:0;">📎 Chọn lại
+        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'${kind}')">
+      </label>
+    </div>
+  `;
+}
+function rotatePhoto(kind, delta){
+  if(kind==='cccd'){ cccdRotation = (cccdRotation + delta + 360) % 360; renderPhotoPreview('cccd'); }
+  else { hopDongRotation = (hopDongRotation + delta + 360) % 360; renderPhotoPreview('hopdong'); }
+}
+function rotatedDataUrl(img, rotationDeg, quality){
+  const swap = (rotationDeg===90 || rotationDeg===270);
+  const w = swap ? img.height : img.width;
+  const h = swap ? img.width : img.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.translate(w/2, h/2);
+  ctx.rotate(rotationDeg*Math.PI/180);
+  ctx.drawImage(img, -img.width/2, -img.height/2);
+  return canvas.toDataURL('image/jpeg', quality||0.8);
+}
+function compressedBase64(img, rotationDeg, maxDim){
+  const swap = (rotationDeg===90 || rotationDeg===270);
+  let w = swap ? img.height : img.width;
+  let h = swap ? img.width : img.height;
+  if(w>=h && w>maxDim){ h = Math.round(h*maxDim/w); w = maxDim; }
+  else if(h>w && h>maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.translate(w/2, h/2);
+  ctx.rotate(rotationDeg*Math.PI/180);
+  const dw = swap ? h : w, dh = swap ? w : h;
+  ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
+  return canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+}
+
+async function submitForm(){
+  const errEl = document.getElementById('formErr');
+  const btn = document.getElementById('submitBtn');
+  const phong = document.getElementById('f_phong').value;
+  const hoten = document.getElementById('f_hoten').value.trim();
+  const cccd = document.getElementById('f_cccd').value.trim();
+  if(!phong){ errEl.textContent = 'Vui lòng chọn số phòng.'; return; }
+  if(!hoten){ errEl.textContent = 'Vui lòng nhập họ tên.'; return; }
+  if(!cccd){ errEl.textContent = 'Vui lòng nhập số CCCD.'; return; }
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang gửi…';
+  try{
+    const payload = {
+      action:'submitTamTruPending',
+      phong: Number(phong),
+      hoTen: hoten,
+      soDienThoai: document.getElementById('f_sdt').value.trim(),
+      ngaySinh: document.getElementById('f_ngaysinh').value,
+      gioiTinh: document.getElementById('f_gioitinh').value,
+      cccd: cccd,
+      ngayCap: document.getElementById('f_ngaycap').value,
+      noiCap: document.getElementById('f_noicap').value.trim(),
+      thuongTru: document.getElementById('f_thuongtru').value.trim(),
+      ngheNghiep: document.getElementById('f_nghenghiep').value.trim()
+    };
+    if(selectedCccdFile) payload.cccdBase64 = compressedBase64(selectedCccdFile, cccdRotation, 1600);
+    if(selectedHopDongFile) payload.hopDongBase64 = compressedBase64(selectedHopDongFile, hopDongRotation, 1600);
+
+    const res = await fetch(WEBHOOK_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload)});
+    const json = await res.json();
+    if(json && json.status==='ok'){
+      showSuccess();
+    } else if(json && json.message==='full'){
+      errEl.textContent = 'Đã đủ số lượng đăng ký cho đợt này. Vui lòng liên hệ chủ trọ.';
+      btn.disabled = false; btn.textContent = 'Gửi đăng ký';
+    } else if(json && json.message==='closed'){
+      errEl.textContent = 'Liên kết đã đóng. Vui lòng liên hệ chủ trọ để nhận liên kết mới.';
+      btn.disabled = false; btn.textContent = 'Gửi đăng ký';
+    } else {
+      errEl.textContent = 'Gửi thất bại, vui lòng thử lại.';
+      btn.disabled = false; btn.textContent = 'Gửi đăng ký';
+    }
+  }catch(err){
+    errEl.textContent = 'Lỗi kết nối, vui lòng thử lại.';
+    btn.disabled = false; btn.textContent = 'Gửi đăng ký';
+  }
+}
+
+function showSuccess(){
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="card">
+      <div class="msg-box">
+        <div class="big">✅</div>
+        <b>Đã gửi đăng ký thành công!</b><br>
+        <span style="color:var(--ink-soft); font-size:13px;">Chủ trọ sẽ xem lại và xác nhận thông tin của bạn.</span>
+      </div>
+      <button class="btn btn-primary" onclick="boot()">➕ Đăng ký cho người tiếp theo</button>
+      <div style="height:8px;"></div>
+      <button class="btn btn-outline" onclick="exitPage()">Thoát</button>
+    </div>
+  `;
+}
+function exitPage(){
+  document.getElementById('content').innerHTML = '<div class="card"><div class="msg-box">Bạn có thể đóng trang này. Cảm ơn bạn!</div></div>';
+}
+
+boot();
+</script>
+</body>
+</html>
