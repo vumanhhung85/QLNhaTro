@@ -353,7 +353,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 4.0</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 4.1</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -746,7 +746,7 @@ async function confirmNewMonth(){
   await saveCurrentMonth();
 
   const newRooms = STATE.monthData.rooms.map(r=>{
-    const nr = Object.assign({}, r);
+    const nr = JSON.parse(JSON.stringify(r)); // sao chép SÂU (kể cả người ở, lịch sử, giấy tờ) — tránh 2 tháng dùng chung 1 vùng nhớ
     if(r.waterMeter){ nr.nuocCu = r.nuocMoi; nr.nuocMoi = null; }
     nr.sodiencu = r.sodienmoi || 0;
     nr.sodienmoi = null;
@@ -771,6 +771,7 @@ async function confirmNewMonth(){
   STATE.openRooms = {};
   STATE.stagingRooms = null;
   await refreshPrevDebts();
+  await touchLastModified();
   closeModal();
   renderTabsNav(); renderMonthSelect(); renderMain();
   showToast('Đã tạo '+monthLabel(nk));
