@@ -352,7 +352,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.1</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.2</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -2074,7 +2074,7 @@ async function inlineImagesForCapture(container){
   for(const img of imgs){
     if(img.dataset.inlined==='1') continue;
     let ok = false;
-    for(let attempt=0; attempt<3 && !ok; attempt++){
+    for(let attempt=0; attempt<4 && !ok; attempt++){
       try{
         const res = await fetch(img.src, {mode:'cors'});
         if(!res.ok) throw new Error('HTTP '+res.status);
@@ -2089,11 +2089,11 @@ async function inlineImagesForCapture(container){
         img.dataset.inlined = '1';
         ok = true;
       }catch(err){
-        // thử lại sau 1 nhịp ngắn — có thể do gửi liên tục quá nhanh bị tạm chặn
-        if(attempt<2) await new Promise(r=>setTimeout(r, 350*(attempt+1)));
+        // thử lại, chờ lâu dần — bên VietQR nhiều khả năng giới hạn số lần gọi liên tục
+        if(attempt<3) await new Promise(r=>setTimeout(r, 1200*(attempt+1)));
       }
     }
-    // giữ nguyên URL cũ nếu vẫn lỗi sau 3 lần — html2canvas với useCORS:true sẽ thử tải trực tiếp
+    // giữ nguyên URL cũ nếu vẫn lỗi sau 4 lần — html2canvas với useCORS:true sẽ thử tải trực tiếp
   }
 }
 function waitForImagesToLoad(container, timeoutMs){
@@ -2160,7 +2160,7 @@ async function doPrintAll(){
   window.print();
 }
 async function doExportAllImages(){
-  showToast('Đang tạo ảnh, vui lòng đợi…');
+  showToast('Đang tạo ảnh, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
   const prevSel = STATE.phieuSelected;
   renderReceiptsList('ALL', true);
   const els = document.querySelectorAll('#receiptsWrap .receipt');
@@ -2173,7 +2173,7 @@ async function doExportAllImages(){
     zip.file(`Phong_${el.dataset.stt}.png`, blob);
     done++;
     showToast(`Đang tạo ảnh… (${done}/${els.length})`);
-    await new Promise(r=>setTimeout(r, 150)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
+    await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
   }
   const content = await zip.generateAsync({type:'blob'});
   const url = URL.createObjectURL(content);
@@ -2183,7 +2183,7 @@ async function doExportAllImages(){
   showToast('Đã tải file zip.');
 }
 async function doExportAllPDF(){
-  showToast('Đang tạo PDF, vui lòng đợi…');
+  showToast('Đang tạo PDF, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
   const prevSel = STATE.phieuSelected;
   renderReceiptsList('ALL', true);
   const els = document.querySelectorAll('#receiptsWrap .receipt');
@@ -2204,7 +2204,7 @@ async function doExportAllPDF(){
     first = false;
     done++;
     showToast(`Đang tạo PDF… (${done}/${els.length})`);
-    await new Promise(r=>setTimeout(r, 150)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
+    await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
   }
   pdf.save(`PhieuThu_${STATE.monthData.key}.pdf`);
   renderReceiptsList(prevSel);
