@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.0/qrcode.min.js"></script>
 <style>
 :root{
   --paper:#FAF5E9;
@@ -352,7 +353,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
   <main id="mainContent"></main>
 
-  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 3.4</span></footer>
+  <footer class="appfoot"><span class="foot-line">Nhà Trọ 187 Ni Sư Huỳnh Liên · dữ liệu lưu tự động</span><span class="foot-line">Phiên bản: 4.0</span></footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -394,7 +395,6 @@ const STATE = {
   filterText:'',
   skipEmptyPrint:true,
   phieuSelected:'ALL',
-  qrPreviewAll:false,
   tamTruFilter:'all',
   tamTruShowAddr:false,
   tamTruColFilters:{phong:'', hoten:'', ngaysinh:'', gioitinh:'', thuongtru:'', nghenghiep:''},
@@ -864,14 +864,14 @@ function updateQRPreview(){
   const customEl = document.getElementById('s_vietqrbank_custom');
   const bankBin = sel.value==='custom' ? (customEl?customEl.value.trim():'') : sel.value;
   const stk = (document.getElementById('s_stk').value||'').trim();
-  const ten = (document.getElementById('s_ten').value||'').trim();
   if(!bankBin || !stk){
     box.innerHTML = '<div class="desc" style="margin:0;">Chọn ngân hàng và nhập số tài khoản ở trên để xem thử mã QR.</div>';
     return;
   }
-  const url = vietQRImageUrl(bankBin, stk, 1000000, 'Vi du', ten);
-  box.innerHTML = `<img src="${url}" alt="Xem trước QR" style="width:130px;height:130px;border-radius:8px;border:1px solid var(--line);">
-    <div class="desc" style="margin:0;">Ví dụ QR với số tiền giả định 1.000.000đ — trên phiếu thật sẽ tự thay đúng số tiền của từng phòng, từng tháng.</div>`;
+  const dataUrl = vietQRLocalDataUrl(bankBin, stk, 1000000, 'Vi du');
+  if(!dataUrl){ box.innerHTML = '<div class="desc" style="margin:0;">Không tạo được mã QR — kiểm tra lại mã ngân hàng/số tài khoản.</div>'; return; }
+  box.innerHTML = `<img src="${dataUrl}" alt="Xem trước QR" style="width:130px;height:130px;border-radius:8px;border:1px solid var(--line);">
+    <div class="desc" style="margin:0;">Ví dụ QR với số tiền giả định 1.000.000đ — trên phiếu thật sẽ tự thay đúng số tiền của từng phòng, từng tháng. Mã được tạo ngay trên máy, không cần mạng.</div>`;
 }
 function stripDiacritics(str){
   return String(str||'')
@@ -879,25 +879,60 @@ function stripDiacritics(str){
     .replace(/đ/g,'d').replace(/Đ/g,'D')
     .replace(/[^a-zA-Z0-9 .-]/g,'').trim();
 }
-function vietQRImageUrl(bankBin, accountNo, amount, addInfo, accountName, template){
-  if(!bankBin || !accountNo) return null;
-  const t = template || 'qr_only';
-  const params = new URLSearchParams();
-  if(amount>0) params.set('amount', Math.round(amount));
-  if(addInfo) params.set('addInfo', stripDiacritics(addInfo).slice(0,50));
-  if(accountName) params.set('accountName', stripDiacritics(accountName));
-  return `https://img.vietqr.io/image/${encodeURIComponent(bankBin)}-${encodeURIComponent(accountNo)}-${t}.png?${params.toString()}`;
+/* ---- Tạo mã QR VietQR ngay trên máy (không gọi mạng) — chuẩn EMVCo/NAPAS ----
+   Cấu trúc và CRC16-CCITT đã được kiểm chứng khớp với payload thật lấy từ tài liệu kỹ thuật NAPAS. */
+function crc16ccitt(str){
+  let crc = 0xFFFF;
+  for(let i=0;i<str.length;i++){
+    crc ^= (str.charCodeAt(i) << 8);
+    for(let j=0;j<8;j++){
+      if(crc & 0x8000){ crc = ((crc << 1) ^ 0x1021) & 0xFFFF; }
+      else { crc = (crc << 1) & 0xFFFF; }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4,'0');
+}
+function tlvField(id, value){
+  return id + String(value.length).padStart(2,'0') + value;
+}
+function buildVietQRPayload(bankBin, accountNo, amount, addInfo){
+  let merchantInfo = tlvField('00','A000000727'); // GUID của Napas
+  const bankSub = tlvField('00', bankBin) + tlvField('01', accountNo);
+  merchantInfo += tlvField('01', bankSub);
+  merchantInfo += tlvField('02', 'QRIBFTTA'); // chuyển khoản liên ngân hàng tới tài khoản
+  let payload = tlvField('00','01'); // Payload Format Indicator
+  payload += tlvField('01', amount>0 ? '12' : '11'); // 12=QR động (có số tiền), 11=QR tĩnh
+  payload += tlvField('38', merchantInfo);
+  payload += tlvField('53','704'); // VND
+  if(amount>0) payload += tlvField('54', String(Math.round(amount)));
+  payload += tlvField('58','VN');
+  if(addInfo){ payload += tlvField('62', tlvField('08', stripDiacritics(addInfo).slice(0,25))); }
+  payload += '6304';
+  payload += crc16ccitt(payload);
+  return payload;
+}
+function vietQRLocalDataUrl(bankBin, accountNo, amount, addInfo){
+  if(!bankBin || !accountNo || typeof qrcode==='undefined') return null;
+  try{
+    const payload = buildVietQRPayload(bankBin, accountNo, amount||0, addInfo);
+    const qr = qrcode(0, 'M');
+    qr.addData(payload);
+    qr.make();
+    return qr.createDataURL(6, 4);
+  }catch(err){
+    return null;
+  }
 }
 function buildQRBlockHtml(r, s, md){
   const bankBin = (s.vietQRBankBin||'').trim();
   if(!bankBin || !s.stk) return '';
   const amount = roomTotalWithDebt(r);
   const addInfo = `P${r.stt} T${md.key.split('-')[1]}-${md.key.split('-')[0]}`;
-  const url = vietQRImageUrl(bankBin, s.stk, amount, addInfo, s.tenNguoiNhan);
-  if(!url) return '';
+  const dataUrl = vietQRLocalDataUrl(bankBin, s.stk, amount, addInfo);
+  if(!dataUrl) return '';
   return `
   <div class="qr-block">
-    <img src="${url}" data-qr-src="${url}" alt="QR chuyển khoản phòng ${r.stt}">
+    <img src="${dataUrl}" alt="QR chuyển khoản phòng ${r.stt}">
     <div class="qr-text">
       <b>Quét mã để chuyển khoản</b><br>
       Đã điền sẵn số tiền &amp; nội dung — mở app ngân hàng, quét, kiểm tra rồi xác nhận.
@@ -1729,8 +1764,7 @@ async function quickShareReceipt(stt){
   temp.innerHTML = receiptHtml(r, STATE.settings, {showQR:true});
   document.body.appendChild(temp);
   const el = temp.querySelector('.receipt');
-  await inlineImagesForCapture(el);
-  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
   document.body.removeChild(temp);
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
   const fileName = `Phong_${stt}_${STATE.monthData.key}_tamtinh.png`;
@@ -1981,18 +2015,16 @@ function renderPhieu(main){
   main.innerHTML = `
     <div class="panel no-print">
       <h2>Phiếu thu tiền phòng</h2>
-      <div class="desc">Chọn 1 phòng để chỉ xem/tải phiếu đó, hoặc để "Tất cả" để xem/in toàn bộ. Nếu chọn "Tất cả": bấm <b>"🔄 Tải mã QR cho tất cả"</b> và đợi tải xong hẳn (xem số đếm bên dưới) <b>trước khi</b> bấm Xuất/In, để hạn chế thiếu mã QR.</div>
+      <div class="desc">Chọn 1 phòng để chỉ xem/tải phiếu đó, hoặc để "Tất cả" để xem/in toàn bộ.</div>
       <div class="toolbar">
-        <label class="checkbox-row"><input type="checkbox" id="skipEmptyChk" ${STATE.skipEmptyPrint?'checked':''} onchange="STATE.skipEmptyPrint=this.checked; STATE.qrPreviewAll=false; renderReceiptsList(STATE.phieuSelected);"> Bỏ qua phòng trống</label>
+        <label class="checkbox-row"><input type="checkbox" id="skipEmptyChk" ${STATE.skipEmptyPrint?'checked':''} onchange="STATE.skipEmptyPrint=this.checked; renderReceiptsList(STATE.phieuSelected);"> Bỏ qua phòng trống</label>
         <div class="spacer"></div>
-        <select id="phieuRoomSelect" onchange="STATE.phieuSelected=this.value; STATE.qrPreviewAll=false; renderReceiptsList(this.value);"></select>
+        <select id="phieuRoomSelect" onchange="STATE.phieuSelected=this.value; renderReceiptsList(this.value);"></select>
         <button class="btn btn-outline btn-sm" onclick="exportOneReceiptImage()">🖼️ Tải ảnh phòng này</button>
         <button class="btn btn-outline btn-sm" onclick="shareReceipt()">📤 Chia sẻ (Zalo...)</button>
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ In phiếu đang xem</button>
-        <button class="btn btn-outline btn-sm" onclick="preloadAllQR()">🔄 Tải mã QR cho tất cả</button>
         <button class="btn btn-brass btn-sm" onclick="openExportAllModal()">⬇️ Xuất tất cả ▾</button>
       </div>
-      <div id="qrPreloadStatus"></div>
     </div>
     <div id="receiptsWrap"></div>
   `;
@@ -2003,29 +2035,7 @@ function renderPhieu(main){
   sel.value = STATE.phieuSelected || 'ALL';
   renderReceiptsList(sel.value);
 }
-function preloadAllQR(){
-  document.getElementById('phieuRoomSelect').value = 'ALL';
-  STATE.phieuSelected = 'ALL';
-  STATE.qrPreviewAll = true;
-  renderReceiptsList('ALL', true);
-  const wrap = document.getElementById('receiptsWrap');
-  const imgs = Array.from(wrap.querySelectorAll('.qr-block img'));
-  const statusEl = document.getElementById('qrPreloadStatus');
-  let loaded = 0, failed = 0;
-  const total = imgs.length;
-  const updateStatus = ()=>{
-    if(!statusEl) return;
-    const done = loaded+failed;
-    statusEl.innerHTML = `<div class="desc" style="margin-top:8px;">Đang tải mã QR tự nhiên qua trình duyệt (không giới hạn tốc độ như trước): <b>${loaded}/${total}</b> đã có ảnh${failed?`, ${failed} chưa tải được`:''}. ${done<total?'Cứ để yên trang, đợi vài chục giây tới khi số này không tăng nữa rồi hẵng bấm Xuất/In.':'<b>Xong — có thể bấm Xuất/In tất cả.</b>'}</div>`;
-  };
-  updateStatus();
-  imgs.forEach(img=>{
-    if(img.complete && img.naturalWidth>0){ loaded++; updateStatus(); return; }
-    img.addEventListener('load', ()=>{ loaded++; updateStatus(); }, {once:true});
-    img.addEventListener('error', ()=>{ failed++; updateStatus(); }, {once:true});
-  });
-}
-function renderReceiptsList(selectedVal, forceShowQR){
+function renderReceiptsList(selectedVal){
   const wrap = document.getElementById('receiptsWrap');
   if(!wrap) return;
   const {rooms} = computeMonth(STATE.monthData);
@@ -2034,8 +2044,8 @@ function renderReceiptsList(selectedVal, forceShowQR){
   if(selectedVal && selectedVal!=='ALL'){
     list = list.filter(r=>String(r.stt)===String(selectedVal));
   }
-  const showQR = forceShowQR!==undefined ? forceShowQR : (STATE.qrPreviewAll && selectedVal==='ALL' ? true : selectedVal !== 'ALL');
-  wrap.innerHTML = list.map(r=>receiptHtml(r,s,{showQR})).join('') || '<div class="empty-state">Không có phiếu để hiển thị.</div>';
+  // Mã QR giờ tạo cục bộ tức thì (không qua mạng), nên luôn hiện — kể cả khi xem "Tất cả"
+  wrap.innerHTML = list.map(r=>receiptHtml(r,s,{showQR:true})).join('') || '<div class="empty-state">Không có phiếu để hiển thị.</div>';
 }
 function receiptHtml(r, s, options){
   options = options || {};
@@ -2085,66 +2095,11 @@ async function exportOneReceiptImage(){
   const el = document.querySelector(`#receiptsWrap .receipt[data-stt="${sel}"]`);
   if(!el){ showToast('Không tìm thấy phiếu.'); return; }
   showToast('Đang tạo ảnh…');
-  await inlineImagesForCapture(el);
-  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download=`Phong_${sel}_${STATE.monthData.key}.png`; a.click();
   URL.revokeObjectURL(url);
-}
-/* Chuyển ảnh QR (tải từ img.vietqr.io, khác domain) thành data URL nhúng sẵn,
-   để html2canvas chụp được đầy đủ thay vì bị trống do giới hạn CORS ảnh chéo domain. */
-function blankAllQRImages(container){
-  // Ngăn trình duyệt tự tải hàng loạt 48 ảnh cùng lúc ngay khi vừa render —
-  // đây là nguyên nhân chính gây mất QR khi xuất tất cả, không phải do giãn nhịp chưa đủ.
-  const imgs = container.querySelectorAll('.qr-block img');
-  imgs.forEach(img=>{
-    if(!img.dataset.qrSrc) img.dataset.qrSrc = img.src;
-    img.removeAttribute('src');
-  });
-}
-async function inlineImagesForCapture(container){
-  const imgs = container.querySelectorAll('.qr-block img');
-  for(const img of imgs){
-    if(img.dataset.inlined==='1') continue;
-    const targetSrc = img.dataset.qrSrc || img.src;
-    if(!targetSrc) continue;
-
-    // Ưu tiên dùng ảnh đã tải sẵn (ví dụ vừa bấm "Tải mã QR cho tất cả" trước đó) — không cần gọi mạng lại nữa
-    if(img.src === targetSrc && img.complete && img.naturalWidth>0){
-      try{
-        const tmp = document.createElement('canvas');
-        tmp.width = img.naturalWidth; tmp.height = img.naturalHeight;
-        tmp.getContext('2d').drawImage(img, 0, 0);
-        img.src = tmp.toDataURL('image/png');
-        img.dataset.inlined = '1';
-        continue; // xong ảnh này, không cần fetch lại
-      }catch(err){ /* bị chặn đọc pixel (CORS) dù ảnh hiển thị được — rơi xuống tải lại bên dưới */ }
-    }
-
-    let ok = false;
-    for(let attempt=0; attempt<4 && !ok; attempt++){
-      try{
-        const res = await fetch(targetSrc, {mode:'cors'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const blob = await res.blob();
-        const dataUrl = await new Promise((resolve,reject)=>{
-          const reader = new FileReader();
-          reader.onload = ()=>resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        img.src = dataUrl;
-        img.dataset.inlined = '1';
-        ok = true;
-      }catch(err){
-        // thử lại, chờ lâu dần — bên VietQR nhiều khả năng giới hạn số lần gọi liên tục
-        if(attempt<3) await new Promise(r=>setTimeout(r, 1200*(attempt+1)));
-      }
-    }
-    if(!ok){ img.src = targetSrc; } // vẫn gán lại URL gốc nếu thất bại hẳn, để html2canvas thử tải trực tiếp qua useCORS
-    await new Promise(r=>setTimeout(r, 400)); // giãn nhịp giữa từng ảnh, kể cả khi thành công — tránh gọi dồn dập
-  }
 }
 async function shareReceipt(){
   const sel = document.getElementById('phieuRoomSelect').value;
@@ -2152,8 +2107,7 @@ async function shareReceipt(){
   const el = document.querySelector(`#receiptsWrap .receipt[data-stt="${sel}"]`);
   if(!el){ showToast('Không tìm thấy phiếu.'); return; }
   showToast('Đang chuẩn bị ảnh để chia sẻ…');
-  await inlineImagesForCapture(el);
-  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
+  const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
   const fileName = `Phong_${sel}_${STATE.monthData.key}.png`;
   const file = new File([blob], fileName, {type:'image/png'});
@@ -2188,49 +2142,27 @@ function openExportAllModal(){
     </div>
   `);
 }
-function waitForImagesToLoad(container, timeoutMs){
-  const imgs = Array.from(container.querySelectorAll('img'));
-  const promises = imgs.map(img=>{
-    if(img.complete && img.naturalWidth>0) return Promise.resolve();
-    return new Promise(resolve=>{
-      img.addEventListener('load', resolve, {once:true});
-      img.addEventListener('error', resolve, {once:true}); // vẫn cho qua để không treo mãi nếu 1 ảnh lỗi
-    });
-  });
-  return Promise.race([Promise.all(promises), new Promise(r=>setTimeout(r, timeoutMs||15000))]);
-}
-async function doPrintAll(){
-  const alreadyPreloaded = document.getElementById('phieuRoomSelect').value==='ALL' && STATE.qrPreviewAll;
+function doPrintAll(){
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
-  if(!alreadyPreloaded){
-    renderReceiptsList('ALL', true);
-    showToast('Đang tải mã QR trước khi in — mẹo: lần sau bấm "Tải mã QR cho tất cả" trước rồi mới In, sẽ nhanh và chắc hơn.');
-    await waitForImagesToLoad(document.getElementById('receiptsWrap'), 15000);
-  }
-  window.print();
+  renderReceiptsList('ALL');
+  setTimeout(()=>window.print(), 150);
 }
 async function doExportAllImages(){
-  const alreadyPreloaded = document.getElementById('phieuRoomSelect').value==='ALL' && STATE.qrPreviewAll;
-  showToast(alreadyPreloaded ? 'Đang tạo ảnh từ mã QR đã tải sẵn…' : 'Đang tạo ảnh, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
+  showToast('Đang tạo ảnh, vui lòng đợi…');
   const prevSel = STATE.phieuSelected;
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
-  if(!alreadyPreloaded){
-    renderReceiptsList('ALL', true);
-    blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
-  }
+  renderReceiptsList('ALL');
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const zip = new JSZip();
   let done = 0;
   for(const el of els){
-    await inlineImagesForCapture(el);
-    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
     const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
     zip.file(`Phong_${el.dataset.stt}.png`, blob);
     done++;
-    showToast(`Đang tạo ảnh… (${done}/${els.length})`);
-    if(!alreadyPreloaded) await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
+    if(done % 8 === 0) showToast(`Đang tạo ảnh… (${done}/${els.length})`);
   }
   const content = await zip.generateAsync({type:'blob'});
   const url = URL.createObjectURL(content);
@@ -2240,23 +2172,18 @@ async function doExportAllImages(){
   showToast('Đã tải file zip.');
 }
 async function doExportAllPDF(){
-  const alreadyPreloaded = document.getElementById('phieuRoomSelect').value==='ALL' && STATE.qrPreviewAll;
-  showToast(alreadyPreloaded ? 'Đang tạo PDF từ mã QR đã tải sẵn…' : 'Đang tạo PDF, có thể mất khoảng 1 phút để đảm bảo đủ mã QR — vui lòng đợi, đừng tắt trang…');
+  showToast('Đang tạo PDF, vui lòng đợi…');
   const prevSel = STATE.phieuSelected;
   document.getElementById('phieuRoomSelect').value = 'ALL';
   STATE.phieuSelected = 'ALL';
-  if(!alreadyPreloaded){
-    renderReceiptsList('ALL', true);
-    blankAllQRImages(document.getElementById('receiptsWrap')); // chặn trình duyệt tự tải cả 48 mã QR cùng lúc
-  }
+  renderReceiptsList('ALL');
   const els = document.querySelectorAll('#receiptsWrap .receipt');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:'px', format:'a5'});
   let first = true;
   let done = 0;
   for(const el of els){
-    await inlineImagesForCapture(el);
-    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9', useCORS:true});
+    const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
     const imgData = canvas.toDataURL('image/png');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
@@ -2266,8 +2193,7 @@ async function doExportAllPDF(){
     pdf.addImage(imgData, 'PNG', (pageW-w)/2, 10, w, h);
     first = false;
     done++;
-    showToast(`Đang tạo PDF… (${done}/${els.length})`);
-    if(!alreadyPreloaded) await new Promise(r=>setTimeout(r, 900)); // giãn nhịp giữa các phòng, tránh gửi quá nhiều yêu cầu liên tục
+    if(done % 8 === 0) showToast(`Đang tạo PDF… (${done}/${els.length})`);
   }
   pdf.save(`PhieuThu_${STATE.monthData.key}.pdf`);
   renderReceiptsList(prevSel);
