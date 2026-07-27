@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
 <title>Sổ Thu Tiền — Nhà Trọ 187 NSHL</title>
+<link rel="icon" type="image/png" href="logo_187_xanhla.png">
+<link rel="apple-touch-icon" href="logo_187_xanhla.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -63,9 +65,8 @@ a{color:inherit;}
   background:repeating-linear-gradient(90deg, var(--brass) 0 14px, var(--brick) 14px 28px);
 }
 .login-seal{
-  width:56px;height:56px;border-radius:50%; margin:0 auto 14px; display:flex; align-items:center; justify-content:center;
-  background:var(--navy); color:var(--brass-light); font-weight:800; font-size:20px; letter-spacing:.5px;
-  border:2px solid var(--brass);
+  display:block; width:138px; height:auto; margin:2px auto 16px;
+  filter:drop-shadow(0 3px 6px rgba(22,35,59,.16));
 }
 .login-card h1{font-size:19px; text-align:center; margin:0 0 2px; color:var(--navy); font-weight:800;}
 .login-card p.sub{text-align:center; color:var(--ink-soft); margin:0 0 22px; font-size:12.5px;}
@@ -103,7 +104,12 @@ header.topbar{
   border-bottom:3px solid var(--brass);
 }
 .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:15px; letter-spacing:.02em;}
-.brand .seal-mini{width:30px;height:30px;border-radius:50%;background:var(--brass); color:var(--navy); display:flex;align-items:center;justify-content:center; font-size:13px; font-weight:800; flex-shrink:0;}
+.brand .seal-mini{
+  height:34px; padding:0 9px; border-radius:9px; background:var(--card);
+  border:1px solid var(--brass); display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,.22);
+}
+.brand .seal-mini img{height:21px; width:auto; display:block;}
 .cloud-indicator{display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:4px 9px; border-radius:20px; background:rgba(255,255,255,.1); color:#c9c2ab; white-space:nowrap;}
 .cloud-indicator.syncing{background:rgba(184,134,59,.25); color:var(--brass-light);}
 .cloud-indicator.synced{background:rgba(47,107,79,.25); color:#8fd6ac;}
@@ -145,10 +151,14 @@ footer.appfoot .foot-line{display:block;}
 .spacer{flex:1;}
 
 /* room accordion */
-.room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:#fff; overflow:hidden;}
+/* KHÔNG dùng overflow:hidden ở đây — nó vô hiệu hoá position:sticky của .room-head */
+.room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:#fff;}
 .room-card.inactive{opacity:.6;}
-.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; background:#fff; border-bottom:1px solid transparent;}
+.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; background:#fff; border-bottom:1px solid transparent; border-radius:8px 8px 0 0;}
 .room-card.open .room-head{border-bottom-color:var(--line); box-shadow:0 2px 4px rgba(22,35,59,.05);}
+/* Khi hàng phòng đang bị ghim ở mép trên, làm nó nổi rõ hơn để dễ nhận ra */
+.room-card.open .room-head{background:var(--card); box-shadow:0 3px 10px rgba(22,35,59,.10);}
+.room-card:not(.open){overflow:hidden;}
 .room-head:hover{background:var(--paper-2);}
 .room-num{
   width:34px;height:34px;border-radius:8px;background:var(--navy); color:var(--brass-light); font-weight:800;
@@ -181,7 +191,14 @@ footer.appfoot .foot-line{display:block;}
 
 .form-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px 12px;}
 .form-grid .f label{display:block; font-size:11px; color:var(--ink-soft); margin-bottom:4px; font-weight:600;}
-.form-grid .f input, .form-grid .f select{width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:6px;}
+.form-grid .f input, .form-grid .f select{width:100%; padding:10px 11px; font-size:15px; border:1px solid var(--line); border-radius:6px;}
+/* Ô ngày: chữ nhỏ làm 3 ô dd/mm/yyyy và nút lịch bé tí, rất khó bấm.
+   Cho bằng cỡ chữ như trang dangky.html và phóng to nút mở lịch. */
+.form-grid .f input[type="date"]{min-height:44px; font-size:15px; line-height:1.2;}
+.form-grid .f input[type="date"]::-webkit-calendar-picker-indicator{
+  width:22px; height:22px; padding:2px; cursor:pointer; opacity:.7;
+}
+.form-grid .f input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 .form-grid .f.span2{grid-column:span 2;}
 .section-title{font-size:11.5px; font-weight:700; color:var(--brass-dark); text-transform:uppercase; letter-spacing:.05em; margin:14px 0 8px; border-bottom:1px dashed var(--line); padding-bottom:4px;}
 .section-title:first-child{margin-top:0;}
@@ -291,6 +308,11 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 }
 @media (max-width:640px){
   .form-grid{grid-template-columns:repeat(2,1fr);}
+  /* iOS tự phóng to trang khi ô nhập có cỡ chữ dưới 16px -> đặt đúng 16px */
+  .form-grid .f input, .form-grid .f select{font-size:16px;}
+  .form-grid .f input[type="date"]{font-size:16px; min-height:46px;}
+  /* Ngày sinh / ngày cấp cho chiếm trọn 1 hàng để đủ chỗ gõ */
+  .form-grid .f:has(input[type="date"]){grid-column:span 2;}
   .stat-row{grid-template-columns:repeat(2,1fr);}
   main{padding:10px;}
   .modal-box{padding:16px; max-width:100%;}
@@ -313,7 +335,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
 <div id="loginScreen">
   <div class="login-card">
-    <div class="login-seal">187</div>
+    <img class="login-seal" src="logo_187_xanhla.png" alt="Nhà trọ 187 Ni Sư Huỳnh Liên" width="138" height="88">
     <h1>Nhà Trọ 187 NSHL</h1>
     <p class="sub">Sổ thu tiền phòng trọ — chỉ dành cho quản lý</p>
     <div class="field" id="deviceCodeWrap" style="display:none;">
@@ -340,7 +362,7 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 
 <div id="appScreen">
   <header class="topbar">
-    <div class="brand"><span class="seal-mini">187</span> Sổ Thu Tiền Nhà Trọ</div>
+    <div class="brand"><span class="seal-mini"><img src="logo_187_xanhla.png" alt=""></span> Sổ Thu Tiền Nhà Trọ</div>
     <span class="cloud-indicator" id="cloudIndicator" title="Chưa cấu hình Google Sheet"><span class="dot"></span><span id="cloudIndicatorText">Chưa đồng bộ</span></span>
     <div class="month-picker">
       <select id="monthSelect" onchange="onChangeMonth(this.value)"></select>
@@ -875,7 +897,15 @@ function showModal(html){
   document.getElementById('modalOverlay').classList.add('show');
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
-document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+/* Chỉ đóng khi người dùng thực sự bấm vào nền mờ.
+   Trước đây: bôi đen chữ trong ô rồi thả chuột ra ngoài khung -> trình duyệt tính là
+   click vào nền mờ -> modal tự đóng, gõ tiếp thì tưởng do phím Backspace. */
+let _mdOnBackdrop = false;
+document.getElementById('modalOverlay').addEventListener('mousedown', e=>{ _mdOnBackdrop = (e.target.id==='modalOverlay'); });
+document.getElementById('modalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='modalOverlay' && _mdOnBackdrop) closeModal();
+  _mdOnBackdrop = false;
+});
 
 /* ============ ẢNH GIẤY TỜ: KHUNG XEM CÓ THỂ ZOOM ============ */
 let imgViewerScale = 1;
