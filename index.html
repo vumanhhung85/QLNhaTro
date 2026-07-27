@@ -713,6 +713,14 @@ async function tryLogin(){
     errEl.textContent='';
     STATE.authed = true;
     markActivity();
+    
+    // ✅ THÊM: Single Session Login
+    await SingleSession.setActiveDevice('app');
+    if (SingleSession.monitoringInterval) {
+      clearInterval(SingleSession.monitoringInterval);
+    }
+    SingleSession.monitoringInterval = SingleSession.startMonitoring('app');
+    
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('appScreen').style.display='flex';
     await loadAll();
@@ -722,6 +730,13 @@ async function tryLogin(){
   }
 }
 function logout(){
+  // ✅ THÊM: Single Session Cleanup
+  if (SingleSession.monitoringInterval) {
+    clearInterval(SingleSession.monitoringInterval);
+    SingleSession.monitoringInterval = null;
+  }
+  SingleSession.setActiveDevice('');
+  
   STATE.authed=false;
   document.getElementById('pwInput').value='';
   document.getElementById('appScreen').style.display='none';
@@ -3927,6 +3942,78 @@ function showNotification(message, type = 'info') {
     setTimeout(() => notification.remove(), 300);
   }, 3000);
 }
+
+// ===== SINGLE SESSION LOGIN v4.3.1 =====
+const SingleSession = {
+  generateDeviceId: () => {
+    const stored = localStorage.getItem('__DEVICE_ID__');
+    if (stored) return stored;
+    const navigator_string = navigator.userAgent + navigator.language + new Date().getTimezoneOffset() + Math.random();
+    const hash = navigator_string.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0).toString(16);
+    const deviceId = 'DEV_' + hash + '_' + Date.now();
+    localStorage.setItem('__DEVICE_ID__', deviceId);
+    return deviceId;
+  },
+  
+  getDeviceId: () => SingleSession.generateDeviceId(),
+  
+  setActiveDevice: async (session) => {
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'setActiveDevice',
+          username: session || 'app',
+          deviceId: SingleSession.getDeviceId()
+        })
+      });
+      return res.json();
+    } catch (err) {
+      console.error('setActiveDevice error:', err);
+      return {status: 'error'};
+    }
+  },
+  
+  checkActiveDevice: async (session) => {
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'checkActiveDevice',
+          username: session || 'app',
+          deviceId: SingleSession.getDeviceId()
+        })
+      });
+      return res.json();
+    } catch (err) {
+      console.error('checkActiveDevice error:', err);
+      return {status: 'error'};
+    }
+  },
+  
+  startMonitoring: (session) => {
+    const interval = setInterval(async () => {
+      if (!STATE.authed) {
+        clearInterval(interval);
+        return;
+      }
+
+      const result = await SingleSession.checkActiveDevice(session);
+
+      if (result.status === 'ok' && !result.isActive) {
+        showNotification('Tài khoản đã được đăng nhập trên thiết bị khác. Đang đăng xuất...', 'error');
+        setTimeout(() => {
+          logout();
+        }, 2000);
+        clearInterval(interval);
+      }
+    }, 5000);
+
+    return interval;
+  },
+
+  monitoringInterval: null
+};
 </script>
 
 <!-- Optimization v4.3 Module -->
