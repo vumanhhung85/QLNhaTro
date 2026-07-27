@@ -52,20 +52,23 @@ p.sub{text-align:center; color:var(--ink-soft); margin:0 0 20px; font-size:13px;
 
 <script>
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec";
-
-// ===== ENCRYPTION v4.3.2 =====
+/* ===== Che dữ liệu nhạy cảm trước khi ghi vào Google Sheet (v4.3) =====
+   XOR trên BYTE UTF-8 rồi mới base64 -> không làm hỏng dấu tiếng Việt.
+   KHOÁ NÀY PHẢI GIỐNG HỆT trong index.html. */
 const SECRET_KEY = "nhatrogx187nshl-2024-secret-key";
 
-function encryptField(text, key) {
-  if (!text) return text;
-  let xored = '';
-  for (let i = 0; i < text.length; i++) {
-    xored += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+function encField(text){
+  if(text === null || text === undefined || text === '') return text;
+  try{
+    const data = new TextEncoder().encode(String(text));
+    const key  = new TextEncoder().encode(SECRET_KEY);
+    let bin = '';
+    for(let i=0; i<data.length; i++) bin += String.fromCharCode(data[i] ^ key[i % key.length]);
+    return '[ENC]' + btoa(bin);
+  }catch(e){
+    return text; // không che được thì gửi nguyên bản, tuyệt đối không chặn việc gửi form
   }
-  return '[ENC]' + btoa(xored);
 }
-
-const ENCRYPT_FIELDS = ['hoTen', 'cccd', 'soDienThoai', 'thuongTru', 'ngaySinh', 'noiCap', 'ngheNghiep', 'gioiTinh'];
 
 let selectedCccdFile = null, selectedHopDongFile = null;
 let cccdRotation = 0, hopDongRotation = 0;
@@ -214,15 +217,15 @@ async function submitForm(){
     const payload = {
       action:'submitTamTruPending',
       phong: Number(phong),
-      hoTen: encryptField(hoten, SECRET_KEY),
-      soDienThoai: encryptField(document.getElementById('f_sdt').value.trim(), SECRET_KEY),
-      ngaySinh: encryptField(document.getElementById('f_ngaysinh').value, SECRET_KEY),
-      gioiTinh: encryptField(document.getElementById('f_gioitinh').value, SECRET_KEY),
-      cccd: encryptField(cccd, SECRET_KEY),
+      hoTen: encField(hoten),
+      soDienThoai: encField(document.getElementById('f_sdt').value.trim()),
+      ngaySinh: encField(document.getElementById('f_ngaysinh').value),
+      gioiTinh: encField(document.getElementById('f_gioitinh').value),
+      cccd: encField(cccd),
       ngayCap: document.getElementById('f_ngaycap').value,
-      noiCap: encryptField(document.getElementById('f_noicap').value.trim(), SECRET_KEY),
-      thuongTru: encryptField(document.getElementById('f_thuongtru').value.trim(), SECRET_KEY),
-      ngheNghiep: encryptField(document.getElementById('f_nghenghiep').value.trim(), SECRET_KEY)
+      noiCap: encField(document.getElementById('f_noicap').value.trim()),
+      thuongTru: encField(document.getElementById('f_thuongtru').value.trim()),
+      ngheNghiep: encField(document.getElementById('f_nghenghiep').value.trim())
     };
     if(selectedCccdFile) payload.cccdBase64 = compressedBase64(selectedCccdFile, cccdRotation, 1600);
     if(selectedHopDongFile) payload.hopDongBase64 = compressedBase64(selectedHopDongFile, hopDongRotation, 1600);
