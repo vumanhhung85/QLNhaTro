@@ -386,6 +386,26 @@ const DEFAULT_PASSWORD = "187nshl";
 /* ============ STATE ============ */
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec";
 
+// ===== ENCRYPTION v4.3.2 =====
+const SECRET_KEY = "nhatrogx187nshl-2024-secret-key";
+
+function decryptField(encrypted, key) {
+  if (!encrypted || !encrypted.startsWith('[ENC]')) return encrypted;
+  try {
+    const encoded = encrypted.substring(5);
+    const xored = atob(encoded);
+    let decrypted = '';
+    for (let i = 0; i < xored.length; i++) {
+      decrypted += String.fromCharCode(xored.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return decrypted;
+  } catch (e) {
+    return encrypted;
+  }
+}
+
+const ENCRYPT_FIELDS = ['hoTen', 'cccd', 'soDienThoai', 'thuongTru', 'ngaySinh', 'noiCap', 'ngheNghiep', 'gioiTinh'];
+
 const STATE = {
   authed:false,
   monthsIndex:[],       // [{key,label}]
