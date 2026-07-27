@@ -40,34 +40,11 @@ p.sub{text-align:center; color:var(--ink-soft); margin:0 0 20px; font-size:13px;
 .hint{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
 .spinner{display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg);}}
-
-/* === CSS FIX v4.3 - Form Layout === */
-.field { display: block !important; margin-bottom: 14px; }
-.field label { display: block !important; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
-.field input, .field select, .field textarea { display: block !important; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); margin: 0; }
-.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--brass-light); border-color: var(--brass); }
-.f { display: block !important; margin-bottom: 10px; }
-.f label { display: block !important; font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; font-weight: 600; }
-.f input, .f select { display: block !important; width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; margin: 0; }
-.form-card { max-width: 500px; margin: 0 auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.btn-block { display: block !important; width: 100%; }
-.field-error { display: none; color: #B23A3A; font-size: 12px; margin-top: 6px; font-weight: 500; animation: slideDown 0.2s ease; }
-.field-error.show { display: block; }
-.field-valid-input { border-color: #2F6B4F !important; background-color: rgba(47, 107, 79, 0.02) !important; }
-.field-error-input { border-color: #B23A3A !important; background-color: rgba(178, 58, 58, 0.02) !important; }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-.notification { position: fixed; bottom: 20px; right: 20px; max-width: 400px; padding: 16px 20px; border-radius: 8px; background: var(--card); border-left: 4px solid; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInUp 0.3s ease; z-index: 9998; }
-.notification.success { border-left-color: #2F6B4F; background-color: rgba(47, 107, 79, 0.05); }
-.notification.error { border-left-color: #B23A3A; background-color: rgba(178, 58, 58, 0.05); }
-.notification.info { border-left-color: #B8863B; background-color: rgba(184, 134, 59, 0.05); }
-@keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 </style>
-<!-- Optimization v4.3 CSS -->
-<link rel="stylesheet" href="optimization.css">
 </head>
 <body>
 <div class="wrap">
-  <img src="logo_187_xanhla.png" alt="NhaTro187" style="width:56px;height:56px;border-radius:50%;object-fit:contain;margin:0 auto 10px;display:block;" loading="lazy">
+  <div class="seal">187</div>
   <h1>Đăng ký tạm trú</h1>
   <p class="sub">Nhà Trọ 187 NSHL — điền thông tin để chủ trọ đăng ký tạm trú giúp bạn</p>
   <div id="content"><div class="card"><div class="msg-box">Đang kiểm tra liên kết…</div></div></div>
@@ -75,6 +52,21 @@ p.sub{text-align:center; color:var(--ink-soft); margin:0 0 20px; font-size:13px;
 
 <script>
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec";
+
+// ===== ENCRYPTION v4.3.2 =====
+const SECRET_KEY = "nhatrogx187nshl-2024-secret-key";
+
+function encryptField(text, key) {
+  if (!text) return text;
+  let xored = '';
+  for (let i = 0; i < text.length; i++) {
+    xored += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return '[ENC]' + btoa(xored);
+}
+
+const ENCRYPT_FIELDS = ['hoTen', 'cccd', 'soDienThoai', 'thuongTru', 'ngaySinh', 'noiCap', 'ngheNghiep', 'gioiTinh'];
+
 let selectedCccdFile = null, selectedHopDongFile = null;
 let cccdRotation = 0, hopDongRotation = 0;
 
@@ -222,15 +214,15 @@ async function submitForm(){
     const payload = {
       action:'submitTamTruPending',
       phong: Number(phong),
-      hoTen: hoten,
-      soDienThoai: document.getElementById('f_sdt').value.trim(),
-      ngaySinh: document.getElementById('f_ngaysinh').value,
-      gioiTinh: document.getElementById('f_gioitinh').value,
-      cccd: cccd,
+      hoTen: encryptField(hoten, SECRET_KEY),
+      soDienThoai: encryptField(document.getElementById('f_sdt').value.trim(), SECRET_KEY),
+      ngaySinh: encryptField(document.getElementById('f_ngaysinh').value, SECRET_KEY),
+      gioiTinh: encryptField(document.getElementById('f_gioitinh').value, SECRET_KEY),
+      cccd: encryptField(cccd, SECRET_KEY),
       ngayCap: document.getElementById('f_ngaycap').value,
-      noiCap: document.getElementById('f_noicap').value.trim(),
-      thuongTru: document.getElementById('f_thuongtru').value.trim(),
-      ngheNghiep: document.getElementById('f_nghenghiep').value.trim()
+      noiCap: encryptField(document.getElementById('f_noicap').value.trim(), SECRET_KEY),
+      thuongTru: encryptField(document.getElementById('f_thuongtru').value.trim(), SECRET_KEY),
+      ngheNghiep: encryptField(document.getElementById('f_nghenghiep').value.trim(), SECRET_KEY)
     };
     if(selectedCccdFile) payload.cccdBase64 = compressedBase64(selectedCccdFile, cccdRotation, 1600);
     if(selectedHopDongFile) payload.hopDongBase64 = compressedBase64(selectedHopDongFile, hopDongRotation, 1600);
@@ -275,25 +267,6 @@ function exitPage(){
 }
 
 boot();
-
-// ===== NOTIFICATION FUNCTION v4.3 =====
-function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.setAttribute('role', 'status');
-  notification.setAttribute('aria-live', 'polite');
-  notification.textContent = message;
-  
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.classList.add('hide');
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
-}
 </script>
-
-<!-- Optimization v4.3 Module -->
-<script src="optimization.js" defer></script>
 </body>
 </html>
