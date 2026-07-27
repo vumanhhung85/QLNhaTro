@@ -430,6 +430,20 @@ function decField(v){
 
 const ENC_FIELDS = ['hoTen','soDienThoai','ngaySinh','gioiTinh','cccd','noiCap','thuongTru','ngheNghiep'];
 
+/* Ảnh khách gửi: 1 ô có thể chứa nhiều file ID ngăn bằng dấu phẩy (mặt trước, mặt sau).
+   Dòng cũ chỉ có 1 ID vẫn chạy đúng. */
+function splitIds(v){
+  return String(v||'').split(',').map(s=>s.trim()).filter(Boolean);
+}
+function docBtns(v, nhan){
+  const ids = splitIds(v);
+  if(!ids.length) return '';
+  const ten = ids.length>1 ? ['mặt trước','mặt sau','ảnh 3','ảnh 4'] : [''];
+  return ids.map((fid,i)=>
+    `<button class="btn btn-outline btn-sm" onclick="viewDoc('${fid}')">👁 Xem ${nhan}${ten[i]?' — '+ten[i]:''}</button>`
+  ).join(' ');
+}
+
 function decRow(row){
   if(!row || typeof row !== 'object') return row;
   const o = Object.assign({}, row);
@@ -2761,8 +2775,8 @@ function openConfirmPendingModal(row){
     </div>
     <div class="section-title">Ảnh khách đã gửi</div>
     <div class="toolbar">
-      ${row.cccdFileId?`<button class="btn btn-outline btn-sm" onclick="viewDoc('${row.cccdFileId}')">👁 Xem CCCD</button>`:'<span class="desc" style="margin:0;">Không có ảnh CCCD</span>'}
-      ${row.hopDongFileId?`<button class="btn btn-outline btn-sm" onclick="viewDoc('${row.hopDongFileId}')">👁 Xem hợp đồng</button>`:''}
+      ${docBtns(row.cccdFileId, 'CCCD') || '<span class="desc" style="margin:0;">Không có ảnh CCCD</span>'}
+      ${docBtns(row.hopDongFileId, 'hợp đồng')}
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
@@ -2791,8 +2805,8 @@ async function confirmPendingTamTru(id){
     documents: {}
   };
   const types = giayToTypesList();
-  if(row.cccdFileId && types.includes('CCCD')){ occ.documents['CCCD'] = [{fileId: row.cccdFileId, uploadedAt: Date.now()}]; }
-  if(row.hopDongFileId && types.includes('Hợp đồng')){ occ.documents['Hợp đồng'] = [{fileId: row.hopDongFileId, uploadedAt: Date.now()}]; }
+  if(row.cccdFileId && types.includes('CCCD')){ occ.documents['CCCD'] = splitIds(row.cccdFileId).map(fid=>({fileId: fid, uploadedAt: Date.now()})); }
+  if(row.hopDongFileId && types.includes('Hợp đồng')){ occ.documents['Hợp đồng'] = splitIds(row.hopDongFileId).map(fid=>({fileId: fid, uploadedAt: Date.now()})); }
   if(!r.nguoiO) r.nguoiO = [];
   occ.laNguoiChinh = (r.nguoiO.length===0);
   r.nguoiO.push(occ);
