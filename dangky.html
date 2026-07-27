@@ -79,8 +79,13 @@ function encField(text){
   }
 }
 
-let selectedCccdFile = null, selectedHopDongFile = null;
-let cccdRotation = 0, hopDongRotation = 0;
+/* 4 ô ảnh: CCCD mặt trước/sau, hợp đồng mặt trước/sau */
+const PHOTOS = {
+  cccdTruoc:    {box:'boxCccdTruoc',    img:null, rot:0},
+  cccdSau:      {box:'boxCccdSau',      img:null, rot:0},
+  hopDongTruoc: {box:'boxHopDongTruoc', img:null, rot:0},
+  hopDongSau:   {box:'boxHopDongSau',   img:null, rot:0}
+};
 
 async function boot(){
   const content = document.getElementById('content');
@@ -126,19 +131,31 @@ function renderForm(){
     </div>
 
     <div class="card">
-      <div class="field" style="margin-bottom:8px;"><label>📷 Ảnh CCCD (mặt trước hoặc gộp cả 2 mặt)</label></div>
-      <div class="photo-box" id="cccdBox">
+      <div class="field" style="margin-bottom:8px;"><label>📷 Ảnh CCCD — <b>mặt trước</b></label></div>
+      <div class="photo-box" id="boxCccdTruoc">
         <label class="btn btn-outline" style="margin:0;">📎 Chọn ảnh / Chụp ảnh
-          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'cccd')">
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'cccdTruoc')">
+        </label>
+      </div>
+      <div class="field" style="margin:14px 0 8px;"><label>📷 Ảnh CCCD — <b>mặt sau</b></label></div>
+      <div class="photo-box" id="boxCccdSau">
+        <label class="btn btn-outline" style="margin:0;">📎 Chọn ảnh / Chụp ảnh
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'cccdSau')">
         </label>
       </div>
     </div>
 
     <div class="card">
-      <div class="field" style="margin-bottom:8px;"><label>📄 Ảnh hợp đồng (nếu có)</label></div>
-      <div class="photo-box" id="hopDongBox">
+      <div class="field" style="margin-bottom:8px;"><label>📄 Ảnh hợp đồng — <b>mặt trước</b> (nếu có)</label></div>
+      <div class="photo-box" id="boxHopDongTruoc">
         <label class="btn btn-outline" style="margin:0;">📎 Chọn ảnh / Chụp ảnh
-          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'hopdong')">
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'hopDongTruoc')">
+        </label>
+      </div>
+      <div class="field" style="margin:14px 0 8px;"><label>📄 Ảnh hợp đồng — <b>mặt sau</b> (nếu có)</label></div>
+      <div class="photo-box" id="boxHopDongSau">
+        <label class="btn btn-outline" style="margin:0;">📎 Chọn ảnh / Chụp ảnh
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'hopDongSau')">
         </label>
       </div>
     </div>
@@ -149,38 +166,41 @@ function renderForm(){
   `;
 }
 
-function onPickPhoto(file, kind){
-  if(!file) return;
+function onPickPhoto(file, slot){
+  if(!file || !PHOTOS[slot]) return;
   const reader = new FileReader();
   reader.onload = ()=>{
     const img = new Image();
     img.onload = ()=>{
-      if(kind==='cccd'){ selectedCccdFile = img; cccdRotation = 0; renderPhotoPreview('cccd'); }
-      else { selectedHopDongFile = img; hopDongRotation = 0; renderPhotoPreview('hopdong'); }
+      PHOTOS[slot].img = img;
+      PHOTOS[slot].rot = 0;
+      renderPhotoPreview(slot);
     };
     img.src = reader.result;
   };
   reader.readAsDataURL(file);
 }
-function renderPhotoPreview(kind){
-  const box = document.getElementById(kind==='cccd'?'cccdBox':'hopDongBox');
-  const img = kind==='cccd'?selectedCccdFile:selectedHopDongFile;
-  const rot = kind==='cccd'?cccdRotation:hopDongRotation;
-  const dataUrl = rotatedDataUrl(img, rot, 0.6);
+function renderPhotoPreview(slot){
+  const p = PHOTOS[slot];
+  const box = document.getElementById(p.box);
+  if(!box || !p.img) return;
+  const dataUrl = rotatedDataUrl(p.img, p.rot, 0.6);
   box.innerHTML = `
     <img src="${dataUrl}" style="transform:none;">
     <div class="photo-actions">
-      <button class="btn btn-outline btn-sm" onclick="rotatePhoto('${kind}',-90)">↺ Xoay trái</button>
-      <button class="btn btn-outline btn-sm" onclick="rotatePhoto('${kind}',90)">↻ Xoay phải</button>
+      <button class="btn btn-outline btn-sm" onclick="rotatePhoto('${slot}',-90)">↺ Xoay trái</button>
+      <button class="btn btn-outline btn-sm" onclick="rotatePhoto('${slot}',90)">↻ Xoay phải</button>
       <label class="btn btn-outline btn-sm" style="margin:0;">📎 Chọn lại
-        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'${kind}')">
+        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPickPhoto(this.files[0],'${slot}')">
       </label>
     </div>
   `;
 }
-function rotatePhoto(kind, delta){
-  if(kind==='cccd'){ cccdRotation = (cccdRotation + delta + 360) % 360; renderPhotoPreview('cccd'); }
-  else { hopDongRotation = (hopDongRotation + delta + 360) % 360; renderPhotoPreview('hopdong'); }
+function rotatePhoto(slot, delta){
+  const p = PHOTOS[slot];
+  if(!p) return;
+  p.rot = (p.rot + delta + 360) % 360;
+  renderPhotoPreview(slot);
 }
 function rotatedDataUrl(img, rotationDeg, quality){
   const swap = (rotationDeg===90 || rotationDeg===270);
@@ -219,6 +239,11 @@ async function submitForm(){
   if(!phong){ errEl.textContent = 'Vui lòng chọn số phòng.'; return; }
   if(!hoten){ errEl.textContent = 'Vui lòng nhập họ tên.'; return; }
   if(!cccd){ errEl.textContent = 'Vui lòng nhập số CCCD.'; return; }
+  if(!PHOTOS.cccdTruoc.img || !PHOTOS.cccdSau.img){
+    const thieu = !PHOTOS.cccdTruoc.img && !PHOTOS.cccdSau.img ? 'cả 2 mặt CCCD'
+                : (!PHOTOS.cccdTruoc.img ? 'mặt trước CCCD' : 'mặt sau CCCD');
+    if(!confirm('Bạn chưa chụp '+thieu+'. Chủ trọ cần đủ 2 mặt để làm thủ tục tạm trú.\n\nVẫn gửi bây giờ?')) return;
+  }
   errEl.textContent = '';
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Đang gửi…';
@@ -236,8 +261,10 @@ async function submitForm(){
       thuongTru: encField(document.getElementById('f_thuongtru').value.trim()),
       ngheNghiep: encField(document.getElementById('f_nghenghiep').value.trim())
     };
-    if(selectedCccdFile) payload.cccdBase64 = compressedBase64(selectedCccdFile, cccdRotation, 1600);
-    if(selectedHopDongFile) payload.hopDongBase64 = compressedBase64(selectedHopDongFile, hopDongRotation, 1600);
+    if(PHOTOS.cccdTruoc.img)    payload.cccdBase64        = compressedBase64(PHOTOS.cccdTruoc.img,    PHOTOS.cccdTruoc.rot,    1600);
+    if(PHOTOS.cccdSau.img)      payload.cccdSauBase64     = compressedBase64(PHOTOS.cccdSau.img,      PHOTOS.cccdSau.rot,      1600);
+    if(PHOTOS.hopDongTruoc.img) payload.hopDongBase64     = compressedBase64(PHOTOS.hopDongTruoc.img, PHOTOS.hopDongTruoc.rot, 1600);
+    if(PHOTOS.hopDongSau.img)   payload.hopDongSauBase64  = compressedBase64(PHOTOS.hopDongSau.img,   PHOTOS.hopDongSau.rot,   1600);
 
     const res = await fetch(WEBHOOK_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload)});
     const json = await res.json();
