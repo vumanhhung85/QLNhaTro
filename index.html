@@ -307,242 +307,13 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
   .month-picker select{padding:6px 8px; font-size:12.5px;}
   nav.tabs button{padding:10px 11px; font-size:12px;}
 }
-
-/* === CSS FIX v4.3 - Login Form & Layout === */
-.field {
-  display: block !important;
-  margin-bottom: 14px;
-}
-.field label {
-  display: block !important;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-.field input,
-.field select,
-.field textarea {
-  display: block !important;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--ink);
-  margin: 0;
-}
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  outline: 2px solid var(--brass-light);
-  border-color: var(--brass);
-}
-.f {
-  display: block !important;
-  margin-bottom: 10px;
-}
-.f label {
-  display: block !important;
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-.f input,
-.f select {
-  display: block !important;
-  width: 100%;
-  padding: 7px 9px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  margin: 0;
-}
-.login-card {
-  max-width: 380px;
-  margin: 0 auto;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.login-seal {
-  text-align: center;
-  margin-bottom: 10px;
-}
-.btn-block {
-  display: block !important;
-  width: 100%;
-}
-.field-error {
-  display: none;
-  color: #B23A3A;
-  font-size: 12px;
-  margin-top: 6px;
-  font-weight: 500;
-  animation: slideDown 0.2s ease;
-}
-.field-error.show {
-  display: block;
-}
-.field-valid-input {
-  border-color: #2F6B4F !important;
-  background-color: rgba(47, 107, 79, 0.02) !important;
-}
-.field-error-input {
-  border-color: #B23A3A !important;
-  background-color: rgba(178, 58, 58, 0.02) !important;
-}
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.skeleton-item {
-  padding: 12px;
-  background: var(--card, #fff);
-  border-radius: 8px;
-  border: 1px solid var(--line, #e0e0e0);
-  margin-bottom: 12px;
-}
-.skeleton-line {
-  height: 12px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: 4px;
-}
-@keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.spinner-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  gap: 16px;
-}
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(22, 35, 59, 0.1);
-  border-top-color: #16233B;
-  border-radius: 50%;
-  animation: spinner-spin 0.8s linear infinite;
-}
-@keyframes spinner-spin {
-  to { transform: rotate(360deg); }
-}
-.btn.btn-loading {
-  position: relative;
-  color: transparent;
-  pointer-events: none;
-}
-.btn.btn-loading::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spinner-spin 0.8s linear infinite;
-}
-.notification {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  max-width: 400px;
-  padding: 16px 20px;
-  border-radius: 8px;
-  background: var(--card);
-  border-left: 4px solid;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideInUp 0.3s ease;
-  z-index: 9998;
-}
-.notification.success {
-  border-left-color: #2F6B4F;
-  background-color: rgba(47, 107, 79, 0.05);
-}
-.notification.error {
-  border-left-color: #B23A3A;
-  background-color: rgba(178, 58, 58, 0.05);
-}
-.notification.info {
-  border-left-color: #B8863B;
-  background-color: rgba(184, 134, 59, 0.05);
-}
-@keyframes slideInUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-.notification.hide {
-  animation: slideOutDown 0.3s ease forwards;
-}
-@keyframes slideOutDown {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-a:focus-visible {
-  outline: 3px solid #B8863B;
-  outline-offset: 2px;
-}
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
 </style>
-<!-- Optimization v4.3 CSS -->
-<link rel="stylesheet" href="optimization.css">
 </head>
 <body>
 
 <div id="loginScreen">
   <div class="login-card">
-    <img src="logo_187_xanhla.png" alt="NhaTro187" style="width:56px;height:56px;border-radius:50%;object-fit:contain;margin:0 auto 14px;display:block;" loading="lazy">
+    <div class="login-seal">187</div>
     <h1>Nhà Trọ 187 NSHL</h1>
     <p class="sub">Sổ thu tiền phòng trọ — chỉ dành cho quản lý</p>
     <div class="field" id="deviceCodeWrap" style="display:none;">
@@ -613,6 +384,8 @@ const SEED_MONTH_LABEL = "Tháng 7/2026";
 const DEFAULT_PASSWORD = "187nshl";
 
 /* ============ STATE ============ */
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec";
+
 const STATE = {
   authed:false,
   monthsIndex:[],       // [{key,label}]
@@ -707,6 +480,11 @@ async function tryLogin(){
       errEl.textContent = 'Mã xác nhận thiết bị mới chưa đúng.';
       return;
     }
+    // ✅ FIX: Lưu device đã xác thực
+    await stSet('device-known', 'true');
+    STATE.isNewDevice = false;
+    document.getElementById('deviceCodeWrap').style.display = 'none';
+    document.getElementById('deviceCodeInput').value = '';
   }
   const savedPw = (await stGet('auth-password')) || DEFAULT_PASSWORD;
   if(input === savedPw){
@@ -714,7 +492,7 @@ async function tryLogin(){
     STATE.authed = true;
     markActivity();
     
-    // ✅ THÊM: Single Session Login
+    // ✅ FIX: Single Session Login
     await SingleSession.setActiveDevice('app');
     if (SingleSession.monitoringInterval) {
       clearInterval(SingleSession.monitoringInterval);
@@ -730,7 +508,7 @@ async function tryLogin(){
   }
 }
 function logout(){
-  // ✅ THÊM: Single Session Cleanup
+  // ✅ FIX: Single Session Cleanup
   if (SingleSession.monitoringInterval) {
     clearInterval(SingleSession.monitoringInterval);
     SingleSession.monitoringInterval = null;
@@ -3926,24 +3704,7 @@ function importBackup(file){
   };
   reader.readAsText(file);
 }
-
-// ===== NOTIFICATION FUNCTION v4.3 =====
-function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.setAttribute('role', 'status');
-  notification.setAttribute('aria-live', 'polite');
-  notification.textContent = message;
-  
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.classList.add('hide');
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
-}
-
-// ===== SINGLE SESSION LOGIN v4.3.1 =====
+// ===== SINGLE SESSION LOGIN v4.3.2 =====
 const SingleSession = {
   generateDeviceId: () => {
     const stored = localStorage.getItem('__DEVICE_ID__');
@@ -4001,7 +3762,7 @@ const SingleSession = {
       const result = await SingleSession.checkActiveDevice(session);
 
       if (result.status === 'ok' && !result.isActive) {
-        showNotification('Tài khoản đã được đăng nhập trên thiết bị khác. Đang đăng xuất...', 'error');
+        showToast('Tài khoản đã được đăng nhập trên thiết bị khác. Đang đăng xuất...');
         setTimeout(() => {
           logout();
         }, 2000);
@@ -4015,8 +3776,5 @@ const SingleSession = {
   monitoringInterval: null
 };
 </script>
-
-<!-- Optimization v4.3 Module -->
-<script src="optimization.js" defer></script>
 </body>
 </html>
