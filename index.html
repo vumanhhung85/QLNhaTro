@@ -383,29 +383,88 @@ const SEED_MONTH_KEY = "2026-07";
 const SEED_MONTH_LABEL = "Tháng 7/2026";
 const DEFAULT_PASSWORD = "187nshl";
 
-/* ============ STATE ============ */
-const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec";
-
-// ===== ENCRYPTION v4.3.2 =====
+/* ===== Giải mã dữ liệu nhận từ dangky.html (v4.3) =====
+   KHOÁ PHẢI GIỐNG HỆT trong dangky.html. */
 const SECRET_KEY = "nhatrogx187nshl-2024-secret-key";
 
-function decryptField(encrypted, key) {
-  if (!encrypted || !encrypted.startsWith('[ENC]')) return encrypted;
-  try {
-    const encoded = encrypted.substring(5);
-    const xored = atob(encoded);
-    let decrypted = '';
-    for (let i = 0; i < xored.length; i++) {
-      decrypted += String.fromCharCode(xored.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-    }
-    return decrypted;
-  } catch (e) {
-    return encrypted;
+function decField(v){
+  if(typeof v !== 'string' || v.indexOf('[ENC]') !== 0) return v; // dữ liệu cũ chưa mã hoá -> trả nguyên
+  try{
+    const bin = atob(v.slice(5));
+    const key = new TextEncoder().encode(SECRET_KEY);
+    const out = new Uint8Array(bin.length);
+    for(let i=0; i<bin.length; i++) out[i] = bin.charCodeAt(i) ^ key[i % key.length];
+    return new TextDecoder().decode(out);
+  }catch(e){
+    return v;
   }
 }
 
-const ENCRYPT_FIELDS = ['hoTen', 'cccd', 'soDienThoai', 'thuongTru', 'ngaySinh', 'noiCap', 'ngheNghiep', 'gioiTinh'];
+const ENC_FIELDS = ['hoTen','soDienThoai','ngaySinh','gioiTinh','cccd','noiCap','thuongTru','ngheNghiep'];
 
+function decRow(row){
+  if(!row || typeof row !== 'object') return row;
+  const o = Object.assign({}, row);
+  ENC_FIELDS.forEach(f => { if(f in o) o[f] = decField(o[f]); });
+  return o;
+}
+
+/* ===== Chỉ cho phép 1 máy đăng nhập tại 1 thời điểm (v4.3) ===== */
+const SingleSession = {
+  interval: null,
+  POLL_MS: 30000, // 30 giây/lần — đủ nhanh mà không đốt hạn ngạch Apps Script
+
+  url(){
+    try{ return ((STATE.settings && STATE.settings.sheetWebhookUrl) || DEFAULT_SETTINGS.sheetWebhookUrl || '').trim(); }
+    catch(e){ return (DEFAULT_SETTINGS.sheetWebhookUrl||'').trim(); }
+  },
+
+  deviceId(){
+    try{
+      let id = localStorage.getItem(LS_PREFIX+'device-id');
+      if(!id){
+        id = 'DEV_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+        localStorage.setItem(LS_PREFIX+'device-id', id);
+      }
+      return id;
+    }catch(e){ return 'DEV_temp'; }
+  },
+
+  async call(action, deviceId){
+    const url = this.url();
+    if(!url) return null;
+    try{
+      const res = await fetch(url, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({action, deviceId})
+      });
+      return await res.json();
+    }catch(e){ return null; }
+  },
+
+  claim(){ return this.call('setActiveDevice', this.deviceId()); },
+  release(){ return this.call('setActiveDevice', ''); },
+
+  start(){
+    this.stop();
+    this.interval = setInterval(async () => {
+      if(!STATE.authed){ this.stop(); return; }
+      const r = await this.call('checkActiveDevice', this.deviceId());
+      if(r && r.status==='ok' && r.isActive === false){
+        this.stop();
+        showToast('Tài khoản vừa được đăng nhập trên thiết bị khác. Đang đăng xuất…');
+        setTimeout(logout, 2500);
+      }
+    }, this.POLL_MS);
+  },
+
+  stop(){
+    if(this.interval){ clearInterval(this.interval); this.interval = null; }
+  }
+};
+
+/* ============ STATE ============ */
 const STATE = {
   authed:false,
   monthsIndex:[],       // [{key,label}]
@@ -500,25 +559,21 @@ async function tryLogin(){
       errEl.textContent = 'Mã xác nhận thiết bị mới chưa đúng.';
       return;
     }
-    // ✅ FIX: Lưu device đã xác thực
-    await stSet('device-known', 'true');
-    STATE.isNewDevice = false;
-    document.getElementById('deviceCodeWrap').style.display = 'none';
-    document.getElementById('deviceCodeInput').value = '';
   }
   const savedPw = (await stGet('auth-password')) || DEFAULT_PASSWORD;
   if(input === savedPw){
     errEl.textContent='';
     STATE.authed = true;
     markActivity();
-    
-    // ✅ FIX: Single Session Login
-    await SingleSession.setActiveDevice('app');
-    if (SingleSession.monitoringInterval) {
-      clearInterval(SingleSession.monitoringInterval);
-    }
-    SingleSession.monitoringInterval = SingleSession.startMonitoring('app');
-    
+    // Mã thiết bị đã đúng -> máy này thành máy quen, không hỏi lại
+    STATE.isNewDevice = false;
+    const _cw = document.getElementById('deviceCodeWrap');
+    if(_cw) _cw.style.display = 'none';
+    const _ci = document.getElementById('deviceCodeInput');
+    if(_ci) _ci.value = '';
+    // Giành quyền phiên: máy này thành máy đang hoạt động, máy cũ sẽ tự thoát
+    SingleSession.claim();
+    SingleSession.start();
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('appScreen').style.display='flex';
     await loadAll();
@@ -528,13 +583,8 @@ async function tryLogin(){
   }
 }
 function logout(){
-  // ✅ FIX: Single Session Cleanup
-  if (SingleSession.monitoringInterval) {
-    clearInterval(SingleSession.monitoringInterval);
-    SingleSession.monitoringInterval = null;
-  }
-  SingleSession.setActiveDevice('');
-  
+  SingleSession.stop();
+  if(STATE.authed) SingleSession.release();
   STATE.authed=false;
   document.getElementById('pwInput').value='';
   document.getElementById('appScreen').style.display='none';
@@ -2617,7 +2667,7 @@ async function loadPendingTamTru(){
     let json = null;
     try{ json = JSON.parse(text); }catch(e){}
     if(json && json.status==='ok'){
-      STATE.tamTruPendingList = json.rows||[];
+      STATE.tamTruPendingList = (json.rows||[]).map(decRow);
       renderPendingTamTruList();
     } else {
       el.innerHTML = '<div class="empty-state">Không tải được danh sách chờ.</div>';
@@ -3724,77 +3774,6 @@ function importBackup(file){
   };
   reader.readAsText(file);
 }
-// ===== SINGLE SESSION LOGIN v4.3.2 =====
-const SingleSession = {
-  generateDeviceId: () => {
-    const stored = localStorage.getItem('__DEVICE_ID__');
-    if (stored) return stored;
-    const navigator_string = navigator.userAgent + navigator.language + new Date().getTimezoneOffset() + Math.random();
-    const hash = navigator_string.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0).toString(16);
-    const deviceId = 'DEV_' + hash + '_' + Date.now();
-    localStorage.setItem('__DEVICE_ID__', deviceId);
-    return deviceId;
-  },
-  
-  getDeviceId: () => SingleSession.generateDeviceId(),
-  
-  setActiveDevice: async (session) => {
-    try {
-      const res = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'setActiveDevice',
-          username: session || 'app',
-          deviceId: SingleSession.getDeviceId()
-        })
-      });
-      return res.json();
-    } catch (err) {
-      console.error('setActiveDevice error:', err);
-      return {status: 'error'};
-    }
-  },
-  
-  checkActiveDevice: async (session) => {
-    try {
-      const res = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'checkActiveDevice',
-          username: session || 'app',
-          deviceId: SingleSession.getDeviceId()
-        })
-      });
-      return res.json();
-    } catch (err) {
-      console.error('checkActiveDevice error:', err);
-      return {status: 'error'};
-    }
-  },
-  
-  startMonitoring: (session) => {
-    const interval = setInterval(async () => {
-      if (!STATE.authed) {
-        clearInterval(interval);
-        return;
-      }
-
-      const result = await SingleSession.checkActiveDevice(session);
-
-      if (result.status === 'ok' && !result.isActive) {
-        showToast('Tài khoản đã được đăng nhập trên thiết bị khác. Đang đăng xuất...');
-        setTimeout(() => {
-          logout();
-        }, 2000);
-        clearInterval(interval);
-      }
-    }, 5000);
-
-    return interval;
-  },
-
-  monitoringInterval: null
-};
 </script>
 </body>
 </html>
