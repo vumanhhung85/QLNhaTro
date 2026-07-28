@@ -305,7 +305,31 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
   cursor:zoom-in;
 }
 
+/* ===== HỢP ĐỒNG ===== */
+#contractPrint{display:none;}
+.ct-preview{max-height:52vh; overflow:auto; border:1px solid var(--line); border-radius:8px; background:#fff; margin-top:10px;}
+.contract-doc{font-family:"Times New Roman",Times,serif; font-size:13.5px; line-height:1.5; color:#000; background:#fff; padding:16px 18px;}
+.contract-doc p{margin:0 0 7px;}
+.contract-doc h1{font-size:17px; font-weight:700; text-align:center; margin:10px 0 12px; letter-spacing:.3px;}
+.contract-doc .ct-center{text-align:center;}
+.contract-doc .ct-bold{font-weight:700;}
+.contract-doc .ct-dieu{font-weight:700; margin-top:11px;}
+.contract-doc .bl{display:inline-block; min-width:110px; border-bottom:1px dotted #444; vertical-align:baseline;}
+.contract-doc .bl-lg{min-width:190px;}
+.contract-doc .bl-xl{min-width:330px;}
+.contract-doc .ct-qr{display:flex; align-items:center; gap:12px; border:1px solid #000; padding:8px 10px; margin:9px 0;}
+.contract-doc .ct-qr-img{width:82px; height:82px; flex-shrink:0;}
+.contract-doc .ct-sign{width:100%; margin-top:16px; border-collapse:collapse; text-align:center;}
+.contract-doc .ct-sign td{width:50%; padding:8px 6px 62px; vertical-align:top;}
+
+@page{size:A4; margin:13mm 14mm;}
 @media print{
+  /* Khi in hợp đồng: giấu toàn bộ giao diện, chỉ để lại tờ hợp đồng */
+  body.print-contract > *{display:none !important;}
+  body.print-contract > #contractPrint{display:block !important;}
+  body.print-contract .contract-doc{padding:0; font-size:12.5pt;}
+  body.print-contract .contract-doc h1{font-size:15pt;}
+  .contract-doc .ct-qr, .contract-doc .ct-sign{page-break-inside:avoid;}
   header.topbar, nav.tabs, .no-print, footer.appfoot{display:none !important;}
   body{background:#fff;}
   main{max-width:none; padding:0;}
@@ -388,6 +412,8 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
   <div class="modal-box" id="modalBox"></div>
 </div>
 <div class="toast" id="toast"></div>
+<!-- Vùng in hợp đồng: phải là con trực tiếp của <body> để CSS in giấu được mọi thứ khác -->
+<div id="contractPrint"></div>
 <div class="img-viewer-overlay" id="imgViewerOverlay">
   <div class="img-viewer-toolbar">
     <button onclick="imgViewerZoom(-0.25)">−</button>
@@ -408,6 +434,100 @@ const SEED_ROOMS = [{"stt": 1, "gia": 8500000, "songuoi": 3, "dongiaNuoc": 26000
 const DEFAULT_CHIPHI = {"luongBaoVe": 12000000, "internet": 500000, "dienChung": 12000000, "racChung": 850000, "nuocChung": 3000000, "ca": 2000000, "suaChua": 2000000, "chuaChay": 1000000, "chiKhac": 0, "tienNha": 55000000};
 const DEFAULT_SETTINGS = {"tenNguoiNhan": "Vũ Mạnh Hưng", "stk": "101004138575", "nganHang": "NH Công Thương Vietinbank", "momo": "0983642606", "zalo": "0904.883.252", "contractWarnDays": 30, "hanDongNgay": 6, "recoveryQuestion1": "Số điện thoại đầu tiên của bạn?", "recoveryAnswer1": "", "recoveryQuestion2": "Tên của ông/bà nội bạn?", "recoveryAnswer2": "", "sheetWebhookUrl": "https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec", "vietQRBankBin": "970415", "giayToTypes": ["Hợp đồng", "CCCD"]};
 const SEED_MONTH_KEY = "2026-07";
+
+/* ===== MẪU HỢP ĐỒNG THUÊ PHÒNG (v4.4) =====
+   Sửa được trong Cài đặt. Các thẻ {{...}} sẽ được thay bằng dữ liệu thật của phòng.
+   Chỗ nào muốn để trống ký tay thì dùng <span class="bl"></span>. */
+const DEFAULT_CONTRACT = `<p class="ct-center ct-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+<p class="ct-center ct-bold">Độc lập - Tự do - Hạnh phúc</p>
+<p class="ct-center">....0O0....</p>
+
+<h1>HỢP ĐỒNG CHO THUÊ PHÒNG TRỌ</h1>
+
+<p>Hôm nay, ngày {{NGAY}} tháng {{THANG}} năm {{NAM}}</p>
+<p class="ct-bold">Tại số nhà: 187 Ni Sư Huỳnh Liên, phường 10, quận Tân Bình, TP Hồ Chí Minh.</p>
+<p>Chúng tôi đứng tên dưới đây là những người tự nhận thấy có đủ năng lực về hành vi dân sự và chịu trước pháp luật về hành vi của mình.</p>
+
+<p><b>BÊN A</b> (Bên cho thuê): <b>VŨ MẠNH HƯNG</b><br>
+CCCD số: 040085000614<br>
+Điện thoại: 0904 883 252 (SMS/Zalo là: Mạnh Hưng)<br>
+Địa chỉ: Số 6 Đường 5, phường Hiệp Bình, TP Hồ Chí Minh.</p>
+
+<p><b>BÊN B</b> (Bên thuê phòng số): <b>{{PHONG}}</b><br>
+Họ và tên người thuê: <b>{{HO_TEN}}</b><br>
+CCCD số: {{CCCD}}<br>
+Địa chỉ thường trú: {{THUONG_TRU}}<br>
+Điện thoại: {{DIEN_THOAI}}</p>
+
+<div class="ct-qr">
+  <div>
+    <p class="ct-bold" style="margin:0;">BẮT BUỘC: Video tuyên truyền về PCCC cho Khách thuê trọ</p>
+    <p style="margin:2px 0 0;">(quét mã QR bên cạnh để xem)</p>
+  </div>
+  {{QR_PCCC}}
+</div>
+
+<p class="ct-bold">Hợp đồng này bên A đồng ý cho bên B thuê với các nội dung như sau:</p>
+
+<p class="ct-dieu">Điều 1: <i>Giá thuê và hình thức thanh toán</i></p>
+<p>Cho thuê phòng số: <b>{{PHONG}}</b><br>
+Giá thuê phòng là: <b>{{GIA_THUE}}</b> (Thu đầu tháng)<br>
+Tiền thế chân là: <span class="bl bl-lg"></span><br>
+Mặt nạ phòng Khói độc: <span class="bl"></span> Cái (trả lại khi trả Phòng, thiếu thì trừ <b>500.000 đồng/Cái</b>. Nếu không nhận ghi rõ lý do và cam kết chịu hoàn toàn trách nhiệm nếu xảy ra sự cố về cháy nổ),<br>
+lý do Không nhận (nếu có): <span class="bl bl-xl"></span></p>
+
+<p><i>Tiền điện là: <b>{{GIA_DIEN}}</b> (Thu cuối tháng)<br>
+Tiền nước là: <b>{{GIA_NUOC}}</b> (Thu đầu tháng)<br>
+Tiền xe: <b>{{GIA_XE}}</b> và Xe điện; <b>75.000 đ/tháng/xe đạp</b> (Thu đầu tháng)</i><br>
+Tiền internet: MIỄN PHÍ<br>
+Số lượng người ở là: <b>{{SO_NGUOI}}</b><br>
+Số lượng xe: <b>{{SO_XE}}</b></p>
+
+<p class="ct-dieu">Điều 2: <i>Thời gian thuê và thời gian thanh toán tiền phòng</i></p>
+<p>Thời gian bên A cho bên B thuê là: <b>{{SO_THANG}} tháng</b>.<br>
+Tính từ ngày: <b>{{TU_NGAY}}</b> đến ngày <b>{{DEN_NGAY}}</b></p>
+<p>- (<b>Lưu ý</b>: <i>Khi hết hợp đồng nếu Khách thuê chưa muốn trả Phòng thì Hợp đồng tiếp tục gia hạn theo luỹ tiến + 3 tháng. Khách muốn trả lại Phòng báo trước ít nhất 20 ngày</i>)</p>
+<p>- Bên B thanh toán tiền cho bên A vào ngày 01 đến tối đa ngày 05 tây hàng tháng.</p>
+<p><i>- Nếu bên B chấm dứt hợp đồng trước thời hạn thì bên A sẽ không hoàn trả lại tiền thế chân, đồng thời bên B sẽ không được khiếu nại gì đối với bên A.</i></p>
+<p><i>- Bên B phải cung cấp đầy đủ giấy tờ cho bên A để đăng ký tạm trú (01 CCCD photo hoặc bản chụp CCCD đủ 2 mặt gửi qua Zalo, đồng thời nhập Link Zalo thông tin đăng ký nhân khẩu, sẽ được cung cấp Link), nếu trong vòng 7 ngày kể từ ngày ký hợp đồng mà bên B không cung cấp đủ giấy tờ cho bên A thì bên A có quyền lấy lại phòng cho người khác thuê và đồng thời không trả bất cứ tiền gì cho bên B.</i></p>
+
+<p class="ct-dieu">Điều 3:</p>
+<p>Nếu cuối tháng có thay đổi số lượng xe và người ở phải báo cho <b>Chủ nhà</b> qua <b>Zalo</b> trước ngày 30 tây hàng tháng. Nếu không thông báo thì số lượng người và xe tính như tháng trước. Trong trường hợp bên B thêm người và xe mà không khai báo, khi Chủ nhà phát hiện thì sẽ phụ thu theo ngày cho những phần không khai báo (Cụ thể là: nước 5.000 đ/người/ngày; xe: 10.000 đ/1 xe/ngày).</p>
+
+<p class="ct-dieu">Điều 4: Quyền và nghĩa vụ các bên</p>
+<p class="ct-bold">Bên A:</p>
+<p>- Ưu tiên phòng cho bên B khi bên B có nhu cầu thuê tiếp.<br>
+- Muốn lấy lại phòng thì phải báo cho bên B trước một tháng, khi đã kết thúc hợp đồng.<br>
+- Thanh toán đủ số tiền thế chân cho bên B khi kết thúc hợp đồng (vào ngày 20 tây hàng tháng với điều kiện bên B trả phòng).<br>
+- Có quyền ngưng hợp đồng ngay lập tức với bên B mà không hoàn trả tiền thế chân nếu bên B phạm nội quy phòng trọ.<br>
+- Có quyền niêm phong phòng của bên B đang thuê và lấy lại phòng cho người khác thuê, không hoàn trả lại tiền thế chân nếu bên B quá hạn 05 ngày không thanh toán đủ tiền phòng.<br>
+- Nếu bên B chấm dứt hợp đồng trước thời hạn thì bên A sẽ không hoàn trả lại tiền thế chân, đồng thời bên B sẽ không được khiếu nại gì đối với bên A.<br>
+- Nếu bên B vắng mặt quá 7 ngày mà không báo thì bên A sẽ niêm phong, không bảo quản tài sản của bên B và lấy lại phòng cho người khác thuê, không hoàn trả tiền thế chân.</p>
+
+<p class="ct-bold">Bên B:</p>
+<p>1) Người thân ở lại phòng qua đêm phải thông báo cho bên A trước 20h cùng ngày và cung cấp cho bên A giấy tờ tùy thân của người thân để bên A trình báo cho Công An Khu Vực. Sau thời gian trên xem như bên B tự ý cho người lạ ở lại qua đêm mà không trình báo. Bên B chịu hoàn toàn trách nhiệm nếu bị Công An xử lý vi phạm.<br>
+2) Không được nhậu nhẹt, tụ tập làm ồn sau 22h đêm (đây là quy định của Nhà nước).<br>
+3) Phải có giấy tờ tùy thân đầy đủ để bên A trình Công An Khu Vực.<br>
+4) Tự giữ và bảo quản đồ đạc cá nhân trong phòng mình như: vật dụng cá nhân, điện thoại, laptop, máy tính, ví tiền... có mất cắp thì bên A không chịu trách nhiệm.<br>
+5) Tự bảo quản và sửa chữa hệ thống điện nước trong phòng tiêu hao theo thời gian sử dụng như: bóng đèn, công tắc, ổ cắm, vòi nước, vòi xịt, thiết bị vệ sinh... Cần nhà trọ sửa chữa thì tính phí.<br>
+6) Giữ gìn vệ sinh sạch sẽ hành lang trước phòng, an ninh trật tự trong nhà trọ và khu phố, không được nuôi súc vật như: chó, mèo, khỉ, rắn...<br>
+7) Không chứa các chất gây nghiện, thuốc nổ, vũ khí trong phòng, không tụ tập uống bia, rượu, đánh lộn. Nấu ăn đúng nơi quy định để phòng chống cháy nổ xảy ra. Nếu có sự cố xảy ra bên B hoàn toàn chịu trách nhiệm trước pháp luật, đồng thời bồi thường thiệt hại cho các bên liên quan.<br>
+8) Không nhận xe người thân bên B để lại qua đêm, trừ trường hợp xe có đủ giấy tờ hợp lệ và được sự đồng ý của bên A.<br>
+9) Không sử dụng phòng với mục đích vi phạm pháp luật.<br>
+10) Không tụ tập đánh bài với mọi hình thức.</p>
+<p>* Nếu bên B vi phạm các điều khoản (1, 2, 3, 6, 7, 9, 10) thì bên A sẽ ngừng hợp đồng, lấy lại phòng cho người khác thuê và không trả lại tiền thế chân cho bên B.</p>
+
+<p class="ct-dieu">Điều 5: Hiệu lực của hợp đồng</p>
+<p>Hợp đồng có hiệu lực kể từ ngày hai bên đồng ý ký nhận.</p>
+<p><i>Hợp đồng này được lập thành hai (02) bản, mỗi bên giữ một (01) có giá trị pháp lý như nhau.</i></p>
+
+<table class="ct-sign">
+  <tr>
+    <td><b>BÊN A CHO THUÊ</b><br><i>Đã đọc và đồng ý</i></td>
+    <td><b>BÊN B THUÊ PHÒNG</b><br><i>Đã đọc và đồng ý</i></td>
+  </tr>
+</table>`;
+
 const SEED_MONTH_LABEL = "Tháng 7/2026";
 const DEFAULT_PASSWORD = "187nshl";
 
@@ -1470,6 +1590,7 @@ function roomFormHtml(r){
     <div class="toolbar" style="gap:6px;">
       <button class="btn btn-outline btn-sm" onclick="openOccupantModal(${r.stt}, null)">+ Thêm người ở</button>
       <button class="btn btn-outline btn-sm" onclick="openTenantHistoryModal(${r.stt})">📜 Lịch sử khách thuê (${(r.lichSuKhach||[]).length})</button>
+      <button class="btn btn-outline btn-sm" onclick="openContractModal(${r.stt})">📄 Hợp đồng</button>
     </div>
     ` : `
     <div class="section-title">👥 Người ở &amp; Tạm trú</div>
@@ -1700,6 +1821,94 @@ function doDeleteOccupant(roomStt, occupantId){
   renderMain();
   showToast('Đã xoá người ở khỏi danh sách.');
 }
+/* ===== HỢP ĐỒNG THUÊ PHÒNG (v4.4) ===== */
+
+function contractTemplate(){
+  const t = STATE.settings && STATE.settings.contractTemplate;
+  return (typeof t === 'string' && t.trim()) ? t : DEFAULT_CONTRACT;
+}
+
+// Đơn giá nước: phòng gắn đồng hồ và phòng tính theo đầu người ghi khác nhau
+function moTaGiaNuoc(r){
+  const dg = Number(r.dongiaNuoc||0);
+  return r.waterMeter ? (fmtVND(dg) + '/khối (theo đồng hồ)') : (fmtVND(dg) + '/người');
+}
+
+function buildContractHtml(stt, ngayKyISO){
+  const r = (STATE.rooms||[]).find(x=>x.stt===stt);
+  if(!r) return null;
+  const p = getPrimaryOccupant(r) || {};
+  const ky = ngayKyISO || r.ngayVaoO || todayISO();
+  const parts = String(ky).split('-');
+  const denNgay = r.ngayVaoO ? addMonths(r.ngayVaoO, r.soThangHopDong||6) : '';
+
+  const map = {
+    NGAY: parts[2] || '……', THANG: parts[1] || '……', NAM: parts[0] || '20……',
+    PHONG: r.stt,
+    HO_TEN: p.hoTen || '……………………………………',
+    CCCD: p.cccd || '……………………………',
+    THUONG_TRU: p.thuongTru || '……………………………………………………',
+    DIEN_THOAI: p.soDienThoai || r.soDienThoai || '………………………',
+    GIA_THUE: fmtVND(r.gia||0),
+    GIA_DIEN: fmtVND(r.dongiaDien||0) + '/KW',
+    GIA_NUOC: moTaGiaNuoc(r),
+    GIA_XE: fmtVND(r.dongiaXe||0) + '/tháng/xe máy',
+    SO_NGUOI: r.songuoi || 0,
+    SO_XE: r.soxe || 0,
+    SO_THANG: r.soThangHopDong || 6,
+    TU_NGAY: r.ngayVaoO ? fmtDate(r.ngayVaoO) : '………………',
+    DEN_NGAY: denNgay ? fmtDate(denNgay) : '………………',
+    QR_PCCC: '<img class="ct-qr-img" src="qr_pccc.png" alt="QR video PCCC">'
+  };
+
+  let html = contractTemplate();
+  Object.keys(map).forEach(k=>{ html = html.split('{{'+k+'}}').join(String(map[k])); });
+  return '<div class="contract-doc">' + html + '</div>';
+}
+
+function openContractModal(stt){
+  const r = (STATE.rooms||[]).find(x=>x.stt===stt);
+  if(!r) return;
+  if(!getPrimaryOccupant(r)){
+    showToast('Phòng '+stt+' chưa có người ở chính — hãy đặt người chính trước khi in hợp đồng.');
+    return;
+  }
+  const macDinhKy = r.ngayVaoO || todayISO();
+  openModal(`
+    <h3>📄 Hợp đồng — Phòng ${r.stt}</h3>
+    <div class="desc">Thông tin lấy từ người ở chính và thiết lập của phòng. Tiền thế chân và số mặt nạ chống khói để trống, ký xong điền tay. Muốn sửa câu chữ hợp đồng thì vào tab Cài đặt.</div>
+    <div class="form-grid" style="margin-bottom:10px;">
+      <div class="f"><label>Ngày ký hợp đồng</label><input type="date" id="ct_ngayky" value="${macDinhKy}" onchange="refreshContractPreview(${r.stt})"></div>
+    </div>
+    <div class="toolbar"><button class="btn btn-primary btn-sm" onclick="printContract(${r.stt})">🖨 In / Lưu PDF</button></div>
+    <div id="ctPreview" class="ct-preview">${buildContractHtml(r.stt, macDinhKy)}</div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
+  `);
+}
+
+function refreshContractPreview(stt){
+  const el = document.getElementById('ctPreview');
+  const d = document.getElementById('ct_ngayky');
+  if(el) el.innerHTML = buildContractHtml(stt, d ? d.value : null) || '';
+}
+
+function printContract(stt){
+  const d = document.getElementById('ct_ngayky');
+  const html = buildContractHtml(stt, d ? d.value : null);
+  if(!html) return;
+  const area = document.getElementById('contractPrint');
+  area.innerHTML = html;
+  document.body.classList.add('print-contract');
+  // Chờ trình duyệt vẽ xong (và ảnh QR sẵn sàng) rồi mới mở hộp thoại in
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{
+      document.body.classList.remove('print-contract');
+      area.innerHTML = '';
+    }, 400);
+  }, 150);
+}
+
 function openTenantHistoryModal(roomStt){
   const r = STATE.monthData.rooms.find(x=>x.stt===roomStt);
   const hist = (r && r.lichSuKhach) || [];
@@ -3203,6 +3412,24 @@ function renderCaiDat(main){
     </div>
 
     <div class="panel">
+      <h2>📄 Mẫu hợp đồng thuê phòng</h2>
+      <div class="desc">Sửa câu chữ, thêm bớt điều khoản thoải mái. Những chỗ có dấu <code>{{...}}</code> sẽ được thay bằng dữ liệu thật của từng phòng khi in — <b>đừng gõ sai tên trong ngoặc</b>, sai thì chỗ đó in ra nguyên chữ <code>{{...}}</code>.</div>
+      <div class="desc" style="margin-top:4px;">
+        Thẻ dùng được: <code>{{NGAY}}</code> <code>{{THANG}}</code> <code>{{NAM}}</code> <code>{{PHONG}}</code>
+        <code>{{HO_TEN}}</code> <code>{{CCCD}}</code> <code>{{THUONG_TRU}}</code> <code>{{DIEN_THOAI}}</code>
+        <code>{{GIA_THUE}}</code> <code>{{GIA_DIEN}}</code> <code>{{GIA_NUOC}}</code> <code>{{GIA_XE}}</code>
+        <code>{{SO_NGUOI}}</code> <code>{{SO_XE}}</code> <code>{{SO_THANG}}</code> <code>{{TU_NGAY}}</code>
+        <code>{{DEN_NGAY}}</code> <code>{{QR_PCCC}}</code>.
+        Chỗ muốn chừa trống để ký tay thì gõ <code>&lt;span class="bl"&gt;&lt;/span&gt;</code>.
+      </div>
+      <textarea id="s_contract" spellcheck="false" style="width:100%; min-height:230px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; line-height:1.45; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:8px;">${escapeAttr(contractTemplate())}</textarea>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" onclick="saveContractTemplate()">Lưu mẫu hợp đồng</button>
+        <button class="btn btn-outline btn-sm" onclick="resetContractTemplate()">↺ Khôi phục mẫu gốc</button>
+      </div>
+    </div>
+
+    <div class="panel">
       <h2>🇶🇷 Mã QR nhận tiền (VietQR)</h2>
       <div class="desc">Hiện mã QR chuyển khoản (đã điền sẵn số tiền + nội dung) trên phiếu thu của các phòng <b>chưa đóng tiền</b>. Dùng chung STK/tên ở mục phía trên — chỉ cần chọn đúng ngân hàng bên dưới.</div>
       <div class="form-grid">
@@ -3659,6 +3886,25 @@ async function doPullFullState(){
     setStatus('❌ '+describeSyncError(err));
   }
 }
+async function saveContractTemplate(){
+  const el = document.getElementById('s_contract');
+  if(!el) return;
+  STATE.settings.contractTemplate = el.value;
+  await stSetJSON('settings', STATE.settings);
+  showToast('Đã lưu mẫu hợp đồng.');
+  saveCurrentMonth();
+}
+
+async function resetContractTemplate(){
+  if(!confirm('Khôi phục mẫu hợp đồng gốc? Mọi chỉnh sửa câu chữ của bạn sẽ mất.')) return;
+  STATE.settings.contractTemplate = '';
+  await stSetJSON('settings', STATE.settings);
+  const el = document.getElementById('s_contract');
+  if(el) el.value = DEFAULT_CONTRACT;
+  showToast('Đã khôi phục mẫu gốc.');
+  saveCurrentMonth();
+}
+
 async function saveSettings(){
   STATE.settings.tenNguoiNhan = document.getElementById('s_ten').value;
   STATE.settings.stk = document.getElementById('s_stk').value;
