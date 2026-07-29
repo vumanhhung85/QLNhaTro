@@ -1835,7 +1835,7 @@ function moTaGiaNuoc(r){
 }
 
 function buildContractHtml(stt, ngayKyISO){
-  const r = (STATE.rooms||[]).find(x=>x.stt===stt);
+  const r = (STATE.monthData && STATE.monthData.rooms || []).find(x=>x.stt===stt);
   if(!r) return null;
   const p = getPrimaryOccupant(r) || {};
   const ky = ngayKyISO || r.ngayVaoO || todayISO();
@@ -1847,7 +1847,7 @@ function buildContractHtml(stt, ngayKyISO){
     PHONG: r.stt,
     HO_TEN: p.hoTen || '……………………………………',
     CCCD: p.cccd || '……………………………',
-    THUONG_TRU: p.thuongTru || '……………………………………………………',
+    THUONG_TRU: p.diaChiThuongTru || '……………………………………………………',
     DIEN_THOAI: p.soDienThoai || r.soDienThoai || '………………………',
     GIA_THUE: fmtVND(r.gia||0),
     GIA_DIEN: fmtVND(r.dongiaDien||0) + '/KW',
@@ -1867,14 +1867,14 @@ function buildContractHtml(stt, ngayKyISO){
 }
 
 function openContractModal(stt){
-  const r = (STATE.rooms||[]).find(x=>x.stt===stt);
+  const r = (STATE.monthData && STATE.monthData.rooms || []).find(x=>x.stt===stt);
   if(!r) return;
   if(!getPrimaryOccupant(r)){
     showToast('Phòng '+stt+' chưa có người ở chính — hãy đặt người chính trước khi in hợp đồng.');
     return;
   }
   const macDinhKy = r.ngayVaoO || todayISO();
-  openModal(`
+  showModal(`
     <h3>📄 Hợp đồng — Phòng ${r.stt}</h3>
     <div class="desc">Thông tin lấy từ người ở chính và thiết lập của phòng. Tiền thế chân và số mặt nạ chống khói để trống, ký xong điền tay. Muốn sửa câu chữ hợp đồng thì vào tab Cài đặt.</div>
     <div class="form-grid" style="margin-bottom:10px;">
