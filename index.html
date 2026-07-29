@@ -308,28 +308,33 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 /* ===== HỢP ĐỒNG ===== */
 #contractPrint{display:none;}
 .ct-preview{max-height:52vh; overflow:auto; border:1px solid var(--line); border-radius:8px; background:#fff; margin-top:10px;}
-.contract-doc{font-family:"Times New Roman",Times,serif; font-size:13.5px; line-height:1.5; color:#000; background:#fff; padding:16px 18px;}
-.contract-doc p{margin:0 0 7px;}
-.contract-doc h1{font-size:17px; font-weight:700; text-align:center; margin:10px 0 12px; letter-spacing:.3px;}
+.contract-doc{font-family:"Times New Roman",Times,serif; font-size:13.5px; line-height:1.45; color:#000; background:#fff; padding:16px 18px; text-align:justify;}
+.contract-doc p{margin:0 0 6px;}
+.contract-doc h1{font-size:16.5px; font-weight:700; text-align:center; margin:8px 0 12px; letter-spacing:.3px;}
 .contract-doc .ct-center{text-align:center;}
 .contract-doc .ct-bold{font-weight:700;}
-.contract-doc .ct-dieu{font-weight:700; margin-top:11px;}
+.contract-doc .ct-dieu{font-weight:700; margin-top:10px; text-align:left;}
 .contract-doc .bl{display:inline-block; min-width:110px; border-bottom:1px dotted #444; vertical-align:baseline;}
 .contract-doc .bl-lg{min-width:190px;}
 .contract-doc .bl-xl{min-width:330px;}
-.contract-doc .ct-qr{display:flex; align-items:center; gap:12px; border:1px solid #000; padding:8px 10px; margin:9px 0;}
-.contract-doc .ct-qr-img{width:82px; height:82px; flex-shrink:0;}
+/* Khối QR nổi bên phải, chữ chảy vòng quanh bên trái — đúng như bản Word gốc.
+   Chữ "↑" thay cho mũi tên vẽ tay trong bản gốc. */
+.contract-doc .ct-qr-float{float:right; width:132px; margin:0 0 8px 14px; text-align:center;}
+.contract-doc .ct-qr-float img{width:100%; height:auto; display:block; border:2px solid #000; border-radius:3px;}
+.contract-doc .ct-qr-cap{border:1.4px solid #2E6DA4; border-radius:6px; padding:5px 6px 6px; margin-top:5px; font-size:10px; font-weight:700; line-height:1.28; color:#1B4A73; background:#EAF2FB; text-align:center;}
+.contract-doc .ct-qr-cap .arrow{display:block; font-size:13px; line-height:1; margin-bottom:2px;}
+.contract-doc .ct-clear{clear:both;}
 .contract-doc .ct-sign{width:100%; margin-top:16px; border-collapse:collapse; text-align:center;}
 .contract-doc .ct-sign td{width:50%; padding:8px 6px 62px; vertical-align:top;}
 
-@page{size:A4; margin:13mm 14mm;}
+@page{size:A4; margin:15mm 16mm;}
 @media print{
   /* Khi in hợp đồng: giấu toàn bộ giao diện, chỉ để lại tờ hợp đồng */
   body.print-contract > *{display:none !important;}
   body.print-contract > #contractPrint{display:block !important;}
   body.print-contract .contract-doc{padding:0; font-size:12.5pt;}
   body.print-contract .contract-doc h1{font-size:15pt;}
-  .contract-doc .ct-qr, .contract-doc .ct-sign{page-break-inside:avoid;}
+  .contract-doc .ct-qr-float, .contract-doc .ct-sign{page-break-inside:avoid;}
   header.topbar, nav.tabs, .no-print, footer.appfoot{display:none !important;}
   body{background:#fff;}
   main{max-width:none; padding:0;}
@@ -439,7 +444,7 @@ const SEED_MONTH_KEY = "2026-07";
    Sửa được trong Cài đặt. Các thẻ {{...}} sẽ được thay bằng dữ liệu thật của phòng.
    Chỗ nào muốn để trống ký tay thì dùng <span class="bl"></span>. */
 const DEFAULT_CONTRACT = `<p class="ct-center ct-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
-<p class="ct-center ct-bold">Độc lập - Tự do - Hạnh phúc</p>
+<p class="ct-center ct-bold" style="text-decoration:underline;">Độc lập - Tự do - Hạnh phúc</p>
 <p class="ct-center">....0O0....</p>
 
 <h1>HỢP ĐỒNG CHO THUÊ PHÒNG TRỌ</h1>
@@ -453,19 +458,16 @@ CCCD số: 040085000614<br>
 Điện thoại: 0904 883 252 (SMS/Zalo là: Mạnh Hưng)<br>
 Địa chỉ: Số 6 Đường 5, phường Hiệp Bình, TP Hồ Chí Minh.</p>
 
+<div class="ct-qr-float">
+  {{QR_PCCC}}
+  <div class="ct-qr-cap"><span class="arrow">↑</span>BẮT BUỘC: Video tuyên truyền về PCCC cho Khách thuê trọ (quét mã QR để xem)</div>
+</div>
+
 <p><b>BÊN B</b> (Bên thuê phòng số): <b>{{PHONG}}</b><br>
 Họ và tên người thuê: <b>{{HO_TEN}}</b><br>
 CCCD số: {{CCCD}}<br>
 Địa chỉ thường trú: {{THUONG_TRU}}<br>
 Điện thoại: {{DIEN_THOAI}}</p>
-
-<div class="ct-qr">
-  <div>
-    <p class="ct-bold" style="margin:0;">BẮT BUỘC: Video tuyên truyền về PCCC cho Khách thuê trọ</p>
-    <p style="margin:2px 0 0;">(quét mã QR bên cạnh để xem)</p>
-  </div>
-  {{QR_PCCC}}
-</div>
 
 <p class="ct-bold">Hợp đồng này bên A đồng ý cho bên B thuê với các nội dung như sau:</p>
 
@@ -476,7 +478,7 @@ Tiền thế chân là: <span class="bl bl-lg"></span><br>
 Mặt nạ phòng Khói độc: <span class="bl"></span> Cái (trả lại khi trả Phòng, thiếu thì trừ <b>500.000 đồng/Cái</b>. Nếu không nhận ghi rõ lý do và cam kết chịu hoàn toàn trách nhiệm nếu xảy ra sự cố về cháy nổ),<br>
 lý do Không nhận (nếu có): <span class="bl bl-xl"></span></p>
 
-<p><i>Tiền điện là: <b>{{GIA_DIEN}}</b> (Thu cuối tháng)<br>
+<p class="ct-clear"><i>Tiền điện là: <b>{{GIA_DIEN}}</b> (Thu cuối tháng)<br>
 Tiền nước là: <b>{{GIA_NUOC}}</b> (Thu đầu tháng)<br>
 Tiền xe: <b>{{GIA_XE}}</b> và Xe điện; <b>75.000 đ/tháng/xe đạp</b> (Thu đầu tháng)</i><br>
 Tiền internet: MIỄN PHÍ<br>
@@ -1858,7 +1860,7 @@ function buildContractHtml(stt, ngayKyISO){
     SO_THANG: r.soThangHopDong || 6,
     TU_NGAY: r.ngayVaoO ? fmtDate(r.ngayVaoO) : '………………',
     DEN_NGAY: denNgay ? fmtDate(denNgay) : '………………',
-    QR_PCCC: '<img class="ct-qr-img" src="qr_pccc.png" alt="QR video PCCC">'
+    QR_PCCC: '<img src="qr_pccc.png" alt="QR video PCCC">'
   };
 
   let html = contractTemplate();
