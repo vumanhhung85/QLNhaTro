@@ -706,7 +706,7 @@ function markActivity(){ lastActivityAt = Date.now(); }
 setInterval(()=>{
   if(STATE.authed && (Date.now()-lastActivityAt) > INACTIVITY_LIMIT_MS){
     logout();
-    showToast('Đã tự động đăng xuất do không thao tác.');
+    showToast('Đã tự động đăng xuất do không thao tác trong 15 phút.');
   }
 }, 20000);
 
@@ -1916,9 +1916,12 @@ async function renderContractPdfBlob(stt, ngayKyISO){
   const html = buildContractHtml(stt, ngayKyISO);
   if(!html) return null;
 
-  // Vẽ ở ngoài khung nhìn (không dùng display:none vì html2canvas cần layout thật)
+  const HOLDER_W = 794; // px CSS — cũng là bề ngang chuẩn dùng để đo dòng chữ bên dưới
+  const SCALE = 2;      // độ phân giải chụp — phải khớp với số dùng trong html2canvas
+
+  // Vẽ ở ngoài khung nhìn (không dùng display:none vì cần layout thật để đo dòng chữ)
   const holder = document.createElement('div');
-  holder.style.cssText = 'position:fixed; left:-10000px; top:0; width:794px; background:#fff;';
+  holder.style.cssText = `position:fixed; left:-10000px; top:0; width:${HOLDER_W}px; background:#fff;`;
   holder.innerHTML = html;
   document.body.appendChild(holder);
 
@@ -1928,14 +1931,48 @@ async function renderContractPdfBlob(stt, ngayKyISO){
     await new Promise(res=>{ qrImg.onload = qrImg.onerror = res; setTimeout(res, 2000); });
   }
 
+  // ===== Đo trước vị trí từng dòng chữ (lúc còn là chữ thật, chưa chụp ảnh) =====
+  // Mục đích: chọn điểm cắt trang đúng vào khoảng trống GIỮA hai dòng, không bao giờ
+  // cắt ngang thân chữ. Bản in của trình duyệt làm được việc này tự động; ảnh chụp thì
+  // phải tự đo lấy.
+  const holderTop = holder.getBoundingClientRect().top;
+  const safeLines = new Set();     // các mốc Y (px CSS, gốc = đỉnh holder) an toàn để cắt
+  const noCutZones = [];           // vùng không được cắt xuyên qua (ảnh QR, bảng chữ ký)
+
+  const walker = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => (n.textContent && n.textContent.trim()) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+  });
+  let node;
+  while((node = walker.nextNode())){
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const rects = range.getClientRects();
+    for(const rc of rects){
+      safeLines.add(Math.round(rc.top - holderTop));
+      safeLines.add(Math.round(rc.bottom - holderTop));
+    }
+  }
+  holder.querySelectorAll('.ct-qr, .ct-sign').forEach(el=>{
+    const r = el.getBoundingClientRect();
+    const top = r.top - holderTop, bottom = r.bottom - holderTop;
+    noCutZones.push([top, bottom]);
+    safeLines.add(Math.round(top));
+    safeLines.add(Math.round(bottom));
+  });
+  const totalHeightCss = holder.scrollHeight;
+  safeLines.add(0);
+  safeLines.add(totalHeightCss);
+  const sortedLines = Array.from(safeLines).sort((a,b)=>a-b);
+  const trongVungCam = y => noCutZones.some(([t,b]) => y > t+0.5 && y < b-0.5);
+
   let canvas;
   try{
-    // Quan trọng: hợp đồng thường cao hơn màn hình điện thoại. Nếu không khai báo
-    // windowWidth/windowHeight, html2canvas sẽ chụp làm nhiều lượt cuộn rồi ghép lại
-    // và chỗ ghép hay bị lệch — ra vệt đen ngang cùng dòng chữ lặp. Khai đúng kích
-    // thước thật của holder để nó chụp trọn một lượt duy nhất, không phải ghép.
+    // hợp đồng thường cao hơn màn hình điện thoại. Nếu không khai báo windowWidth/
+    // windowHeight, html2canvas chụp làm nhiều lượt cuộn rồi ghép lại và chỗ ghép hay
+    // bị lệch — ra vệt đen ngang cùng dòng chữ lặp. Khai đúng kích thước thật để nó
+    // chụp trọn một lượt duy nhất.
     canvas = await html2canvas(holder, {
-      scale:2, backgroundColor:'#ffffff', useCORS:true,
+      scale:SCALE, backgroundColor:'#ffffff', useCORS:true,
       windowWidth: holder.scrollWidth, windowHeight: holder.scrollHeight,
       scrollX: 0, scrollY: 0
     });
@@ -1947,20 +1984,53 @@ async function renderContractPdfBlob(stt, ngayKyISO){
   const pdf = new jsPDF({unit:'px', format:'a4'});
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  const ratio = pageW / canvas.width;
-  const pageHeightPx = Math.floor(pageH / ratio);
+  const marginX = Math.round(pageW * 0.055);
+  const marginY = Math.round(pageH * 0.045);
+  const footerH  = 16; // chỗ chừa cho số trang ở đáy mỗi trang
+  const contentW = pageW - marginX*2;
+  const contentH = pageH - marginY*2 - footerH;
 
-  let y = 0, pageIdx = 0;
-  while(y < canvas.height){
-    const sliceH = Math.min(pageHeightPx, canvas.height - y);
+  // ratio quy đổi: px canvas (đã nhân SCALE) -> px trong PDF, theo bề ngang vùng nội dung
+  const ratio = contentW / (HOLDER_W * SCALE);
+  const maxSliceCssH = (contentH / ratio) / SCALE; // chiều cao tối đa 1 trang, tính theo px CSS gốc
+
+  // ===== Chọn các điểm cắt: luôn trùng một mốc "an toàn", không cắt trong vùng cấm =====
+  const breaks = [0];
+  let cursor = 0;
+  while(cursor < totalHeightCss - 1){
+    const limit = cursor + maxSliceCssH;
+    let candidate = null;
+    for(const ln of sortedLines){
+      if(ln > cursor && ln <= limit && !trongVungCam(ln)) candidate = ln;
+      if(ln > limit) break;
+    }
+    if(candidate === null){
+      // Không có mốc an toàn nào trong tầm 1 trang (dòng/ảnh quá dài hiếm gặp) — đành cắt cứng
+      candidate = Math.min(cursor + maxSliceCssH, totalHeightCss);
+    }
+    breaks.push(candidate);
+    cursor = candidate;
+  }
+  if(breaks[breaks.length-1] < totalHeightCss) breaks.push(totalHeightCss);
+
+  const totalPages = breaks.length - 1;
+  for(let i=0; i<totalPages; i++){
+    const yStartCanvas = Math.round(breaks[i] * SCALE);
+    const yEndCanvas = Math.round(breaks[i+1] * SCALE);
+    const sliceH = Math.max(1, yEndCanvas - yStartCanvas);
+
     const pc = document.createElement('canvas');
     pc.width = canvas.width; pc.height = sliceH;
-    pc.getContext('2d').drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-    if(pageIdx>0) pdf.addPage();
-    pdf.addImage(pc.toDataURL('image/png'), 'PNG', 0, 0, pageW, sliceH*ratio);
-    y += sliceH;
-    pageIdx++;
+    pc.getContext('2d').drawImage(canvas, 0, yStartCanvas, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+    if(i>0) pdf.addPage();
+    pdf.addImage(pc.toDataURL('image/png'), 'PNG', marginX, marginY, contentW, sliceH*ratio);
+
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(120);
+    pdf.text(`Trang ${i+1}/${totalPages}`, pageW/2, pageH - footerH/2, {align:'center'});
   }
+
   return pdf.output('blob');
 }
 
