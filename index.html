@@ -313,7 +313,8 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 .contract-doc h1{font-size:16.5px; font-weight:700; text-align:center; margin:8px 0 12px; letter-spacing:.3px;}
 .contract-doc .ct-center{text-align:center;}
 .contract-doc .ct-bold{font-weight:700;}
-.contract-doc .ct-dieu{font-weight:700; margin-top:10px; text-align:left;}
+.contract-doc .ct-dieu{font-weight:700; margin-top:9px; text-align:left;}
+.contract-doc .ct-ind{margin-left:22px;}
 .contract-doc .bl{display:inline-block; min-width:110px; border-bottom:1px dotted #444; vertical-align:baseline;}
 .contract-doc .bl-lg{min-width:190px;}
 .contract-doc .bl-xl{min-width:330px;}
@@ -327,13 +328,14 @@ table.receipt-tbl tfoot td:last-child{text-align:right;}
 .contract-doc .ct-sign{width:100%; margin-top:16px; border-collapse:collapse; text-align:center;}
 .contract-doc .ct-sign td{width:50%; padding:8px 6px 62px; vertical-align:top;}
 
-@page{size:A4; margin:15mm 16mm;}
+@page{size:A4; margin:12mm 14mm;}
 @media print{
   /* Khi in hợp đồng: giấu toàn bộ giao diện, chỉ để lại tờ hợp đồng */
   body.print-contract > *{display:none !important;}
   body.print-contract > #contractPrint{display:block !important;}
-  body.print-contract .contract-doc{padding:0; font-size:12.5pt;}
-  body.print-contract .contract-doc h1{font-size:15pt;}
+  body.print-contract .contract-doc{padding:0; font-size:12.5pt; line-height:1.35;}
+  body.print-contract .contract-doc p{margin:0 0 5pt;}
+  body.print-contract .contract-doc h1{font-size:15pt; margin:6pt 0 10pt;}
   .contract-doc .ct-qr-float, .contract-doc .ct-sign{page-break-inside:avoid;}
   header.topbar, nav.tabs, .no-print, footer.appfoot{display:none !important;}
   body{background:#fff;}
@@ -445,12 +447,12 @@ const SEED_MONTH_KEY = "2026-07";
    Chỗ nào muốn để trống ký tay thì dùng <span class="bl"></span>. */
 const DEFAULT_CONTRACT = `<p class="ct-center ct-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
 <p class="ct-center ct-bold" style="text-decoration:underline;">Độc lập - Tự do - Hạnh phúc</p>
-<p class="ct-center">....0O0....</p>
+<p class="ct-center">....oOo....</p>
 
 <h1>HỢP ĐỒNG CHO THUÊ PHÒNG TRỌ</h1>
 
 <p>Hôm nay, ngày {{NGAY}} tháng {{THANG}} năm {{NAM}}</p>
-<p class="ct-bold">Tại số nhà: 187 Ni Sư Huỳnh Liên, phường 10, quận Tân Bình, TP Hồ Chí Minh.</p>
+<p class="ct-bold">Tại số nhà: 187 Ni Sư Huỳnh Liên, phường Bảy Hiền, TP Hồ Chí Minh.</p>
 <p>Chúng tôi đứng tên dưới đây là những người tự nhận thấy có đủ năng lực về hành vi dân sự và chịu trước pháp luật về hành vi của mình.</p>
 
 <p><b>BÊN A</b> (Bên cho thuê): <b>VŨ MẠNH HƯNG</b><br>
@@ -471,57 +473,44 @@ CCCD số: {{CCCD}}<br>
 
 <p class="ct-bold">Hợp đồng này bên A đồng ý cho bên B thuê với các nội dung như sau:</p>
 
-<p class="ct-dieu">Điều 1: <i>Giá thuê và hình thức thanh toán</i></p>
-<p>Cho thuê phòng số: <b>{{PHONG}}</b><br>
-Giá thuê phòng là: <b>{{GIA_THUE}}</b> (Thu đầu tháng)<br>
-Tiền thế chân là: <span class="bl bl-lg"></span><br>
-Mặt nạ phòng Khói độc: <span class="bl"></span> Cái (trả lại khi trả Phòng, thiếu thì trừ <b>500.000 đồng/Cái</b>. Nếu không nhận ghi rõ lý do và cam kết chịu hoàn toàn trách nhiệm nếu xảy ra sự cố về cháy nổ),<br>
-lý do Không nhận (nếu có): <span class="bl bl-xl"></span></p>
+<p class="ct-dieu">Điều 1: Giá thuê và hình thức thanh toán</p>
+<p class="ct-ind"><b>Cho thuê phòng số:</b> {{PHONG}}</p>
+<p class="ct-ind"><b>Giá thuê phòng:</b> {{GIA_THUE}}/tháng <i>(thu đầu tháng)</i></p>
+<p class="ct-ind"><b>Tiền thế chân (đặt cọc):</b> <span class="bl bl-lg"></span> đồng</p>
+<p class="ct-ind">Mặt nạ phòng khói độc: <span class="bl"></span> cái (hoàn trả khi trả phòng; thiếu cái nào trừ <b>500.000đ/cái</b>. Nếu không nhận, bên B ghi rõ lý do và tự chịu trách nhiệm nếu xảy ra sự cố cháy nổ). Lý do không nhận (nếu có): <span class="bl bl-xl"></span></p>
+<p class="ct-ind ct-clear">Tiền điện: <b>{{GIA_DIEN}}</b> (thu cuối tháng) — Tiền nước: <b>{{GIA_NUOC}}</b> (thu đầu tháng)</p>
+<p class="ct-ind">Tiền xe: <b>{{GIA_XE}}</b> (xe máy, xe điện); <b>75.000đ/tháng</b> (xe đạp) — thu đầu tháng — Tiền internet: miễn phí</p>
+<p class="ct-ind">Số lượng người ở: <b>{{SO_NGUOI}}</b> &nbsp;&nbsp;&nbsp; Số lượng xe: <b>{{SO_XE}}</b></p>
 
-<p class="ct-clear"><i>Tiền điện là: <b>{{GIA_DIEN}}</b> (Thu cuối tháng)<br>
-Tiền nước là: <b>{{GIA_NUOC}}</b> (Thu đầu tháng)<br>
-Tiền xe: <b>{{GIA_XE}}</b> và Xe điện; <b>75.000 đ/tháng/xe đạp</b> (Thu đầu tháng)</i><br>
-Tiền internet: MIỄN PHÍ<br>
-Số lượng người ở là: <b>{{SO_NGUOI}}</b><br>
-Số lượng xe: <b>{{SO_XE}}</b></p>
+<p class="ct-dieu">Điều 2: Thời hạn thuê và thanh toán tiền phòng</p>
+<p class="ct-ind">Thời hạn thuê: <b>{{SO_THANG}} tháng</b>, tính từ ngày <b>{{TU_NGAY}}</b> đến ngày <b>{{DEN_NGAY}}</b></p>
+<p class="ct-ind">Bên B thanh toán tiền phòng cho bên A từ ngày 01 đến tối đa ngày 05 hàng tháng.</p>
+<p class="ct-ind"><i><b>Lưu ý:</b> Hết hạn hợp đồng mà bên B chưa muốn trả phòng thì hợp đồng tự động gia hạn thêm 3 tháng (lặp lại theo lũy tiến). Bên B muốn trả phòng phải báo trước ít nhất 20 ngày.</i></p>
+<p class="ct-ind">Bên B phải cung cấp CCCD/giấy tờ tùy thân cho bên A trong vòng 7 ngày kể từ ngày ký hợp đồng để đăng ký tạm trú theo quy định. Quá thời hạn trên mà bên B chưa cung cấp, bên A có quyền lấy lại phòng cho người khác thuê và không hoàn trả bất kỳ khoản tiền nào.</p>
+<p class="ct-ind">Nếu bên B chấm dứt hợp đồng trước thời hạn, bên A không hoàn trả tiền thế chân và bên B không được khiếu nại gì đối với bên A. Quy định này áp dụng cho mọi trường hợp chấm dứt trước hạn nêu trong hợp đồng, kể cả các trường hợp tại Điều 4.</p>
 
-<p class="ct-dieu">Điều 2: <i>Thời gian thuê và thời gian thanh toán tiền phòng</i></p>
-<p>Thời gian bên A cho bên B thuê là: <b>{{SO_THANG}} tháng</b>.<br>
-Tính từ ngày: <b>{{TU_NGAY}}</b> đến ngày <b>{{DEN_NGAY}}</b></p>
-<p>- (<b>Lưu ý</b>: <i>Khi hết hợp đồng nếu Khách thuê chưa muốn trả Phòng thì Hợp đồng tiếp tục gia hạn theo luỹ tiến + 3 tháng. Khách muốn trả lại Phòng báo trước ít nhất 20 ngày</i>)</p>
-<p>- Bên B thanh toán tiền cho bên A vào ngày 01 đến tối đa ngày 05 tây hàng tháng.</p>
-<p><i>- Nếu bên B chấm dứt hợp đồng trước thời hạn thì bên A sẽ không hoàn trả lại tiền thế chân, đồng thời bên B sẽ không được khiếu nại gì đối với bên A.</i></p>
-<p><i>- Bên B phải cung cấp đầy đủ giấy tờ cho bên A để đăng ký tạm trú (01 CCCD photo hoặc bản chụp CCCD đủ 2 mặt gửi qua Zalo, đồng thời nhập Link Zalo thông tin đăng ký nhân khẩu, sẽ được cung cấp Link), nếu trong vòng 7 ngày kể từ ngày ký hợp đồng mà bên B không cung cấp đủ giấy tờ cho bên A thì bên A có quyền lấy lại phòng cho người khác thuê và đồng thời không trả bất cứ tiền gì cho bên B.</i></p>
-
-<p class="ct-dieu">Điều 3:</p>
-<p>Nếu cuối tháng có thay đổi số lượng xe và người ở phải báo cho <b>Chủ nhà</b> qua <b>Zalo</b> trước ngày 30 tây hàng tháng. Nếu không thông báo thì số lượng người và xe tính như tháng trước. Trong trường hợp bên B thêm người và xe mà không khai báo, khi Chủ nhà phát hiện thì sẽ phụ thu theo ngày cho những phần không khai báo (Cụ thể là: nước 5.000 đ/người/ngày; xe: 10.000 đ/1 xe/ngày).</p>
+<p class="ct-dieu">Điều 3: Thay đổi số lượng người ở / xe</p>
+<p class="ct-ind">Cuối mỗi tháng, nếu có thay đổi số lượng người ở hoặc xe, bên B phải báo cho chủ nhà qua Zalo trước ngày 30. Không báo thì tính theo số liệu tháng trước; nếu chủ nhà phát hiện phát sinh không khai báo sẽ phụ thu theo ngày cho phần chưa khai báo: nước 5.000đ/người/ngày, xe 10.000đ/xe/ngày.</p>
 
 <p class="ct-dieu">Điều 4: Quyền và nghĩa vụ các bên</p>
 <p class="ct-bold">Bên A:</p>
-<p>- Ưu tiên phòng cho bên B khi bên B có nhu cầu thuê tiếp.<br>
-- Muốn lấy lại phòng thì phải báo cho bên B trước một tháng, khi đã kết thúc hợp đồng.<br>
-- Thanh toán đủ số tiền thế chân cho bên B khi kết thúc hợp đồng (vào ngày 20 tây hàng tháng với điều kiện bên B trả phòng).<br>
-- Có quyền ngưng hợp đồng ngay lập tức với bên B mà không hoàn trả tiền thế chân nếu bên B phạm nội quy phòng trọ.<br>
-- Có quyền niêm phong phòng của bên B đang thuê và lấy lại phòng cho người khác thuê, không hoàn trả lại tiền thế chân nếu bên B quá hạn 05 ngày không thanh toán đủ tiền phòng.<br>
-- Nếu bên B chấm dứt hợp đồng trước thời hạn thì bên A sẽ không hoàn trả lại tiền thế chân, đồng thời bên B sẽ không được khiếu nại gì đối với bên A.<br>
-- Nếu bên B vắng mặt quá 7 ngày mà không báo thì bên A sẽ niêm phong, không bảo quản tài sản của bên B và lấy lại phòng cho người khác thuê, không hoàn trả tiền thế chân.</p>
+<p class="ct-ind">Ưu tiên cho bên B thuê tiếp nếu có nhu cầu. Muốn lấy lại phòng phải báo trước cho bên B ít nhất 1 tháng khi hết hạn hợp đồng. Hoàn trả tiền thế chân cho bên B khi kết thúc hợp đồng (vào ngày 20 hàng tháng, với điều kiện bên B đã trả phòng). Có quyền chấm dứt hợp đồng ngay và không hoàn trả tiền thế chân nếu bên B vi phạm nội quy phòng trọ (bao gồm các trường hợp nêu tại mục * cuối Điều này). Có quyền niêm phong, lấy lại phòng cho người khác thuê và không hoàn trả tiền thế chân nếu: (a) bên B trễ hạn quá 5 ngày không thanh toán đủ tiền phòng, hoặc (b) bên B vắng mặt quá 7 ngày mà không báo — trường hợp này bên A không chịu trách nhiệm bảo quản tài sản còn lại của bên B.</p>
 
 <p class="ct-bold">Bên B:</p>
-<p>1) Người thân ở lại phòng qua đêm phải thông báo cho bên A trước 20h cùng ngày và cung cấp cho bên A giấy tờ tùy thân của người thân để bên A trình báo cho Công An Khu Vực. Sau thời gian trên xem như bên B tự ý cho người lạ ở lại qua đêm mà không trình báo. Bên B chịu hoàn toàn trách nhiệm nếu bị Công An xử lý vi phạm.<br>
-2) Không được nhậu nhẹt, tụ tập làm ồn sau 22h đêm (đây là quy định của Nhà nước).<br>
-3) Phải có giấy tờ tùy thân đầy đủ để bên A trình Công An Khu Vực.<br>
-4) Tự giữ và bảo quản đồ đạc cá nhân trong phòng mình như: vật dụng cá nhân, điện thoại, laptop, máy tính, ví tiền... có mất cắp thì bên A không chịu trách nhiệm.<br>
-5) Tự bảo quản và sửa chữa hệ thống điện nước trong phòng tiêu hao theo thời gian sử dụng như: bóng đèn, công tắc, ổ cắm, vòi nước, vòi xịt, thiết bị vệ sinh... Cần nhà trọ sửa chữa thì tính phí.<br>
-6) Giữ gìn vệ sinh sạch sẽ hành lang trước phòng, an ninh trật tự trong nhà trọ và khu phố, không được nuôi súc vật như: chó, mèo, khỉ, rắn...<br>
-7) Không chứa các chất gây nghiện, thuốc nổ, vũ khí trong phòng, không tụ tập uống bia, rượu, đánh lộn. Nấu ăn đúng nơi quy định để phòng chống cháy nổ xảy ra. Nếu có sự cố xảy ra bên B hoàn toàn chịu trách nhiệm trước pháp luật, đồng thời bồi thường thiệt hại cho các bên liên quan.<br>
-8) Không nhận xe người thân bên B để lại qua đêm, trừ trường hợp xe có đủ giấy tờ hợp lệ và được sự đồng ý của bên A.<br>
-9) Không sử dụng phòng với mục đích vi phạm pháp luật.<br>
-10) Không tụ tập đánh bài với mọi hình thức.</p>
-<p>* Nếu bên B vi phạm các điều khoản (1, 2, 3, 6, 7, 9, 10) thì bên A sẽ ngừng hợp đồng, lấy lại phòng cho người khác thuê và không trả lại tiền thế chân cho bên B.</p>
+<p class="ct-ind">1) Người thân ở lại qua đêm phải báo cho bên A trước 20h cùng ngày và cung cấp giấy tờ tùy thân để bên A trình báo Công an khu vực; quá giờ trên mà không báo, bên B tự chịu trách nhiệm nếu bị xử lý vi phạm.<br>
+2) Không nhậu nhẹt, tụ tập gây ồn sau 22h đêm (theo quy định Nhà nước).<br>
+3) Có giấy tờ tùy thân đầy đủ để bên A trình báo Công an khu vực khi cần.<br>
+4) Tự bảo quản tài sản, đồ dùng cá nhân trong phòng; mất mát bên A không chịu trách nhiệm.<br>
+5) Tự bảo quản, sửa chữa (chịu phí) các thiết bị điện nước hao mòn theo sử dụng: bóng đèn, công tắc, ổ cắm, vòi nước, vòi xịt, thiết bị vệ sinh...<br>
+6) Giữ vệ sinh hành lang, an ninh trật tự trong nhà trọ và khu phố; không nuôi chó, mèo, khỉ, rắn...<br>
+7) Không tàng trữ chất gây nghiện, chất nổ, vũ khí; không tụ tập nhậu nhẹt, đánh nhau; nấu ăn đúng nơi quy định để phòng cháy nổ. Nếu xảy ra sự cố, bên B chịu trách nhiệm trước pháp luật và bồi thường thiệt hại liên quan.<br>
+8) Không cho người thân để xe lại qua đêm, trừ khi xe có đủ giấy tờ hợp lệ và được bên A đồng ý.<br>
+9) Không sử dụng phòng vào mục đích vi phạm pháp luật.<br>
+10) Không tụ tập đánh bài dưới mọi hình thức.</p>
+<p class="ct-ind">* Nếu bên B vi phạm các mục (1, 2, 3, 6, 7, 9, 10), bên A có quyền chấm dứt hợp đồng, lấy lại phòng cho người khác thuê và không hoàn trả tiền thế chân.</p>
 
-<p class="ct-dieu">Điều 5: Hiệu lực của hợp đồng</p>
-<p>Hợp đồng có hiệu lực kể từ ngày hai bên đồng ý ký nhận.</p>
-<p><i>Hợp đồng này được lập thành hai (02) bản, mỗi bên giữ một (01) có giá trị pháp lý như nhau.</i></p>
+<p class="ct-dieu">Điều 5: Hiệu lực hợp đồng</p>
+<p class="ct-ind">Hợp đồng có hiệu lực kể từ ngày hai bên ký nhận, được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p>
 
 <table class="ct-sign">
   <tr>
