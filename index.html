@@ -1878,7 +1878,10 @@ function openContractModal(stt){
     <div class="form-grid" style="margin-bottom:10px;">
       <div class="f"><label>Ngày ký hợp đồng</label><input type="date" id="ct_ngayky" value="${macDinhKy}" onchange="refreshContractPreview(${r.stt})"></div>
     </div>
-    <div class="toolbar"><button class="btn btn-primary btn-sm" onclick="printContract(${r.stt})">🖨 In / Lưu PDF</button></div>
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" onclick="printContract(${r.stt})">🖨 In / Lưu PDF</button>
+      <button class="btn btn-outline btn-sm" id="ctShareBtn" onclick="shareContractZalo(${r.stt})">📤 Chia sẻ qua Zalo</button>
+    </div>
     <div id="ctPreview" class="ct-preview">${buildContractHtml(r.stt, macDinhKy)}</div>
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
   `);
@@ -1905,6 +1908,91 @@ function printContract(stt){
       area.innerHTML = '';
     }, 400);
   }, 150);
+}
+
+// Dựng nội dung hợp đồng ra file PDF thật (nhiều trang nếu dài), dùng chung
+// html2canvas + jsPDF đã có sẵn trong app cho phiếu thu.
+async function renderContractPdfBlob(stt, ngayKyISO){
+  const html = buildContractHtml(stt, ngayKyISO);
+  if(!html) return null;
+
+  // Vẽ ở ngoài khung nhìn (không dùng display:none vì html2canvas cần layout thật)
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed; left:-10000px; top:0; width:794px; background:#fff;';
+  holder.innerHTML = html;
+  document.body.appendChild(holder);
+
+  // Chờ ảnh QR trong hợp đồng tải xong, tránh PDF bị thiếu ảnh
+  const qrImg = holder.querySelector('img.ct-qr-img');
+  if(qrImg && !qrImg.complete){
+    await new Promise(res=>{ qrImg.onload = qrImg.onerror = res; setTimeout(res, 2000); });
+  }
+
+  let canvas;
+  try{
+    canvas = await html2canvas(holder, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+  } finally {
+    document.body.removeChild(holder);
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'px', format:'a4'});
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const ratio = pageW / canvas.width;
+  const pageHeightPx = Math.floor(pageH / ratio);
+
+  let y = 0, pageIdx = 0;
+  while(y < canvas.height){
+    const sliceH = Math.min(pageHeightPx, canvas.height - y);
+    const pc = document.createElement('canvas');
+    pc.width = canvas.width; pc.height = sliceH;
+    pc.getContext('2d').drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    if(pageIdx>0) pdf.addPage();
+    pdf.addImage(pc.toDataURL('image/png'), 'PNG', 0, 0, pageW, sliceH*ratio);
+    y += sliceH;
+    pageIdx++;
+  }
+  return pdf.output('blob');
+}
+
+async function shareContractZalo(stt){
+  const btn = document.getElementById('ctShareBtn');
+  const d = document.getElementById('ct_ngayky');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Đang tạo file…'; }
+  try{
+    const blob = await renderContractPdfBlob(stt, d ? d.value : null);
+    if(!blob){ showToast('Không tạo được file hợp đồng.'); return; }
+
+    const fileName = `HopDong_Phong${stt}.pdf`;
+    const file = new File([blob], fileName, {type:'application/pdf'});
+
+    // Web Share API (điện thoại): mở bảng chia sẻ của hệ thống, trong đó có Zalo
+    // nếu máy đã cài. Trình duyệt tự quyết định danh sách app, ta không chọn thay được.
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({
+          files: [file],
+          title: `Hợp đồng thuê phòng ${stt}`,
+          text: `Hợp đồng thuê phòng ${stt} — Nhà Trọ 187 NSHL`
+        });
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError') return; // người dùng tự đóng bảng chia sẻ, không phải lỗi
+        // các lỗi khác thì rơi xuống cách tải file bên dưới
+      }
+    }
+
+    // Máy tính hoặc trình duyệt chưa hỗ trợ chia sẻ file: tải file rồi hướng dẫn gửi tay
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Máy này chưa hỗ trợ chia sẻ trực tiếp — đã tải file PDF, mở Zalo và đính kèm file để gửi.');
+  }catch(e){
+    showToast('Lỗi khi tạo file chia sẻ: ' + (e.message||e));
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '📤 Chia sẻ qua Zalo'; }
+  }
 }
 
 function openTenantHistoryModal(roomStt){
