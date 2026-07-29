@@ -1930,7 +1930,15 @@ async function renderContractPdfBlob(stt, ngayKyISO){
 
   let canvas;
   try{
-    canvas = await html2canvas(holder, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+    // Quan trọng: hợp đồng thường cao hơn màn hình điện thoại. Nếu không khai báo
+    // windowWidth/windowHeight, html2canvas sẽ chụp làm nhiều lượt cuộn rồi ghép lại
+    // và chỗ ghép hay bị lệch — ra vệt đen ngang cùng dòng chữ lặp. Khai đúng kích
+    // thước thật của holder để nó chụp trọn một lượt duy nhất, không phải ghép.
+    canvas = await html2canvas(holder, {
+      scale:2, backgroundColor:'#ffffff', useCORS:true,
+      windowWidth: holder.scrollWidth, windowHeight: holder.scrollHeight,
+      scrollX: 0, scrollY: 0
+    });
   } finally {
     document.body.removeChild(holder);
   }
