@@ -706,7 +706,7 @@ function markActivity(){ lastActivityAt = Date.now(); }
 setInterval(()=>{
   if(STATE.authed && (Date.now()-lastActivityAt) > INACTIVITY_LIMIT_MS){
     logout();
-    showToast('Đã tự động đăng xuất do không thao tác trong 15 phút.');
+    showToast('Đã tự động đăng xuất do không thao tác.');
   }
 }, 20000);
 
