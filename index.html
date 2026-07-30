@@ -2014,6 +2014,7 @@ async function renderContractPdfBlob(stt, ngayKyISO){
   if(breaks[breaks.length-1] < totalHeightCss) breaks.push(totalHeightCss);
 
   const totalPages = breaks.length - 1;
+  const pageCanvases = [];
   for(let i=0; i<totalPages; i++){
     const yStartCanvas = Math.round(breaks[i] * SCALE);
     const yEndCanvas = Math.round(breaks[i+1] * SCALE);
@@ -2022,16 +2023,37 @@ async function renderContractPdfBlob(stt, ngayKyISO){
     const pc = document.createElement('canvas');
     pc.width = canvas.width; pc.height = sliceH;
     pc.getContext('2d').drawImage(canvas, 0, yStartCanvas, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-
-    if(i>0) pdf.addPage();
-    pdf.addImage(pc.toDataURL('image/png'), 'PNG', marginX, marginY, contentW, sliceH*ratio);
-
-    pdf.setFontSize(8.5);
-    pdf.setTextColor(120);
-    pdf.text(`Trang ${i+1}/${totalPages}`, pageW/2, pageH - footerH/2, {align:'center'});
+    pageCanvases.push({pc, sliceH});
   }
 
-  return pdf.output('blob');
+  // Đóng gói thành PDF ở chất lượng JPEG cao trước; nếu file vẫn nặng thì giảm dần
+  // chất lượng và thử lại — không cần chụp lại ảnh, chỉ nén lại nên rất nhanh.
+  // PNG không nén tốt với chữ có viền răng cưa (mỗi điểm ảnh gần như một màu riêng),
+  // trong khi JPEG cho hợp đồng chữ đen/trắng thì nhẹ hơn nhiều mà mắt thường khó thấy khác biệt.
+  const TARGET_BYTES = 6 * 1024 * 1024;
+  const qualityLevels = [0.9, 0.8, 0.68, 0.55, 0.42];
+
+  function assemblePdf(quality){
+    const pdf = new jsPDF({unit:'px', format:'a4'});
+    pageCanvases.forEach(({pc, sliceH}, i)=>{
+      if(i>0) pdf.addPage();
+      pdf.addImage(pc.toDataURL('image/jpeg', quality), 'JPEG', marginX, marginY, contentW, sliceH*ratio);
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(120);
+      pdf.text(`Trang ${i+1}/${totalPages}`, pageW/2, pageH - footerH/2, {align:'center'});
+    });
+    return pdf.output('blob');
+  }
+
+  let finalBlob = null;
+  for(const q of qualityLevels){
+    finalBlob = assemblePdf(q);
+    if(finalBlob.size <= TARGET_BYTES) break;
+  }
+  if(finalBlob.size > TARGET_BYTES){
+    showToast(`Hợp đồng khá dài nên file vẫn ~${(finalBlob.size/1024/1024).toFixed(1)}MB — vẫn gửi được, chỉ hơi nặng.`);
+  }
+  return finalBlob;
 }
 
 async function shareContractZalo(stt){
