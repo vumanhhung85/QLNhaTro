@@ -261,6 +261,12 @@ table.receipt-tbl thead th:nth-child(5), table.receipt-tbl tbody td:nth-child(5)
 table.receipt-tbl thead th:nth-child(6), table.receipt-tbl tbody td:nth-child(6){text-align:right;}
 table.receipt-tbl tfoot td{font-weight:800; border-top:2px solid var(--navy); border-bottom:none; font-size:13.5px; color:var(--navy);}
 table.receipt-tbl tfoot td:last-child{text-align:right;}
+/* Dòng nợ cũ: chỉ xuất hiện khi phòng còn thiếu tiền tháng trước. Tách khỏi dòng
+   "Tổng cộng" của riêng tháng này để khách vẫn thấy rõ 2 khoản là khác nhau,
+   rồi mới đến dòng tổng cuối cùng phải đóng (gồm cả nợ). */
+table.receipt-tbl tfoot tr.debt-row td{font-weight:700; font-size:12px; color:var(--brick); border-top:1px dashed var(--line);}
+table.receipt-tbl tfoot tr.debt-total-row td{font-weight:800; font-size:14.5px; color:var(--brick); border-top:2px solid var(--brick);}
+table.receipt-tbl tfoot tr.debt-total-row td:last-child{text-align:right;}
 .receipt-note{font-size:10.5px; color:var(--ink-soft); margin-top:8px; white-space:pre-wrap; line-height:1.5;}
 .qr-block{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; gap:12px; align-items:center;}
 .qr-block img{width:110px; height:110px; border-radius:6px; border:1px solid var(--line); flex-shrink:0; background:#fff;}
@@ -2560,7 +2566,7 @@ function renderPhieu(main){
         <select id="phieuRoomSelect" onchange="STATE.phieuSelected=this.value; renderReceiptsList(this.value);"></select>
         <button class="btn btn-outline btn-sm" onclick="exportOneReceiptImage()">🖼️ Tải ảnh phòng này</button>
         <button class="btn btn-outline btn-sm" onclick="shareReceipt()">📤 Chia sẻ (Zalo...)</button>
-        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ In phiếu đang xem</button>
+        <button class="btn btn-outline btn-sm" onclick="printCurrentReceiptView()">🖨️ In phiếu đang xem</button>
         <button class="btn btn-brass btn-sm" onclick="openExportAllModal()">⬇️ Xuất tất cả ▾</button>
       </div>
     </div>
@@ -2590,6 +2596,8 @@ function receiptHtml(r, s, options){
   const showQR = options.showQR !== false;
   const c = r._c;
   const md = STATE.monthData;
+  const debt = roomDebtInfo(r);                 // null nếu phòng không có nợ cũ
+  const totalWithDebt = roomTotalWithDebt(r);    // = tiền tháng này (+ nợ cũ nếu có)
   const noteDien = `Lưu ý: Thu chuyển khoản: ${s.tenNguoiNhan}\n- STK: ${s.stk} — ${s.nganHang} (Momo: ${s.momo})\n- Đề nghị đóng tiền trước ${fmtDate(md.hanDong)}. Thanks\n- Nhắn Zalo/SMS Chủ nhà trọ để Xác Nhận đã đóng Tiền!`;
   const waterRow = r.waterMeter ? `
     <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.nuocMoi||0)}</td><td>${fmtNum(r.nuocCu||0)}</td><td>${fmtNum(Math.max(0,(r.nuocMoi||0)-(r.nuocCu||0)))}</td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
@@ -2609,7 +2617,7 @@ function receiptHtml(r, s, options){
       <div class="rdate"><div class="rmonth-big">${md.label}</div>Hạn đóng: ${fmtDate(md.hanDong)}</div>
     </div>
     ${proratedBanner}
-    <div class="receipt-total-hero"><span class="hero-label">Tổng tiền phòng <span class="room-num-big">${r.stt}</span></span><span class="amt mono">${fmtVND(c.tong)}</span></div>
+    <div class="receipt-total-hero"><span class="hero-label">Tổng tiền phòng <span class="room-num-big">${r.stt}</span></span><span class="amt mono">${fmtVND(totalWithDebt)}</span></div>
     <table class="receipt-tbl">
       <thead><tr><th>TT</th><th>Danh mục</th><th>Số mới</th><th>Số cũ</th><th>Đã SD</th><th>Số tiền</th></tr></thead>
       <tbody>
@@ -2619,7 +2627,11 @@ function receiptHtml(r, s, options){
         <tr><td>4</td><td>Tiền xe${c.prorated?' (theo ngày ở)':''}</td><td>${fmtNum(r.soxe||0)}</td><td>Xe</td><td></td><td class="mono">${fmtVND(c.tienXe)}</td></tr>
         <tr><td>5</td><td>Rác${c.prorated?' (theo ngày ở)':''}</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienRac)}</td></tr>
       </tbody>
-      <tfoot><tr><td colspan="5">Tổng cộng</td><td class="mono">${fmtVND(c.tong)}</td></tr></tfoot>
+      <tfoot>
+        <tr><td colspan="5">Tổng cộng</td><td class="mono">${fmtVND(c.tong)}</td></tr>
+        ${debt?`<tr class="debt-row"><td colspan="5">Nợ cũ ${debt.monthLabel}</td><td class="mono" style="color:var(--brick);">${fmtVND(debt.amount)}</td></tr>
+        <tr class="debt-total-row"><td colspan="5">Tổng cộng phải đóng</td><td class="mono">${fmtVND(totalWithDebt)}</td></tr>`:''}
+      </tfoot>
     </table>
     ${qrHtml}
     <div class="receipt-note">${noteDien}</div>
@@ -2627,6 +2639,30 @@ function receiptHtml(r, s, options){
 }
 
 /* ---- export helpers: image / zip / pdf ---- */
+// Tên file phòng luôn 2 chữ số cho phòng 1-9 (Phong_01...Phong_09), giữ nguyên
+// cho phòng 10-48 — để khi sắp xếp file theo tên trên máy tính/điện thoại, thứ tự
+// đúng 1,2,3...48 thay vì 1,10,11,...,2,20,... (kiểu sắp chữ, không phải sắp số).
+function roomFileTag(stt){
+  const n = Number(stt);
+  return (n>=1 && n<=9) ? '0'+n : String(n);
+}
+
+// Đặt tên file gợi ý khi in/lưu PDF: trình duyệt lấy tên đó từ tiêu đề trang <title>,
+// nên đổi tạm tiêu đề trước khi mở hộp thoại in rồi trả lại tên cũ ngay sau đó.
+function printCurrentReceiptView(){
+  const sel = document.getElementById('phieuRoomSelect').value;
+  const oldTitle = document.title;
+  document.title = (sel !== 'ALL')
+    ? `Phong_${roomFileTag(sel)}_${STATE.monthData.key}`
+    : `PhieuThu_${STATE.monthData.key}`;
+  // Chỉ trả lại tên cũ khi hộp thoại in THỰC SỰ đã đóng (sự kiện afterprint), tránh
+  // trường hợp đổi tên lại quá sớm trong lúc người dùng còn đang chọn "Lưu thành PDF".
+  const restore = () => { document.title = oldTitle; };
+  window.addEventListener('afterprint', restore, {once:true});
+  window.print();
+  setTimeout(restore, 4000); // dự phòng cho các trình duyệt/WebView không bắn afterprint
+}
+
 async function exportOneReceiptImage(){
   const sel = document.getElementById('phieuRoomSelect').value;
   if(sel==='ALL'){ showToast('Vui lòng chọn 1 phòng cụ thể trước.'); return; }
@@ -2636,7 +2672,7 @@ async function exportOneReceiptImage(){
   const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=`Phong_${sel}_${STATE.monthData.key}.png`; a.click();
+  const a = document.createElement('a'); a.href=url; a.download=`Phong_${roomFileTag(sel)}_${STATE.monthData.key}.png`; a.click();
   URL.revokeObjectURL(url);
 }
 async function shareReceipt(){
@@ -2647,7 +2683,7 @@ async function shareReceipt(){
   showToast('Đang chuẩn bị ảnh để chia sẻ…');
   const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
   const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
-  const fileName = `Phong_${sel}_${STATE.monthData.key}.png`;
+  const fileName = `Phong_${roomFileTag(sel)}_${STATE.monthData.key}.png`;
   const file = new File([blob], fileName, {type:'image/png'});
   const shareData = {
     files:[file],
@@ -2698,7 +2734,7 @@ async function doExportAllImages(){
   for(const el of els){
     const canvas = await html2canvas(el, {scale:2, backgroundColor:'#fffef9'});
     const blob = await new Promise(res=>canvas.toBlob(res,'image/png'));
-    zip.file(`Phong_${el.dataset.stt}.png`, blob);
+    zip.file(`Phong_${roomFileTag(el.dataset.stt)}.png`, blob);
     done++;
     if(done % 8 === 0) showToast(`Đang tạo ảnh… (${done}/${els.length})`);
   }
