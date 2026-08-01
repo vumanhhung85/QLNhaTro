@@ -249,7 +249,7 @@ table.data tfoot td{font-weight:700; background:var(--paper-2); border-top:2px s
 .receipt-header .rmonth-big{color:var(--brick); font-weight:800; font-size:15px;}
 .receipt-total-hero{font-weight:800; font-size:15px; margin-bottom:8px; padding-bottom:6px; border-bottom:1px dashed var(--line); display:flex; justify-content:space-between; align-items:baseline;}
 .receipt-total-hero .hero-label{color:var(--brick);}
-.receipt-total-hero .room-num-big{font-size:22px; font-weight:900; margin:0 2px; display:inline-block;}
+.receipt-total-hero .room-num-big{font-size:24px; font-weight:900; margin:0 2px; display:inline-block;}
 .receipt-total-hero .amt{color:var(--brick); font-size:19px;}
 table.receipt-tbl{width:100%; border-collapse:collapse; font-size:12px;}
 table.receipt-tbl th{text-align:left; border-bottom:1px solid var(--ink); padding:4px 3px; font-size:11px;}
@@ -355,6 +355,31 @@ table.receipt-tbl tfoot tr.debt-total-row td:last-child{text-align:right;}
   main{max-width:none; padding:0;}
   .receipt{page-break-after:always; border:1px solid #999; box-shadow:none;}
   .receipt:last-child{page-break-after:auto;}
+
+  /* ===== Phiếu thu khi in giấy thật (KHÔNG ảnh hưởng bản xem trên màn hình) =====
+     (A) Trên màn hình .receipt giới hạn max-width:480px cho gọn, nhưng khổ giấy A4
+     (đã khai ở @page phía trên) rộng hơn nhiều — giữ nguyên 480px thì phiếu in ra
+     chỉ chiếm hơn nửa trang, hai bên trống rất nhiều. Mở hết cỡ giấy cho đỡ phí. */
+  .receipt{max-width:100%; padding:20px 24px;}
+
+  /* (B) Tăng nhẹ cỡ chữ so với bản xem màn hình — trên giấy in, cỡ chữ tương đương
+     màn hình bị nhỏ hơn cảm giác thật (chữ nhỏ, nhất là phần ghi chú), tăng lên cho
+     dễ đọc, đặc biệt với khách lớn tuổi. */
+  .receipt-header .rmonth-big{font-size:17px;}
+  .receipt-header .rdate{font-size:13px;}
+  .receipt-total-hero{font-size:17px;}
+  .receipt-total-hero .amt{font-size:22px;}
+  .receipt-total-hero .room-num-big{font-size:25px;}
+  table.receipt-tbl{font-size:13.5px;}
+  table.receipt-tbl th{font-size:12.5px;}
+  table.receipt-tbl tfoot td{font-size:15.5px;}
+  table.receipt-tbl tfoot tr.debt-row td{font-size:13.5px;}
+  table.receipt-tbl tfoot tr.debt-total-row td{font-size:16.5px;}
+  .receipt-note{font-size:12px;}
+  .qr-block img{width:130px; height:130px;}
+  .qr-block .qr-text{font-size:14px;}
+  .qr-block .qr-text b{font-size:16px;}
+  .qr-caption{font-size:12.5px;}
 }
 @media (max-width:640px){
   .form-grid{grid-template-columns:repeat(2,1fr);}
