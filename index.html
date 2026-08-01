@@ -4297,18 +4297,28 @@ async function openForgotPasswordModal(){
   const settings = (await stGetJSON('settings')) || {};
   const q1 = settings.recoveryQuestion1, q2 = settings.recoveryQuestion2;
   const ready = q1 && q2 && settings.recoveryAnswer1 && settings.recoveryAnswer2;
+
+  // Nút gửi email dùng chung cho cả 2 trường hợp (có hoặc chưa có câu hỏi bảo mật)
+  const emailBlock = `
+    <div class="section-title" style="margin-top:14px;">📧 Gửi lại mật khẩu qua email</div>
+    <div class="desc">App sẽ gửi email chứa mật khẩu hiện tại về hộp thư đã đăng ký sẵn cho chủ trọ (không cần nhớ câu hỏi bảo mật). Cần máy đang có mạng.</div>
+    <button class="btn btn-outline btn-block" id="pwEmailBtn" onclick="requestPasswordEmail()">📧 Gửi mật khẩu về email</button>
+  `;
+
   if(!ready){
     showModal(`
       <h3>Quên mật khẩu</h3>
-      <div class="desc">Bạn chưa thiết lập đủ 2 câu hỏi bảo mật để tự khôi phục. App này không có máy chủ riêng nên không thể gửi mã qua email/SMS thật.</div>
-      <div class="desc">Mật khẩu mặc định ban đầu là <b>187nshl</b> — hãy thử mật khẩu này nếu bạn chưa từng đổi. Nếu đã đổi và quên, hãy đăng nhập lại khi nhớ ra, rồi vào mục Cài đặt để thiết lập đủ 2 câu hỏi bảo mật cho lần sau.</div>
+      <div class="desc">Bạn chưa thiết lập đủ 2 câu hỏi bảo mật để tự khôi phục ngay tại chỗ (không cần mạng).</div>
+      <div class="desc">Mật khẩu mặc định ban đầu là <b>187nshl</b> — hãy thử mật khẩu này nếu bạn chưa từng đổi.</div>
+      ${emailBlock}
+      <div class="desc" style="margin-top:10px;">Sau khi đăng nhập lại được, nhớ vào mục Cài đặt thiết lập đủ 2 câu hỏi bảo mật để lần sau khôi phục được ngay cả khi không có mạng.</div>
       <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
     `);
     return;
   }
   showModal(`
     <h3>Khôi phục mật khẩu</h3>
-    <div class="desc">Trả lời đúng cả 2 câu hỏi bảo mật để đặt lại mật khẩu.</div>
+    <div class="desc">Trả lời đúng cả 2 câu hỏi bảo mật để đặt lại mật khẩu — dùng được cả khi không có mạng.</div>
     <div class="field"><label>${q1}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="rc_answer1"></div>
     <div class="field"><label>${q2}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="rc_answer2"></div>
     <div class="field"><label>Mật khẩu mới</label><input type="password" id="rc_newpw"></div>
@@ -4317,8 +4327,36 @@ async function openForgotPasswordModal(){
       <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
       <button class="btn btn-primary" onclick="confirmRecovery()">Đặt lại mật khẩu</button>
     </div>
+    <div class="desc" style="text-align:center; margin:12px 0 4px;">— hoặc —</div>
+    ${emailBlock}
   `);
 }
+// Gửi email chứa mật khẩu hiện tại về hộp thư đã đăng ký sẵn cho chủ trọ (đặt cứng
+// trong Apps Script, không sửa được từ web app này — xem ghi chú trong file .gs).
+async function requestPasswordEmail(){
+  const btn = document.getElementById('pwEmailBtn');
+  const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
+  if(!url){ showToast('Chưa cấu hình kết nối Google Sheet, không gửi được email.'); return; }
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Đang gửi…'; }
+  try{
+    const res = await fetch(url, {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'sendPasswordReminder'})
+    });
+    const json = await res.json();
+    if(json && json.status==='ok'){
+      showToast('Đã gửi email chứa mật khẩu hiện tại. Kiểm tra hộp thư nhé.');
+      closeModal();
+    } else {
+      showToast((json && json.message) || 'Gửi email thất bại, thử lại sau.');
+    }
+  }catch(err){
+    showToast('Lỗi kết nối: ' + describeSyncError(err));
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '📧 Gửi mật khẩu về email'; }
+  }
+}
+
 async function confirmRecovery(){
   const settings = (await stGetJSON('settings')) || {};
   const ans1 = (document.getElementById('rc_answer1').value||'').trim().toLowerCase();
