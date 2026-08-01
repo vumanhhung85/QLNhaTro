@@ -658,6 +658,11 @@ const SingleSession = {
 /* ============ STATE ============ */
 const STATE = {
   authed:false,
+  // true khi đã kiểm tra xong (dù thành công, thất bại, hay không có mạng) việc Google
+  // Sheet có dữ liệu mới hơn máy này không, ngay sau khi đăng nhập. Trước khi cờ này
+  // bật, TUYỆT ĐỐI không được đẩy dữ liệu lên Sheet — nếu không, máy mới/máy đã xoá
+  // cache có thể đẩy dữ liệu MẪU đè lên dữ liệu thật đang có trên server.
+  cloudCheckDone:false,
   monthsIndex:[],       // [{key,label}]
   currentKey:null,
   monthData:null,       // active month object (rooms, chiphi, hanDong, key,label)
@@ -768,6 +773,7 @@ async function tryLogin(){
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('appScreen').style.display='flex';
     await loadAll();
+    STATE.cloudCheckDone = false; // mỗi lần đăng nhập lại phải kiểm tra lại từ đầu
     checkRemoteForNewerData(); // âm thầm kiểm tra ở nền, không chặn màn hình
   } else {
     errEl.textContent = 'Sai mật khẩu, vui lòng thử lại.';
@@ -847,8 +853,19 @@ async function refreshPrevDebts(){
 
 function scheduleSave(){
   if(STATE.saveTimer) clearTimeout(STATE.saveTimer);
-  STATE.saveTimer = setTimeout(saveCurrentMonth, 1200);
+  STATE.saveTimer = setTimeout(runLocalSaveWhenSafe, 1200);
   scheduleCloudSync();
+}
+function runLocalSaveWhenSafe(){
+  // Lý do phải chặn cả bước lưu cục bộ (không chỉ bước đẩy lên server): saveCurrentMonth()
+  // có gọi touchLastModified() ghi lại "vừa sửa lúc..." — nếu ghi mốc này lên TRÊN dữ liệu
+  // mẫu/dữ liệu cũ trước khi kiểm tra xong remote, app sẽ hiểu lầm dữ liệu cục bộ "mới toanh"
+  // và bỏ qua luôn việc tải dữ liệu thật về, dù dữ liệu cục bộ chỉ là hàng giả.
+  if(!STATE.cloudCheckDone){
+    STATE.saveTimer = setTimeout(runLocalSaveWhenSafe, 300);
+    return;
+  }
+  saveCurrentMonth();
 }
 /* ---- Tự động đồng bộ lên Google Sheet sau khi ngừng sửa vài giây ---- */
 let cloudSyncTimer = null;
@@ -871,7 +888,18 @@ function scheduleCloudSync(){
   if(!url) { setCloudIndicator('', 'Chưa đồng bộ'); return; }
   setCloudIndicator('', 'Đang chờ lưu…');
   if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
-  cloudSyncTimer = setTimeout(autoSyncToSheet, 3000);
+  cloudSyncTimer = setTimeout(runCloudSyncWhenSafe, 3000);
+}
+function runCloudSyncWhenSafe(){
+  // Chưa kiểm tra xong xem Sheet có dữ liệu mới hơn máy này không thì TUYỆT ĐỐI
+  // chưa được đẩy lên — đẩy sớm có thể lấy dữ liệu mẫu/dữ liệu cũ đè lên dữ liệu thật
+  // trên server. Cứ đợi, không huỷ, không bỏ qua — chỉ trì hoãn cho tới khi an toàn.
+  if(!STATE.cloudCheckDone){
+    setCloudIndicator('', 'Đang chờ kiểm tra dữ liệu…');
+    cloudSyncTimer = setTimeout(runCloudSyncWhenSafe, 500);
+    return;
+  }
+  autoSyncToSheet();
 }
 async function autoSyncToSheet(){
   const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
@@ -926,13 +954,13 @@ async function manualSave(){
 
 /* ---- Lưu ngay khi rời khỏi app/thu nhỏ trình duyệt, phòng khi đóng ngang không kịp tự lưu ---- */
 document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState==='hidden' && STATE.authed){
+  if(document.visibilityState==='hidden' && STATE.authed && STATE.cloudCheckDone){
     if(STATE.saveTimer) clearTimeout(STATE.saveTimer);
     saveCurrentMonth();
   }
 });
 window.addEventListener('pagehide', ()=>{
-  if(STATE.authed){ saveCurrentMonth(); }
+  if(STATE.authed && STATE.cloudCheckDone){ saveCurrentMonth(); }
 });
 
 /* ============ MONTH SWITCH ============ */
@@ -974,7 +1002,26 @@ function defaultDeadlineDay(){
 function deadlineDateForMonth(nk){
   return nk + '-' + String(defaultDeadlineDay()).padStart(2,'0');
 }
+// Chỉ cho mở tháng mới từ ngày 26 đến hết tháng (theo ngày thật của máy) — tránh
+// việc lỡ tay mở sang tháng sau trong khi tháng hiện tại còn đang xử lý dở, dẫn tới
+// rối dữ liệu. Ví dụ: đang là 15/8 thì chưa mở được, phải đợi tới 26/8 trở đi.
+const NGAY_MO_THANG_MOI = 26;
+function canOpenNewMonth(){
+  return new Date().getDate() >= NGAY_MO_THANG_MOI;
+}
+
 function openNewMonthModal(){
+  if(!canOpenNewMonth()){
+    const today = new Date();
+    const soNgayConLai = NGAY_MO_THANG_MOI - today.getDate();
+    showModal(`
+      <h3>➕ Bắt đầu tháng mới</h3>
+      <div class="desc">Chỉ mở được tháng mới từ ngày <b>${NGAY_MO_THANG_MOI}</b> đến hết tháng, để tránh mở nhầm sang tháng sau khi tháng hiện tại còn đang xử lý dở.</div>
+      <div class="desc">Hôm nay là ngày <b>${today.getDate()}/${today.getMonth()+1}</b> — còn <b>${soNgayConLai} ngày</b> nữa (đến ngày ${NGAY_MO_THANG_MOI}) mới mở được.</div>
+      <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đã hiểu</button></div>
+    `);
+    return;
+  }
   const nk = nextMonthGuess(STATE.currentKey);
   const maxAllowed = nextMonthGuess(todayMonthKey());
   const c = STATE.monthData.chiphi;
@@ -1017,6 +1064,10 @@ async function confirmNewMonth(){
   const nk = document.getElementById('nmMonth').value; // YYYY-MM
   const errEl = document.getElementById('nm_err');
   if(!nk){ return; }
+  if(!canOpenNewMonth()){
+    errEl.textContent = `Chỉ mở được tháng mới từ ngày ${NGAY_MO_THANG_MOI} đến hết tháng.`;
+    return;
+  }
   const maxAllowed = nextMonthGuess(todayMonthKey());
   if(nk > maxAllowed){
     errEl.textContent = `Chỉ được tạo tối đa đến ${monthLabel(maxAllowed)} — theo ngày hệ thống hiện tại, chưa thể tạo ${monthLabel(nk)}.`;
@@ -1461,10 +1512,9 @@ function renderNhap(main){
       </div>
     </div>
 
-    <div class="sticky-actions no-print">
-      <button class="btn btn-outline" onclick="manualSave()">💾 Lưu tháng này</button>
-      <button class="btn btn-brass" onclick="openNewMonthModal()">➕ Bắt đầu tháng mới</button>
-    </div>
+    <!-- Đã bỏ nút "Lưu tháng này" và "Bắt đầu tháng mới" ở đây: dữ liệu tự lưu cục bộ
+         1.2 giây và tự đồng bộ Google Sheet 3 giây sau khi ngừng sửa (xem đèn trạng thái
+         ở đầu trang), còn tạo tháng mới đã có nút "+ Tháng mới" ở thanh trên cùng rồi. -->
   `;
   document.getElementById('roomsList').innerHTML = shown.map(r=>roomCardHtml(r)).join('') || '<div class="empty-state">Không tìm thấy phòng phù hợp.</div>';
   document.getElementById('chiphiGrid').innerHTML = chiphiFieldsHtml(STATE.monthData.chiphi, 'cp_') ;
@@ -3713,7 +3763,7 @@ function renderCaiDat(main){
         <div class="f"><label>Cảnh báo hợp đồng trước (ngày)</label><input type="number" min="1" id="s_warn" value="${s.contractWarnDays||30}"></div>
         <div class="f"><label>Hạn đóng tiền mặc định (ngày trong tháng)</label><input type="number" min="1" max="28" id="s_handong" value="${s.hanDongNgay||6}"></div>
       </div>
-      <div class="desc" style="margin-top:6px;">Ví dụ để 6 nghĩa là mỗi tháng mới tạo, hạn đóng tiền sẽ mặc định là ngày 6 — bạn vẫn có thể sửa lại riêng cho từng tháng khi bấm "Bắt đầu tháng mới".</div>
+      <div class="desc" style="margin-top:6px;">Ví dụ để 6 nghĩa là mỗi tháng mới tạo, hạn đóng tiền sẽ mặc định là ngày 6 — bạn vẫn có thể sửa lại riêng cho từng tháng khi bấm "+ Tháng mới".</div>
       <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSettings()">Lưu thông tin</button></div>
     </div>
 
@@ -4136,7 +4186,7 @@ async function checkSyncStatus(){
 }
 async function checkRemoteForNewerData(){
   const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
-  if(!url) return;
+  if(!url){ STATE.cloudCheckDone = true; return; }
   try{
     const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
     const text = await res.text();
@@ -4154,6 +4204,10 @@ async function checkRemoteForNewerData(){
     }
   }catch(err){
     // âm thầm bỏ qua — không làm phiền lúc đăng nhập nếu không kết nối được
+  } finally {
+    // Bật cờ ở MỌI trường hợp (kể cả lỗi/mất mạng) — nếu không, máy đang mất mạng
+    // lúc đăng nhập sẽ vĩnh viễn không đẩy được dữ liệu lên nữa dù mạng có lại sau đó.
+    STATE.cloudCheckDone = true;
   }
 }
 async function absorbRemoteState(state){
