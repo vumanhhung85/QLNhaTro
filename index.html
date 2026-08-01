@@ -3474,9 +3474,36 @@ function initStagingFromMonth(){
     dongiaNuoc:r.dongiaNuoc||0
   }));
 }
-function renderNhapDauThang(main){
+// Lấy số điện đã dùng của THÁNG TRƯỚC cho từng phòng, để đối chiếu với tháng đang
+// nhập — giúp phát hiện phòng nào dùng điện bất thường (tăng/giảm đột ngột).
+// Trả về null nếu chưa có tháng nào trước đó (tháng đầu tiên dùng app).
+async function getPrevMonthUsage(){
+  const idx = STATE.monthsIndex;
+  const pos = idx.findIndex(m=>m.key===STATE.currentKey);
+  if(pos<=0) return null;
+  const prevKey = idx[pos-1].key;
+  const data = prevKey===STATE.currentKey ? STATE.monthData : await stGetJSON('month:'+prevKey);
+  if(!data) return null;
+  const map = {};
+  data.rooms.forEach(r=>{
+    map[r.stt] = Math.max(0, Number(r.sodienmoi||0) - Number(r.sodiencu||0));
+  });
+  return {map, monthNum: Number(prevKey.split('-')[1])};
+}
+
+async function renderNhapDauThang(main){
   const md = STATE.monthData;
   if(!STATE.stagingRooms || STATE.stagingRooms.length!==md.rooms.length){ initStagingFromMonth(); }
+  const prevUsage = await getPrevMonthUsage(); // null nếu chưa có tháng trước đó
+  STATE._prevUsageMap = prevUsage ? prevUsage.map : null; // dùng lại khi tính dòng tổng cộng
+  const prevColHeader = prevUsage ? `<th>Đã SD T${prevUsage.monthNum}</th>` : '';
+
+  const sumGia = STATE.stagingRooms.reduce((s,r)=>s+(Number(r.gia)||0),0);
+  const sumNguoi = STATE.stagingRooms.reduce((s,r)=>s+(Number(r.songuoi)||0),0);
+  const sumXe = STATE.stagingRooms.reduce((s,r)=>s+(Number(r.soxe)||0),0);
+  const sumSD = STATE.stagingRooms.reduce((s,r)=>s+Math.max(0,(Number(r.sodienmoi)||0)-(Number(r.sodiencu)||0)),0);
+  const sumSDPrev = prevUsage ? STATE.stagingRooms.reduce((s,r)=>s+(prevUsage.map[r.stt]||0),0) : 0;
+
   main.innerHTML = `
     <div class="panel">
       <h2>Nhập đầu tháng — <span class="month-highlight">${md.label}</span></h2>
@@ -3484,6 +3511,7 @@ function renderNhapDauThang(main){
         Có thể sửa trực tiếp trong lưới bên dưới, hoặc xuất file Excel mẫu để điền rồi nhập lại — <b>ô nào để trống khi nhập lại sẽ giữ nguyên giá trị hiện tại</b>,
         ô nào có số sẽ ghi đè. Dữ liệu trong lưới <b>chưa</b> được lưu vào hệ thống cho tới khi bạn bấm nút "Xác nhận, đưa vào hệ thống" ở cuối trang.
         Phòng 1 mặc định tính nước theo đồng hồ riêng, các phòng khác theo đầu người.
+        ${prevUsage ? `Cột <b>"Đã SD T${prevUsage.monthNum}"</b> là số điện đã dùng của tháng trước, để đối chiếu xem phòng nào dùng điện bất thường so với tháng này.` : ''}
       </div>
       <div class="toolbar">
         <button class="btn btn-outline" onclick="exportInputTemplate()">⬇️ Xuất file mẫu</button>
@@ -3496,21 +3524,37 @@ function renderNhapDauThang(main){
       <div class="section-title">Lưới dữ liệu (sửa được)</div>
       <div class="table-wrap">
         <table class="data">
-          <thead><tr><th class="text-center sticky-col">Phòng</th><th>Giá phòng</th><th>Số người</th><th>Số xe</th><th>Số điện cũ</th><th>Số điện mới</th><th>Đã SD</th><th>Số nước mới</th></tr></thead>
+          <thead><tr><th class="text-center sticky-col">Phòng</th><th>Giá phòng</th><th>Số người</th><th>Số xe</th><th>Số điện cũ</th><th>Số điện mới</th><th>Đã SD</th>${prevColHeader}<th>Số nước mới</th></tr></thead>
           <tbody>
-            ${STATE.stagingRooms.map((r,i)=>`<tr>
+            ${STATE.stagingRooms.map((r,i)=>{
+              const prevCell = prevUsage ? `<td class="mono" style="color:var(--ink-soft);" title="Số điện đã dùng tháng trước">${fmtNum(prevUsage.map[r.stt]||0)}</td>` : '';
+              return `<tr>
               <td class="text-center sticky-col"><b>${r.stt}</b></td>
-              <td><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" style="width:110px" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="stagingSet(${i},'gia',parseMoneyVal(this))"></td>
-              <td><input type="number" style="width:64px" value="${r.songuoi}" onchange="stagingSet(${i},'songuoi',Number(this.value)||0)"></td>
-              <td><input type="number" style="width:64px" value="${r.soxe}" onchange="stagingSet(${i},'soxe',Number(this.value)||0)"></td>
+              <td><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" style="width:110px" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="stagingSet(${i},'gia',parseMoneyVal(this)); refreshStagingTotals()"></td>
+              <td><input type="number" style="width:64px" value="${r.songuoi}" onchange="stagingSet(${i},'songuoi',Number(this.value)||0); refreshStagingTotals()"></td>
+              <td><input type="number" style="width:64px" value="${r.soxe}" onchange="stagingSet(${i},'soxe',Number(this.value)||0); refreshStagingTotals()"></td>
               <td class="mono">${fmtNum(r.sodiencu)}</td>
               <td><input type="number" style="width:90px" value="${r.sodienmoi==null?'':r.sodienmoi}" onchange="stagingSet(${i},'sodienmoi', this.value===''?null:Number(this.value)); updateStagingUsage(${i})"></td>
               <td class="mono" id="usage-${i}">${fmtNum(Math.max(0,(Number(r.sodienmoi)||0)-(Number(r.sodiencu)||0)))}</td>
+              ${prevCell}
               <td>${r.waterMeter
                 ? `<input type="number" style="width:90px" value="${r.nuocMoi==null?'':r.nuocMoi}" onchange="stagingSet(${i},'nuocMoi', this.value===''?null:Number(this.value))">`
                 : `<span class="mono" style="color:var(--ink-soft);" title="Tính theo đầu người, không sửa ở đây">${fmtNum(r.dongiaNuoc)}đ</span>`}</td>
-            </tr>`).join('')}
+            </tr>`;}).join('')}
           </tbody>
+          <tfoot>
+            <tr style="font-weight:800; background:var(--paper-2);">
+              <td class="text-center sticky-col" style="background:var(--paper-2);">Tổng</td>
+              <td class="mono" id="staging-total-gia">${fmtVND(sumGia)}</td>
+              <td class="mono" id="staging-total-nguoi">${fmtNum(sumNguoi)}</td>
+              <td class="mono" id="staging-total-xe">${fmtNum(sumXe)}</td>
+              <td></td>
+              <td></td>
+              <td class="mono" id="staging-total-sd">${fmtNum(sumSD)}</td>
+              ${prevUsage ? `<td class="mono" id="staging-total-sdprev" style="color:var(--ink-soft);">${fmtNum(sumSDPrev)}</td>` : ''}
+              <td></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
       <div class="sticky-actions no-print">
@@ -3518,6 +3562,20 @@ function renderNhapDauThang(main){
       </div>
     </div>
   `;
+}
+// Tính lại dòng "Tổng" ở chân lưới sau mỗi lần sửa giá phòng / số người / số xe / điện —
+// không phải render lại cả bảng, chỉ cập nhật đúng các ô tổng cho nhanh.
+function refreshStagingTotals(){
+  const rows = STATE.stagingRooms || [];
+  const sumGia = rows.reduce((s,r)=>s+(Number(r.gia)||0),0);
+  const sumNguoi = rows.reduce((s,r)=>s+(Number(r.songuoi)||0),0);
+  const sumXe = rows.reduce((s,r)=>s+(Number(r.soxe)||0),0);
+  const sumSD = rows.reduce((s,r)=>s+Math.max(0,(Number(r.sodienmoi)||0)-(Number(r.sodiencu)||0)),0);
+  const setTxt = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  setTxt('staging-total-gia', fmtVND(sumGia));
+  setTxt('staging-total-nguoi', fmtNum(sumNguoi));
+  setTxt('staging-total-xe', fmtNum(sumXe));
+  setTxt('staging-total-sd', fmtNum(sumSD));
 }
 function stagingSet(index, field, value){
   if(!STATE.stagingRooms[index]) return;
@@ -3529,6 +3587,7 @@ function updateStagingUsage(index){
   const usage = Math.max(0, (Number(r.sodienmoi)||0) - (Number(r.sodiencu)||0));
   const el = document.getElementById('usage-'+index);
   if(el) el.textContent = fmtNum(usage);
+  refreshStagingTotals();
 }
 function exportInputTemplate(){
   const md = STATE.monthData;
