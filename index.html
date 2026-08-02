@@ -3883,7 +3883,7 @@ function renderCaiDat(main){
     </div>
 
     <div class="panel">
-      <h2>Sao lưu / Phục hồi dữ liệu (file JSON trên máy)</h2>
+      <h2>Sao lưu / Phục hồi dữ liệu</h2>
       <div class="desc">Tải toàn bộ dữ liệu về máy để phòng khi cần khôi phục lại — độc lập với Google Sheet.</div>
       <div class="toolbar">
         <button class="btn btn-outline" onclick="exportBackup()">⬇️ Tải file sao lưu</button>
@@ -3891,6 +3891,31 @@ function renderCaiDat(main){
           <input type="file" accept="application/json" style="display:none" onchange="importBackup(this.files[0])">
         </label>
       </div>
+
+      <div class="section-title" style="margin-top:16px;">☁️ Sao lưu tự động lên thư mục Google Drive</div>
+      <div class="desc">
+        Tiện dùng trên điện thoại — không cần tự tải file rồi tự tay đưa lên Drive.
+        Mỗi lần bấm, app tạo <b>1 file mới đặt tên theo ngày giờ</b> (không đè lên bản cũ), gửi thẳng vào thư mục Drive bạn chỉ định bên dưới.
+      </div>
+      <div class="form-grid" style="margin-top:8px;">
+        <div class="f span2"><label>ID thư mục Google Drive</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="s_backupfolder" value="${escapeAttr(s.backupFolderId||'')}" placeholder="Dán ID thư mục, VD: 1AbCdEfGhIjKlmNoPQRstuVWxyz"></div>
+      </div>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="btn btn-outline" onclick="saveBackupFolderId()">Lưu ID thư mục</button>
+        <button class="btn btn-brass" id="driveBackupBtn" onclick="backupToDriveFolder()">☁️ Sao lưu lên Google Drive</button>
+      </div>
+      <div class="desc" style="margin-top:8px;">
+        <b>Lấy ID thư mục ở đâu?</b> Mở thư mục trên Google Drive → nhìn thanh địa chỉ trình duyệt, dạng
+        <code>drive.google.com/drive/folders/<b>1AbCdEfGhIjKlmNoPQRstuVWxyz</b></code> — phần in đậm sau <code>/folders/</code> chính là ID, dán đúng phần đó vào ô trên (không dán cả link).
+      </div>
+      <div class="desc" style="margin-top:6px;">
+        <b>Thư mục thuộc tài khoản Google khác được không?</b> Được — miễn tài khoản đó đã <b>chia sẻ thư mục đó cho tài khoản đang chạy Apps Script</b>
+        (chính là tài khoản Google đang gắn Sheet của bạn) với quyền <b>"Người chỉnh sửa"</b> (Editor). Chỉ chia sẻ đúng 1 thư mục này thôi,
+        không phải cả ổ Drive — nên dù chia sẻ, tài khoản kia vẫn an toàn cho các file/thư mục khác.
+        Cách này còn có lợi: nếu tài khoản chính gặp sự cố (khoá, mất quyền truy cập...), bản sao lưu vẫn còn nguyên vẹn ở tài khoản khác, không phụ thuộc hoàn toàn vào 1 tài khoản duy nhất.
+        <b>Không</b> nên đặt quyền "Bất kỳ ai có link đều chỉnh sửa được" — nên chia sẻ thẳng theo đúng địa chỉ email của tài khoản chạy Apps Script để kiểm soát và thu hồi quyền dễ dàng khi cần.
+      </div>
+      <div id="driveBackupStatus" style="font-size:12px;color:var(--ink-soft);margin-top:8px;"></div>
     </div>
   `;
   updateQRPreview();
@@ -4437,6 +4462,51 @@ async function changePassword(){
   showToast('Đã đổi mật khẩu.');
   document.getElementById('pw_old').value=''; document.getElementById('pw_new').value='';
 }
+async function saveBackupFolderId(){
+  STATE.settings.backupFolderId = (document.getElementById('s_backupfolder').value||'').trim();
+  await stSetJSON('settings', STATE.settings);
+  showToast('Đã lưu ID thư mục sao lưu.');
+}
+
+async function backupToDriveFolder(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  const folderId = (STATE.settings.backupFolderId||'').trim();
+  const statusEl = document.getElementById('driveBackupStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  const btn = document.getElementById('driveBackupBtn');
+
+  if(!url){ showToast('Chưa có link Google Sheet ở mục phía trên, hãy dán và lưu link trước.'); return; }
+  if(!folderId){ showToast('Chưa nhập ID thư mục Google Drive — dán ID rồi bấm "Lưu ID thư mục" trước.'); return; }
+
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Đang sao lưu…'; }
+  setStatus('Đang gửi dữ liệu lên Drive…');
+  try{
+    const payload = await buildFullStatePayload();
+    payload.action = 'backupToDriveFolder';
+    payload.folderId = folderId;
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok'){
+      showToast('☁️ Đã sao lưu lên Drive: ' + json.fileName);
+      setStatus('✅ Đã lưu "'+json.fileName+'" vào thư mục "'+(json.folderName||'')+'" lúc '+fmtDate(todayISO()));
+    } else {
+      showToast((json && json.message) || 'Sao lưu thất bại, thử lại sau.');
+      setStatus('❌ '+((json && json.message) || 'Lỗi không rõ nguyên nhân.'));
+    }
+  }catch(err){
+    showToast('Lỗi kết nối: ' + describeSyncError(err));
+    setStatus('❌ Lỗi kết nối: ' + describeSyncError(err));
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '☁️ Sao lưu lên Google Drive'; }
+  }
+}
+
 async function exportBackup(){
   const backup = {settings: STATE.settings, monthsIndex: STATE.monthsIndex, months:{}};
   for(const mm of STATE.monthsIndex){
