@@ -95,6 +95,20 @@
 }
 /* In ra giấy LUÔN sáng, bất kể đang bật chế độ tối trên màn hình — giấy in nền tối
    vừa tốn mực vừa không khớp với giấy thật. */
+/* Phiếu thu & bản xem hợp đồng LUÔN mô phỏng giấy thật — nền sáng cố định dù app
+   đang bật giao diện tối. Nhưng chỉ đổi nền thôi thì CHỮ bên trong (đang dùng biến
+   --ink/--ink-soft/--brick... đã bị giao diện tối đổi thành màu sáng) sẽ bị "chữ
+   sáng trên nền sáng" → mờ gần như biến mất. Khoá lại TOÀN BỘ biến màu về đúng
+   giá trị sáng ngay trong phạm vi 2 khung này, để mọi phần tử con tự động ăn theo. */
+[data-theme="dark"] .receipt,
+[data-theme="dark"] .ct-preview,
+[data-theme="dark"] .contract-doc{
+  --paper:#FAF5E9; --paper-2:#F1E8D4; --card:#FFFDF8; --ink:#22241F; --ink-soft:#5B5A4E;
+  --navy:#16233B; --navy-2:#1F3050; --brass:#B8863B; --brass-dark:#8C6526; --brass-light:#E6C989;
+  --brass-accent:#E6C989;
+  --brick:#A8442B; --brick-dark:#8A3722; --green-ok:#2F6B4F; --green-bg:#E3EFE6; --line:#DCCFAE;
+  --danger:#B23A3A; --danger-bg:#F6E4E1;
+}
 @media print{
   :root[data-theme="dark"]{
     --paper:#FAF5E9; --paper-2:#F1E8D4; --card:#FFFDF8; --ink:#22241F; --ink-soft:#5B5A4E;
@@ -137,7 +151,7 @@ a{color:inherit;}
   display:block; width:138px; height:auto; margin:2px auto 16px;
   filter:drop-shadow(0 3px 6px rgba(22,35,59,.16));
 }
-.login-card h1{font-size:19px; text-align:center; margin:0 0 2px; color:var(--navy); font-weight:800;}
+.login-card h1{font-size:19px; text-align:center; margin:0 0 2px; color:var(--ink); font-weight:800;}
 .login-card p.sub{text-align:center; color:var(--ink-soft); margin:0 0 22px; font-size:12.5px;}
 .field{margin-bottom:14px;}
 .field label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;}
@@ -205,21 +219,21 @@ nav.tabs button{
   background:none; border:none; padding:12px 14px; font-weight:600; font-size:13px; color:var(--ink-soft);
   border-bottom:3px solid transparent; white-space:nowrap;
 }
-nav.tabs button.active{color:var(--navy); border-bottom-color:var(--brick);}
-nav.tabs button:hover{color:var(--navy);}
+nav.tabs button.active{color:var(--ink); border-bottom-color:var(--brick);}
+nav.tabs button:hover{color:var(--ink);}
 
 main{flex:1; padding:16px; max-width:1100px; width:100%; margin:0 auto;}
 footer.appfoot{text-align:center; color:var(--ink-soft); font-size:11px; padding:16px 10px; opacity:.7; line-height:1.7;}
 footer.appfoot .foot-line{display:block;}
 
 .panel{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:var(--shadow);}
-.panel h2{margin:0 0 4px; font-size:16px; color:var(--navy);}
+.panel h2{margin:0 0 4px; font-size:16px; color:var(--ink);}
 .panel .desc{color:var(--ink-soft); font-size:12.5px; margin:0 0 14px;}
 
 .stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px;}
 .stat{background:var(--paper-2); border:1px solid var(--line); border-radius:9px; padding:10px 12px;}
 .stat .lbl{font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
-.stat .val{font-size:17px; font-weight:700; color:var(--navy);}
+.stat .val{font-size:17px; font-weight:700; color:var(--ink);}
 .stat.good .val{color:var(--green-ok);}
 .stat.bad .val{color:var(--brick);}
 
@@ -230,7 +244,13 @@ footer.appfoot .foot-line{display:block;}
 /* room accordion */
 /* KHÔNG dùng overflow:hidden ở đây — nó vô hiệu hoá position:sticky của .room-head */
 .room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:var(--card);}
-.room-card.inactive{opacity:.6;}
+/* Trước đây dùng opacity:.6 cho cả khối — độ mờ này trộn với màu NỀN, nên trên nền
+   tối chữ vốn đã sáng lại bị kéo về gần màu nền hơn nhiều so với trên nền sáng,
+   khiến phòng trống gần như biến mất ở giao diện tối. Đổi sang giảm độ nổi bật bằng
+   chính các biến màu (ink-soft, line) — luôn đọc được ở cả 2 giao diện như nhau. */
+.room-card.inactive{}
+.room-card.inactive .room-total, .room-card.inactive .note{color:var(--ink-soft);}
+.room-card.inactive .room-head{background:var(--paper-2);}
 .room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; background:var(--card); border-bottom:1px solid transparent; border-radius:8px 8px 0 0;}
 .room-card.open .room-head{border-bottom-color:var(--line); box-shadow:0 2px 4px rgba(22,35,59,.05);}
 /* Khi hàng phòng đang bị ghim ở mép trên, làm nó nổi rõ hơn để dễ nhận ra */
@@ -246,7 +266,7 @@ footer.appfoot .foot-line{display:block;}
 .room-num.contract-expired{background:var(--brick) !important; color:#fff;}
 .room-mid{flex:1; min-width:0;}
 .room-mid .note{font-size:11.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.room-total{font-weight:700; color:var(--navy); font-size:14.5px; white-space:nowrap;}
+.room-total{font-weight:700; color:var(--ink); font-size:14.5px; white-space:nowrap;}
 .room-total.urgent-yellow{color:#946200; background:#FFF3CD; padding:2px 7px; border-radius:5px;}
 .room-total.urgent-red{color:#fff; background:var(--brick); padding:2px 7px; border-radius:5px;}
 .urgent-yellow{color:#946200; background:#FFF3CD; padding:2px 7px;}
@@ -280,7 +300,7 @@ footer.appfoot .foot-line{display:block;}
 .section-title{font-size:11.5px; font-weight:700; color:var(--brass-dark); text-transform:uppercase; letter-spacing:.05em; margin:14px 0 8px; border-bottom:1px dashed var(--line); padding-bottom:4px;}
 .section-title:first-child{margin-top:0;}
 .breakdown{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:12.5px;}
-.breakdown span b{color:var(--navy);}
+.breakdown span b{color:var(--ink);}
 
 .checkbox-row{display:flex; align-items:center; gap:8px;}
 .checkbox-row input{width:auto;}
@@ -305,6 +325,18 @@ table.data tfoot td{font-weight:700; background:var(--paper-2); border-top:2px s
 .receipt{
   background:#fffef9; border:1px dashed var(--ink-soft); border-radius:6px; padding:16px; max-width:480px; margin:0 auto 18px;
   position:relative;
+}
+/* Phiếu thu mô phỏng TỜ GIẤY THẬT — luôn hiển thị như bản in dù app đang ở chế độ
+   tối, không chỉ riêng cái nền. Khoá lại TOÀN BỘ biến màu về giá trị sáng ngay tại
+   đây; mọi phần tử con (bảng, ghi chú, khối QR...) đang tham chiếu qua var(--ink),
+   var(--ink-soft)... sẽ tự động thừa hưởng đúng màu sáng, không cần sửa từng chỗ.
+   Thiếu bước này thì chữ "trắng" của chế độ tối in trên nền trắng gần như biến mất. */
+[data-theme="dark"] .receipt{
+  --paper:#FAF5E9; --paper-2:#F1E8D4; --card:#FFFDF8; --ink:#22241F; --ink-soft:#5B5A4E;
+  --navy:#16233B; --navy-2:#1F3050; --brass:#B8863B; --brass-dark:#8C6526; --brass-light:#E6C989;
+  --brass-accent:#E6C989; --brick:#A8442B; --brick-dark:#8A3722; --green-ok:#2F6B4F; --green-bg:#E3EFE6;
+  --line:#DCCFAE; --danger:#B23A3A; --danger-bg:#F6E4E1;
+  color:var(--ink);
 }
 .receipt-header{display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--navy); padding-bottom:8px; margin-bottom:8px;}
 /* Logo thay cho 2 dòng "NHÀ TRỌ 187 / Phòng số N".
@@ -354,7 +386,7 @@ table.receipt-tbl tfoot tr.debt-total-row td:last-child{text-align:right;}
 .modal-overlay{position:fixed; inset:0; background:rgba(22,20,15,.5); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
 .modal-overlay.show{display:flex;}
 .modal-box{background:var(--card); border-radius:14px; padding:22px; max-width:440px; width:100%; box-shadow:var(--shadow); max-height:88vh; overflow-y:auto;}
-.modal-box h3{margin:0 0 4px; color:var(--navy);}
+.modal-box h3{margin:0 0 4px; color:var(--ink);}
 .modal-box .desc{color:var(--ink-soft); font-size:12.5px; margin-bottom:16px;}
 .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:18px;}
 .toast{
@@ -1725,7 +1757,7 @@ function roomFormHtml(r){
       ${(()=>{ const p = r.active ? getPrimaryOccupant(r) : null; return p ? `
       <div class="f" style="background:var(--green-bg); border-radius:7px; padding:6px 8px 8px;">
         <label style="color:var(--green-ok);">⭐ Người chính (liên hệ Zalo)</label>
-        <div style="font-weight:700; color:var(--navy); margin-top:2px;">${escapeAttr(p.hoTen||'(chưa có tên)')}</div>
+        <div style="font-weight:700; color:var(--ink); margin-top:2px;">${escapeAttr(p.hoTen||'(chưa có tên)')}</div>
         <div style="font-size:12px;color:var(--green-ok);margin-top:2px;">📞 ${p.soDienThoai? escapeAttr(p.soDienThoai) : 'Chưa có SĐT'}</div>
       </div>` : ''; })()}
       <div class="f"><label>Giá phòng</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.gia)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'gia',parseMoneyVal(this))"></div>
@@ -2306,7 +2338,7 @@ function openTenantHistoryModal(roomStt){
     <div style="max-height:60vh; overflow-y:auto;">
       ${hist.slice().reverse().map(h=>`
         <div style="border:1px solid var(--line); border-radius:7px; padding:8px 10px; margin-bottom:8px;">
-          <div style="font-weight:700; color:var(--navy);">${fmtDate(h.tuNgay)} → ${fmtDate(h.denNgay)}</div>
+          <div style="font-weight:700; color:var(--ink);">${fmtDate(h.tuNgay)} → ${fmtDate(h.denNgay)}</div>
           <div style="font-size:11px; color:var(--ink-soft);">Số người ở: ${(h.nguoiO||[]).length}</div>
           ${(h.nguoiO||[]).map(o=>`
             <div style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);">
