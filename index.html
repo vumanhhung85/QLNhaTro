@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<script>
+// Áp dụng giao diện sáng/tối NGAY LẬP TỨC, trước khi CSS/nội dung vẽ ra — tránh
+// hiện tượng nhấp nháy sai màu 1 chớp mắt (sáng rồi mới đổi tối) khi mở trang.
+(function(){
+  try{
+    var saved = localStorage.getItem('nt187_theme') || 'auto';
+    var effective = saved;
+    if(saved === 'auto'){
+      effective = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', effective);
+    document.documentElement.setAttribute('data-theme-mode', saved); // ghi nhớ lựa chọn gốc (sáng/tối/tự động)
+  }catch(e){}
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
 <title>Sổ Thu Tiền — Nhà Trọ 187 NSHL</title>
@@ -40,14 +55,60 @@
   --line:#DCCFAE;
   --danger:#B23A3A;
   --danger-bg:#F6E4E1;
+  --brass-accent:#E6C989;
+  --paper-glow:#FFFCF5;
   --shadow: 0 1px 2px rgba(22,35,59,.06), 0 4px 16px rgba(22,35,59,.06);
   --radius: 10px;
+}
+/* ===== Giao diện tối =====
+   Chỉ đổi GIÁ TRỊ của đúng các biến màu ở trên — mọi thành phần trong app đều
+   tham chiếu qua biến, không hardcode màu, nên đổi ở đây là tự động lan ra toàn bộ
+   giao diện mà không phải sửa từng chỗ một. */
+:root[data-theme="dark"]{
+  --paper:#181A20;
+  --paper-2:#20232B;
+  --card:#22252D;
+  --ink:#EDE9DD;
+  --ink-soft:#A8A398;
+  --navy:#0F1826;
+  --navy-2:#18243A;
+  --brass:#C99A4E;
+  /* brass-dark/brass-light là CẶP nền+chữ của huy hiệu nhỏ (badge) — tự đủ tương
+     phản với NHAU, không phụ thuộc nền trang, nên đảo vai trò cho hợp nền tối:
+     nền huy hiệu tối hơn, chữ trên đó sáng hơn. brass-dark còn được dùng làm MÀU
+     CHỮ trực tiếp trên --paper/--card (section-title, ghi chú...) nên cũng phải
+     đủ sáng để đọc được trên nền giấy tối. */
+  --brass-dark:#D9AE66;
+  --brass-light:#4A3B1F;
+  /* Biến RIÊNG cho chữ đặt trực tiếp trên nền navy (room-num, cloud-indicator...) —
+     navy vẫn tối ở cả 2 theme nên giữ nguyên 1 màu sáng, không đổi theo theme. */
+  --brass-accent:#E6C989;
+  --paper-glow:transparent;
+  --brick:#D9694A;
+  --brick-dark:#B23A3A;
+  --green-ok:#5FAE85;
+  --green-bg:#1E3128;
+  --line:#3A3E48;
+  --danger:#E06666;
+  --danger-bg:#3A2323;
+  --shadow: 0 1px 2px rgba(0,0,0,.35), 0 4px 16px rgba(0,0,0,.35);
+}
+/* In ra giấy LUÔN sáng, bất kể đang bật chế độ tối trên màn hình — giấy in nền tối
+   vừa tốn mực vừa không khớp với giấy thật. */
+@media print{
+  :root[data-theme="dark"]{
+    --paper:#FAF5E9; --paper-2:#F1E8D4; --card:#FFFDF8; --ink:#22241F; --ink-soft:#5B5A4E;
+    --navy:#16233B; --navy-2:#1F3050; --brass:#B8863B; --brass-dark:#8C6526; --brass-light:#E6C989;
+    --brass-accent:#E6C989;
+    --brick:#A8442B; --brick-dark:#8A3722; --green-ok:#2F6B4F; --green-bg:#E3EFE6; --line:#DCCFAE;
+    --danger:#B23A3A; --danger-bg:#F6E4E1;
+  }
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
   background:
-    radial-gradient(1200px 500px at 10% -10%, #FFFCF5 0%, transparent 60%),
+    radial-gradient(1200px 500px at 10% -10%, var(--paper-glow) 0%, transparent 60%),
     var(--paper);
   color:var(--ink);
   font-family:'Be Vietnam Pro', -apple-system, sans-serif;
@@ -81,9 +142,9 @@ a{color:inherit;}
 .field{margin-bottom:14px;}
 .field label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;}
 .field input, .field select, .field textarea{
-  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);
+  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);
 }
-.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--brass-light); border-color:var(--brass);}
+.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--brass-accent); border-color:var(--brass);}
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
   padding:10px 16px; border-radius:8px; border:1px solid transparent; font-weight:600; font-size:13.5px;
@@ -119,9 +180,17 @@ header.topbar{
 }
 .brand .seal-mini img{height:21px; width:auto; display:block;}
 .cloud-indicator{display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:4px 9px; border-radius:20px; background:rgba(255,255,255,.1); color:#c9c2ab; white-space:nowrap;}
-.cloud-indicator.syncing{background:rgba(184,134,59,.25); color:var(--brass-light);}
+.cloud-indicator.syncing{background:rgba(184,134,59,.25); color:var(--brass-accent);}
 .cloud-indicator.synced{background:rgba(47,107,79,.25); color:#8fd6ac;}
 .cloud-indicator.error{background:rgba(168,68,43,.3); color:#ffb3a3;}
+.theme-toggle-btn{
+  width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08); color:#EFE7D3; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; padding:0;
+}
+.theme-toggle-btn:active{background:rgba(255,255,255,.18);}
+.theme-choice-btn{border:1.5px solid var(--line); background:var(--card); color:var(--ink);}
+.theme-choice-btn.active{border-color:var(--brass); background:var(--brass-light); color:var(--brass-dark); font-weight:700;}
 .cloud-indicator .dot{width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
 .cloud-indicator.syncing .dot{animation:pulse-dot 1s ease-in-out infinite;}
 @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
@@ -160,16 +229,16 @@ footer.appfoot .foot-line{display:block;}
 
 /* room accordion */
 /* KHÔNG dùng overflow:hidden ở đây — nó vô hiệu hoá position:sticky của .room-head */
-.room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:#fff;}
+.room-card{border:1px solid var(--line); border-radius:9px; margin-bottom:8px; background:var(--card);}
 .room-card.inactive{opacity:.6;}
-.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; background:#fff; border-bottom:1px solid transparent; border-radius:8px 8px 0 0;}
+.room-head{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; background:var(--card); border-bottom:1px solid transparent; border-radius:8px 8px 0 0;}
 .room-card.open .room-head{border-bottom-color:var(--line); box-shadow:0 2px 4px rgba(22,35,59,.05);}
 /* Khi hàng phòng đang bị ghim ở mép trên, làm nó nổi rõ hơn để dễ nhận ra */
 .room-card.open .room-head{background:var(--card); box-shadow:0 3px 10px rgba(22,35,59,.10);}
 .room-card:not(.open){overflow:hidden;}
 .room-head:hover{background:var(--paper-2);}
 .room-num{
-  width:34px;height:34px;border-radius:8px;background:var(--navy); color:var(--brass-light); font-weight:800;
+  width:34px;height:34px;border-radius:8px;background:var(--navy); color:var(--brass-accent); font-weight:800;
   display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
 }
 .room-card.inactive .room-num{background:#9a9384;}
@@ -225,7 +294,7 @@ footer.appfoot .foot-line{display:block;}
 table.data{width:100%; border-collapse:collapse; font-size:12.5px;}
 table.data th{background:var(--navy); color:#EFE7D3; text-align:left; padding:8px 9px; font-weight:600; white-space:nowrap;}
 table.data td{padding:7px 9px; border-bottom:1px solid var(--line); white-space:nowrap;}
-table.data tr:nth-child(even) td{background:#FBF8F0;}
+table.data tr:nth-child(even) td{background:var(--paper-2);}
 table.data tfoot td{font-weight:700; background:var(--paper-2); border-top:2px solid var(--brass);}
 .table-wrap{overflow-x:auto; border-radius:8px; border:1px solid var(--line); position:relative;}
 .table-wrap table.data{border:none;}
@@ -439,6 +508,7 @@ table.receipt-tbl tfoot tr.debt-total-row td:last-child{text-align:right;}
   <header class="topbar">
     <div class="brand"><span class="seal-mini"><img src="logo_187_xanhla.png" alt=""></span> Sổ Thu Tiền Nhà Trọ</div>
     <span class="cloud-indicator" id="cloudIndicator" title="Chưa cấu hình Google Sheet"><span class="dot"></span><span id="cloudIndicatorText">Chưa đồng bộ</span></span>
+    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="cycleTheme()" title="Đổi giao diện sáng/tối"></button>
     <div class="month-picker">
       <select id="monthSelect" onchange="onChangeMonth(this.value)"></select>
       <button class="btn btn-brass btn-sm" onclick="openNewMonthModal()">+ Tháng mới</button>
@@ -730,6 +800,54 @@ async function boot(){
   if(codeWrap) codeWrap.style.display = known ? 'none' : '';
   document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
 }
+/* ===== Giao diện sáng / tối ===== */
+const THEME_ORDER = ['light','dark','auto'];
+const THEME_LABEL = {light:'Sáng', dark:'Tối', auto:'Tự động (theo máy)'};
+const THEME_ICON  = {light:'☀️', dark:'🌙', auto:'🌓'};
+
+function effectiveTheme(mode){
+  if(mode === 'auto'){
+    return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  return mode;
+}
+
+function applyTheme(mode){
+  document.documentElement.setAttribute('data-theme', effectiveTheme(mode));
+  document.documentElement.setAttribute('data-theme-mode', mode);
+  try{ localStorage.setItem('nt187_theme', mode); }catch(e){}
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn) btn.textContent = THEME_ICON[mode];
+  // Cập nhật 3 nút lựa chọn trong Cài đặt (nếu tab đó đang mở)
+  document.querySelectorAll('.theme-choice-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+}
+
+function cycleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme-mode') || 'auto';
+  const next = THEME_ORDER[(THEME_ORDER.indexOf(cur)+1) % THEME_ORDER.length];
+  applyTheme(next);
+  showToast('Giao diện: ' + THEME_LABEL[next]);
+}
+
+function setTheme(mode){ applyTheme(mode); }
+
+function initThemeSystem(){
+  const saved = (function(){ try{ return localStorage.getItem('nt187_theme') || 'auto'; }catch(e){ return 'auto'; } })();
+  applyTheme(saved);
+  // Nếu đang ở chế độ tự động, khi điện thoại tự đổi sáng/tối (theo cài đặt hệ
+  // thống hoặc lịch hoàng hôn của máy) thì app đổi theo ngay, không cần mở lại app.
+  if(window.matchMedia){
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+      if((document.documentElement.getAttribute('data-theme-mode')||'auto') === 'auto'){
+        applyTheme('auto');
+      }
+    });
+  }
+}
+initThemeSystem();
+
 boot();
 
 /* ---- Tự động đăng xuất sau 15 phút không thao tác ---- */
@@ -1764,7 +1882,7 @@ function occupantsListHtml(r){
   const list = r.nguoiO || [];
   if(!list.length) return '<div class="empty-state" style="padding:10px;">Chưa có thông tin người ở.</div>';
   return list.map(o => `
-    <div style="border:1px solid ${o.laNguoiChinh?'var(--brass)':'var(--line)'}; border-radius:7px; padding:8px 10px; margin-bottom:6px; background:#fff;">
+    <div style="border:1px solid ${o.laNguoiChinh?'var(--brass)':'var(--line)'}; border-radius:7px; padding:8px 10px; margin-bottom:6px; background:var(--card);">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
         <div>${o.laNguoiChinh?'⭐ ':''}<b>${escapeAttr(o.hoTen||'(chưa có tên)')}</b>${o.gioiTinh?(' · '+o.gioiTinh):''}${o.soDienThoai?(' · '+escapeAttr(o.soDienThoai)):''}</div>
         <span class="pill ${o.daDangKyTamTru?'pill-green':'pill-yellow'}">${o.daDangKyTamTru?'Đã đăng ký TT':'Chưa đăng ký TT'}</span>
@@ -3751,7 +3869,18 @@ async function renderLichSu(main){
 /* ============ TAB: CÀI ĐẶT ============ */
 function renderCaiDat(main){
   const s = STATE.settings;
+  const curMode = document.documentElement.getAttribute('data-theme-mode') || 'auto';
   main.innerHTML = `
+    <div class="panel">
+      <h2>🌓 Giao diện</h2>
+      <div class="desc">Khi in phiếu thu/hợp đồng ra giấy, luôn tự động in nền sáng dù đang chọn giao diện tối.</div>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="btn theme-choice-btn ${curMode==='light'?'active':''}" data-mode="light" onclick="setTheme('light')">☀️ Sáng</button>
+        <button class="btn theme-choice-btn ${curMode==='dark'?'active':''}" data-mode="dark" onclick="setTheme('dark')">🌙 Tối</button>
+        <button class="btn theme-choice-btn ${curMode==='auto'?'active':''}" data-mode="auto" onclick="setTheme('auto')">🌓 Tự động (theo máy)</button>
+      </div>
+    </div>
+
     <div class="panel">
       <h2>Thông tin nhận tiền (in trên phiếu thu)</h2>
       <div class="form-grid">
