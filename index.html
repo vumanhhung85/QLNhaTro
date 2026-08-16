@@ -205,6 +205,14 @@ header.topbar{
 .theme-toggle-btn:active{background:rgba(255,255,255,.18);}
 .theme-choice-btn{border:1.5px solid var(--line); background:var(--card); color:var(--ink);}
 .theme-choice-btn.active{border-color:var(--brass); background:var(--brass-light); color:var(--brass-dark); font-weight:700;}
+.theme-toggle-btn{position:relative;}
+.notif-badge{
+  position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; padding:0 3px;
+  border-radius:8px; background:var(--brick); color:#fff; font-size:10px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1; border:1.5px solid var(--navy);
+}
+@keyframes bell-ring{0%,100%{transform:rotate(0);}20%{transform:rotate(14deg);}40%{transform:rotate(-12deg);}60%{transform:rotate(8deg);}80%{transform:rotate(-6deg);}}
+.theme-toggle-btn.ringing{animation:bell-ring .6s ease-in-out 2;}
 .cloud-indicator .dot{width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
 .cloud-indicator.syncing .dot{animation:pulse-dot 1s ease-in-out infinite;}
 @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
@@ -541,6 +549,7 @@ table.receipt-tbl tfoot tr.debt-total-row td:last-child{text-align:right;}
     <div class="brand"><span class="seal-mini"><img src="logo_187_xanhla.png" alt=""></span> Sổ Thu Tiền Nhà Trọ</div>
     <span class="cloud-indicator" id="cloudIndicator" title="Chưa cấu hình Google Sheet"><span class="dot"></span><span id="cloudIndicatorText">Chưa đồng bộ</span></span>
     <button class="theme-toggle-btn" id="themeToggleBtn" onclick="cycleTheme()" title="Đổi giao diện sáng/tối"></button>
+    <button class="theme-toggle-btn" id="notifBellBtn" onclick="setTab('tamtru')" title="Khách mới đăng ký tạm trú">🔔<span class="notif-badge" id="notifBadge" style="display:none;"></span></button>
     <div class="month-picker">
       <select id="monthSelect" onchange="onChangeMonth(this.value)"></select>
       <button class="btn btn-brass btn-sm" onclick="openNewMonthModal()">+ Tháng mới</button>
@@ -757,6 +766,110 @@ const SingleSession = {
   }
 };
 
+/* ===== Thông báo khách mới đăng ký tạm trú (Mức 2 — chuông + số đếm trong app) =====
+   Tái dùng đúng action 'listTamTruPending' đã có sẵn (không cần thêm gì bên Apps
+   Script) — chỉ đếm số dòng trả về, không đổi cách xử lý dữ liệu. */
+const TamTruNotif = {
+  POLL_MS: 60000, // 60 giây — đủ nhanh mà không tốn nhiều lượt gọi Apps Script
+  interval: null,
+  seenKey: 'nt187_tamtru_seen_count',
+
+  getSeenCount(){
+    try{ return Number(localStorage.getItem(this.seenKey)) || 0; }catch(e){ return 0; }
+  },
+  setSeenCount(n){
+    try{ localStorage.setItem(this.seenKey, String(n)); }catch(e){}
+  },
+
+  async poll(){
+    const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
+    if(!url) return;
+    try{
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'listTamTruPending'})});
+      const text = await res.text();
+      let json = null;
+      try{ json = JSON.parse(text); }catch(e){}
+      if(!(json && json.status==='ok')) return;
+      const pending = (json.rows||[]).length;
+      const seen = this.getSeenCount();
+      const chuaXem = Math.max(0, pending - seen);
+      // Nếu số chưa xem TĂNG so với lần đếm hiển thị gần nhất -> có khách mới thật
+      // sự vừa tới trong lúc app đang mở, rung chuông + phát âm báo cho biết ngay.
+      const badgeNow = Number(document.getElementById('notifBadge')?.dataset.count || 0);
+      if(chuaXem > badgeNow && badgeNow >= 0 && STATE._notifFirstPollDone){
+        this.ring();
+        showToast('🔔 Có khách mới đăng ký tạm trú!');
+      }
+      STATE._notifFirstPollDone = true;
+      this.renderBadge(chuaXem);
+    }catch(err){
+      // âm thầm bỏ qua lỗi mạng — không làm phiền, chỉ đơn giản không cập nhật badge lần này
+    }
+  },
+
+  renderBadge(count){
+    const el = document.getElementById('notifBadge');
+    if(!el) return;
+    el.dataset.count = count;
+    if(count > 0){
+      el.textContent = count > 99 ? '99+' : String(count);
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  },
+
+  // Gọi khi người dùng thực sự mở tab Tạm trú ra xem — coi như đã "đọc" hết số hiện có
+  async markSeen(){
+    const url = (STATE.settings && STATE.settings.sheetWebhookUrl || '').trim();
+    if(!url) return;
+    try{
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'listTamTruPending'})});
+      const text = await res.text();
+      const json = JSON.parse(text);
+      if(json && json.status==='ok'){
+        this.setSeenCount((json.rows||[]).length);
+        this.renderBadge(0);
+      }
+    }catch(e){}
+  },
+
+  ring(){
+    const btn = document.getElementById('notifBellBtn');
+    if(btn){
+      btn.classList.remove('ringing'); void btn.offsetWidth; // ép trình duyệt chạy lại animation nếu đang rung dở
+      btn.classList.add('ringing');
+    }
+    try{
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      const beep = (freq, start, dur)=>{
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type='sine'; osc.frequency.value=freq;
+        osc.connect(gain); gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime+start);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+start+dur);
+        osc.start(ctx.currentTime+start); osc.stop(ctx.currentTime+start+dur);
+      };
+      beep(880, 0, 0.12); beep(1160, 0.14, 0.14); // 2 tiếng "ting" ngắn
+    }catch(e){
+      // trình duyệt chặn âm thanh tự phát (chưa có tương tác) — bỏ qua, rung chuông vẫn còn
+    }
+  },
+
+  start(){
+    this.stop();
+    STATE._notifFirstPollDone = false;
+    this.poll();
+    this.interval = setInterval(()=>{
+      if(!STATE.authed){ this.stop(); return; }
+      this.poll();
+    }, this.POLL_MS);
+  },
+  stop(){
+    if(this.interval){ clearInterval(this.interval); this.interval = null; }
+  }
+};
+
 /* ============ STATE ============ */
 const STATE = {
   authed:false,
@@ -920,6 +1033,7 @@ async function tryLogin(){
     // Giành quyền phiên: máy này thành máy đang hoạt động, máy cũ sẽ tự thoát
     SingleSession.claim();
     SingleSession.start();
+    TamTruNotif.start();
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('appScreen').style.display='flex';
     await loadAll();
@@ -931,6 +1045,7 @@ async function tryLogin(){
 }
 function logout(){
   SingleSession.stop();
+  TamTruNotif.stop();
   if(STATE.authed) SingleSession.release();
   STATE.authed=false;
   document.getElementById('pwInput').value='';
@@ -3137,6 +3252,7 @@ function getAllOccupantsFlat(){
   return list.sort((a,b)=>a.r.stt-b.r.stt);
 }
 function renderTamTru(main){
+  TamTruNotif.markSeen();
   const all = getAllOccupantsFlat();
   const soDaDK = all.filter(x=>x.o.daDangKyTamTru).length;
   const soChuaDK = all.length - soDaDK;
