@@ -1034,6 +1034,7 @@ async function tryLogin(){
     SingleSession.claim();
     SingleSession.start();
     TamTruNotif.start();
+    startSepayLivePoll();
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('appScreen').style.display='flex';
     await loadAll();
@@ -1046,6 +1047,7 @@ async function tryLogin(){
 function logout(){
   SingleSession.stop();
   TamTruNotif.stop();
+  stopSepayLivePoll();
   if(STATE.authed) SingleSession.release();
   STATE.authed=false;
   document.getElementById('pwInput').value='';
@@ -2883,7 +2885,10 @@ function renderThuTien(main){
             <tr>
               <td class="text-center sticky-col"><b>${r.stt}</b></td>
               <td class="mono" style="font-weight:800; color:var(--brick); font-size:13.5px;">${fmtVND(totalWithDebt)}${debt?`<div style="font-size:10px;font-weight:600;color:var(--ink-soft);">gồm nợ ${debt.monthLabel}: ${fmtVND(debt.amount)}</div>`:''}</td>
-              <td><input type="checkbox" ${r.paid?'checked':''} onchange="onTogglePaid(${r.stt}, this.checked)"></td>
+              <td>
+                <input type="checkbox" ${r.paid?'checked':''} onchange="onTogglePaid(${r.stt}, this.checked)">
+                ${r.paid && r.paidBy==='sepay' ? `<span title="Tick tự động qua SePay — bấm để xem lịch sử" style="margin-left:4px;cursor:pointer;" onclick="openSepayHistoryModal(${r.stt})">🔄</span>` : ''}
+              </td>
               <td><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" style="width:120px" placeholder="để trống = đủ" value="${fmtMoneyInputVal(r.soTienDaDong)}" oninput="onMoneyInputFmt(this)" onchange="onSoTienDaDongChange(${r.stt}, this)"></td>
               <td>${thieu>0 ? `<span class="pill pill-red mono">${fmtVND(thieu)}</span>` : `<span class="pill pill-muted">Đủ</span>`}</td>
               <td>
@@ -2901,6 +2906,7 @@ function renderThuTien(main){
           </tbody>
         </table>
       </div>
+      <div class="desc" style="margin-top:8px;">🔄 = phòng này được tự động tick "Đã đóng" qua SePay, không phải tick tay.</div>
     </div>
     <div class="panel" id="sepayPanel">
       <h2>🔄 Đối soát chuyển khoản SePay</h2>
@@ -2909,11 +2915,65 @@ function renderThuTien(main){
         Giao dịch nào app không đọc được (khách chuyển tay không quét QR, nội dung bị ngân hàng cắt/đổi khác thường)
         sẽ hiện ở đây — chọn đúng phòng và tháng rồi bấm "Gán" để cộng tiền thủ công.
       </div>
-      <div id="sepayUnmatchedWrap"><div class="desc" style="margin:0;">Đang tải…</div></div>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="btn btn-outline btn-sm" onclick="openSepayHistoryModal()">📜 Xem lịch sử đã nhận qua SePay</button>
+      </div>
+      <div id="sepayUnmatchedWrap" style="margin-top:10px;"><div class="desc" style="margin:0;">Đang tải…</div></div>
     </div>
   `;
   loadSepayUnmatchedSection();
 }
+/* ============ LỊCH SỬ ĐÃ NHẬN QUA SEPAY (modal xem — không sửa được, chỉ để tra cứu) ============ */
+async function openSepayHistoryModal(phongFilter){
+  const url = SingleSession.url();
+  if(!url){ showToast('Chưa cấu hình link Apps Script.'); return; }
+  showModal(`
+    <h3>📜 Lịch sử đã nhận qua SePay</h3>
+    <div class="toolbar" style="margin-bottom:8px;">
+      <input type="number" min="1" id="sepayHistPhongFilter" placeholder="Lọc theo số phòng (để trống = tất cả)" style="width:220px" value="${phongFilter||''}">
+      <button class="btn btn-outline btn-sm" onclick="reloadSepayHistoryModal()">Lọc</button>
+    </div>
+    <div id="sepayHistWrap" style="max-height:60vh; overflow-y:auto;"><div class="desc" style="margin:0;">Đang tải…</div></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Đóng</button></div>
+  `);
+  await reloadSepayHistoryModal();
+}
+async function reloadSepayHistoryModal(){
+  const wrap = document.getElementById('sepayHistWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '<div class="desc" style="margin:0;">Đang tải…</div>';
+  const filterEl = document.getElementById('sepayHistPhongFilter');
+  const phong = filterEl && filterEl.value ? Number(filterEl.value) : null;
+  const url = SingleSession.url();
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'listSepayHistory', phong})});
+    const json = await res.json();
+    if(!(json && json.status==='ok')){ wrap.innerHTML = '<div class="desc" style="margin:0;">Không tải được lịch sử.</div>'; return; }
+    const rows = json.rows||[];
+    if(!rows.length){ wrap.innerHTML = '<div class="empty-state">Chưa có giao dịch SePay nào'+(phong?(' cho phòng '+phong):'')+'.</div>'; return; }
+    wrap.innerHTML = `
+      <table class="data">
+        <thead><tr><th>Thời gian</th><th>Phòng</th><th>Tháng</th><th>Ngân hàng</th><th>Số tiền</th><th>Nội dung</th></tr></thead>
+        <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td style="white-space:nowrap;">${escapeAttr(r.thoiGianGD||'')}</td>
+            <td class="text-center"><b>${r.phong||''}</b></td>
+            <td>${escapeAttr(r.thang||'')}</td>
+            <td>${escapeAttr(r.nganHang||'')}</td>
+            <td class="mono">${fmtVND(r.soTien)}</td>
+            <td style="max-width:200px;">${escapeAttr(r.noiDung||'')}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>
+      <div class="desc" style="margin-top:6px;">Hiện tối đa 200 giao dịch gần nhất${phong?(' của phòng '+phong):''}.</div>
+    `;
+  }catch(err){
+    wrap.innerHTML = '<div class="desc" style="margin:0;">❌ Lỗi tải lịch sử: '+describeSyncError(err)+'</div>';
+  }
+}
+
 /* ============ ĐỐI SOÁT SEPAY (giao dịch chưa tự khớp được vào phòng) ============ */
 async function loadSepayUnmatchedSection(){
   const wrap = document.getElementById('sepayUnmatchedWrap');
@@ -2996,6 +3056,66 @@ async function pullFreshAfterSepay(){
     // âm thầm bỏ qua — lần vào app sau sẽ tự đồng bộ lại như bình thường
   }
 }
+
+/* ============ TỰ ĐỘNG CẬP NHẬT KHI CÓ THANH TOÁN SEPAY (trong lúc app đang mở) ============
+   Vấn đề thực tế anh Hưng gặp: app đang mở sẵn trên máy → SePay ghi tiền vào 1 phòng
+   ngay trên server → nhưng máy đang mở không hề biết → chỉ cần vô tình chuyển tab
+   (kích hoạt scheduleSave) là máy tự lưu bản CŨ đè lên, xoá mất luôn phần SePay vừa
+   tick. saveState() bên Apps Script đã tự bảo vệ không cho mất dữ liệu (so mốc
+   sepayUpdatedAt), nhưng máy đang mở vẫn cần được BÁO để hiện đúng lên màn hình,
+   không phải đợi tải lại trang mới thấy.
+   Cách làm: cứ 30 giây hỏi lại server 1 lần (cùng nhịp với SingleSession, không hỏi
+   dày hơn để khỏi tốn hạn ngạch Apps Script), chỉ merge ĐÚNG phần thanh toán
+   (paid/soTienDaDong/paidDate/paidNote) của tháng đang xem — không đụng gì tới các
+   tab khác hay dữ liệu đang gõ dở, tránh làm gián đoạn khi anh đang nhập liệu. */
+let sepayPollTimer = null;
+const SEPAY_POLL_MS = 30000;
+function startSepayLivePoll(){
+  stopSepayLivePoll();
+  sepayPollTimer = setInterval(checkSepayLiveUpdates, SEPAY_POLL_MS);
+}
+function stopSepayLivePoll(){
+  if(sepayPollTimer) clearInterval(sepayPollTimer);
+  sepayPollTimer = null;
+}
+async function checkSepayLiveUpdates(){
+  if(!STATE.authed || !STATE.monthData) return;
+  const url = SingleSession.url();
+  if(!url) return;
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'loadState'})});
+    const json = await res.json();
+    if(!(json && json.status==='ok' && json.data)) return;
+    const remote = JSON.parse(json.data);
+    const remoteMonth = remote.months && remote.months[STATE.currentKey];
+    if(!remoteMonth || !remoteMonth.rooms) return;
+    const changedRooms = [];
+    remoteMonth.rooms.forEach(remoteRoom=>{
+      const localRoom = STATE.monthData.rooms.find(r=>Number(r.stt)===Number(remoteRoom.stt));
+      if(!localRoom) return;
+      const remoteTs = Number(remoteRoom.sepayUpdatedAt)||0;
+      const localTs = Number(localRoom.sepayUpdatedAt)||0;
+      if(remoteTs > localTs){
+        localRoom.paid = remoteRoom.paid;
+        localRoom.soTienDaDong = remoteRoom.soTienDaDong;
+        localRoom.paidDate = remoteRoom.paidDate;
+        localRoom.paidNote = remoteRoom.paidNote;
+        localRoom.paidBy = remoteRoom.paidBy;
+        localRoom.sepayUpdatedAt = remoteRoom.sepayUpdatedAt;
+        changedRooms.push(remoteRoom.stt);
+      }
+    });
+    if(changedRooms.length){
+      // Lưu cục bộ ngay để lần lưu tiếp theo (vd chuyển tab) không còn là bản cũ nữa
+      await stSetJSON('month:'+STATE.currentKey, STATE.monthData);
+      changedRooms.forEach(stt=>showToast('💰 Phòng '+stt+' vừa được xác nhận đã đóng tiền qua SePay!'));
+      if(STATE.activeTab==='thutien' || STATE.activeTab==='nhap') renderMain();
+    }
+  }catch(err){
+    // âm thầm bỏ qua — 30 giây sau tự thử lại, không cần báo lỗi làm phiền
+  }
+}
+
 function onSoTienDaDongChange(stt, el){
   const val = parseMoneyVal(el);
   updRoom(stt, 'soTienDaDong', val>0? val : null);
@@ -3010,7 +3130,7 @@ function onTogglePaid(stt, checked){
   const r = STATE.monthData.rooms.find(x=>x.stt===stt);
   if(!r) return;
   r.paid = checked;
-  if(checked){ r.paidDate = todayISO(); }
+  if(checked){ r.paidDate = todayISO(); r.paidBy = 'manual'; }
   scheduleSave();
   renderMain();
 }
@@ -4167,24 +4287,6 @@ function renderCaiDat(main){
     </div>
 
     <div class="panel">
-      <h2>📄 Mẫu hợp đồng thuê phòng</h2>
-      <div class="desc">Sửa câu chữ, thêm bớt điều khoản thoải mái. Những chỗ có dấu <code>{{...}}</code> sẽ được thay bằng dữ liệu thật của từng phòng khi in — <b>đừng gõ sai tên trong ngoặc</b>, sai thì chỗ đó in ra nguyên chữ <code>{{...}}</code>.</div>
-      <div class="desc" style="margin-top:4px;">
-        Thẻ dùng được: <code>{{NGAY}}</code> <code>{{THANG}}</code> <code>{{NAM}}</code> <code>{{PHONG}}</code>
-        <code>{{HO_TEN}}</code> <code>{{CCCD}}</code> <code>{{THUONG_TRU}}</code> <code>{{DIEN_THOAI}}</code>
-        <code>{{GIA_THUE}}</code> <code>{{GIA_DIEN}}</code> <code>{{GIA_NUOC}}</code> <code>{{GIA_XE}}</code>
-        <code>{{SO_NGUOI}}</code> <code>{{SO_XE}}</code> <code>{{SO_THANG}}</code> <code>{{TU_NGAY}}</code>
-        <code>{{DEN_NGAY}}</code> <code>{{QR_PCCC}}</code>.
-        Chỗ muốn chừa trống để ký tay thì gõ <code>&lt;span class="bl"&gt;&lt;/span&gt;</code>.
-      </div>
-      <textarea id="s_contract" spellcheck="false" style="width:100%; min-height:230px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; line-height:1.45; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:8px;">${escapeAttr(contractTemplate())}</textarea>
-      <div class="toolbar" style="margin-top:8px;">
-        <button class="btn btn-primary btn-sm" onclick="saveContractTemplate()">Lưu mẫu hợp đồng</button>
-        <button class="btn btn-outline btn-sm" onclick="resetContractTemplate()">↺ Khôi phục mẫu gốc</button>
-      </div>
-    </div>
-
-    <div class="panel">
       <h2>🇶🇷 Mã QR nhận tiền (VietQR)</h2>
       <div class="desc">Hiện mã QR chuyển khoản (đã điền sẵn số tiền + nội dung) trên phiếu thu của các phòng <b>chưa đóng tiền</b>. Dùng chung STK/tên ở mục phía trên — chỉ cần chọn đúng ngân hàng bên dưới.</div>
       <div class="form-grid">
@@ -4210,6 +4312,24 @@ function renderCaiDat(main){
       <div class="section-title">Xem trước</div>
       <div id="qrPreviewBox" style="display:flex; align-items:center; gap:12px;"></div>
       <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveSettings()">Lưu thông tin</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>📄 Mẫu hợp đồng thuê phòng</h2>
+      <div class="desc">Sửa câu chữ, thêm bớt điều khoản thoải mái. Những chỗ có dấu <code>{{...}}</code> sẽ được thay bằng dữ liệu thật của từng phòng khi in — <b>đừng gõ sai tên trong ngoặc</b>, sai thì chỗ đó in ra nguyên chữ <code>{{...}}</code>.</div>
+      <div class="desc" style="margin-top:4px;">
+        Thẻ dùng được: <code>{{NGAY}}</code> <code>{{THANG}}</code> <code>{{NAM}}</code> <code>{{PHONG}}</code>
+        <code>{{HO_TEN}}</code> <code>{{CCCD}}</code> <code>{{THUONG_TRU}}</code> <code>{{DIEN_THOAI}}</code>
+        <code>{{GIA_THUE}}</code> <code>{{GIA_DIEN}}</code> <code>{{GIA_NUOC}}</code> <code>{{GIA_XE}}</code>
+        <code>{{SO_NGUOI}}</code> <code>{{SO_XE}}</code> <code>{{SO_THANG}}</code> <code>{{TU_NGAY}}</code>
+        <code>{{DEN_NGAY}}</code> <code>{{QR_PCCC}}</code>.
+        Chỗ muốn chừa trống để ký tay thì gõ <code>&lt;span class="bl"&gt;&lt;/span&gt;</code>.
+      </div>
+      <textarea id="s_contract" spellcheck="false" style="width:100%; min-height:230px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; line-height:1.45; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:8px;">${escapeAttr(contractTemplate())}</textarea>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" onclick="saveContractTemplate()">Lưu mẫu hợp đồng</button>
+        <button class="btn btn-outline btn-sm" onclick="resetContractTemplate()">↺ Khôi phục mẫu gốc</button>
+      </div>
     </div>
 
     <div class="panel">
