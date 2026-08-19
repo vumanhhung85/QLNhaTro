@@ -3204,7 +3204,13 @@ function receiptHtml(r, s, options){
   const md = STATE.monthData;
   const debt = roomDebtInfo(r);                 // null nếu phòng không có nợ cũ
   const totalWithDebt = roomTotalWithDebt(r);    // = tiền tháng này (+ nợ cũ nếu có)
-  const noteDien = `Lưu ý: Thu chuyển khoản: ${s.tenNguoiNhan}\n- STK: ${s.stk} — ${s.nganHang} (Momo: ${s.momo})\n- Đề nghị đóng tiền trước ${fmtDate(md.hanDong)}. Thanks\n- Nhắn Zalo/SMS Chủ nhà trọ để Xác Nhận đã đóng Tiền!`;
+  // Khách mới vào ở giữa tháng (prorated=true, tính theo số ngày ở) thường vào bất
+  // chợt, phải thu ngay lúc nhận phòng — không có ý nghĩa hẹn 1 "hạn đóng" cố định
+  // như phòng đã ở ổn định. Trường hợp này hiện "Ngày ra phiếu" = ngày hệ thống
+  // hiện tại thay cho "Hạn đóng", và đổi luôn câu nhắc bên dưới cho khớp.
+  const dueDateLabel = c.prorated ? `Ngày ra phiếu: ${fmtDate(todayISO())}` : `Hạn đóng: ${fmtDate(md.hanDong)}`;
+  const dueDateNote = c.prorated ? 'Đề nghị đóng tiền ngay khi nhận phòng.' : `Đề nghị đóng tiền trước ${fmtDate(md.hanDong)}.`;
+  const noteDien = `Lưu ý: Thu chuyển khoản: ${s.tenNguoiNhan}\n- STK: ${s.stk} — ${s.nganHang} (Momo: ${s.momo})\n- ${dueDateNote} Thanks\n- Nhắn Zalo/SMS Chủ nhà trọ để Xác Nhận đã đóng Tiền!`;
   const waterRow = r.waterMeter ? `
     <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.nuocMoi||0)}</td><td>${fmtNum(r.nuocCu||0)}</td><td>${fmtNum(Math.max(0,(r.nuocMoi||0)-(r.nuocCu||0)))}</td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
   ` : `
@@ -3228,7 +3234,7 @@ function receiptHtml(r, s, options){
     ${r.paid?'<div class="stamp">ĐÃ ĐÓNG<br>TIỀN</div>':''}
     <div class="receipt-header">
       <div class="rlogo"><img src="logo_187_xanhla.png" alt="Nhà trọ 187"></div>
-      <div class="rdate"><div class="rmonth-big">${md.label}</div>Hạn đóng: ${fmtDate(md.hanDong)}</div>
+      <div class="rdate"><div class="rmonth-big">${md.label}</div>${dueDateLabel}</div>
     </div>
     ${proratedBanner}
     <div class="receipt-total-hero"><span class="hero-label">Tổng tiền phòng <span class="room-num-big">${r.stt}</span></span><span class="amt mono">${fmtVND(totalWithDebt)}</span></div>
