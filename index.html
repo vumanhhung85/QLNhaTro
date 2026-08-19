@@ -1606,6 +1606,26 @@ function onMoneyInputFmt(el){
 }
 function parseMoneyVal(el){ return Number((el.value||'').replace(/[^\d]/g,''))||0; }
 
+/* Bản CHO PHÉP ÂM — chỉ dùng riêng cho "Điều chỉnh khác (+/-)". Không dùng chung
+   với 3 hàm phía trên vì các ô tiền khác (giá phòng, tiền cọc, đơn giá điện/nước...)
+   không có nghĩa gì khi âm, để chung sẽ vô tình cho phép nhập âm nhầm chỗ. */
+function fmtMoneyInputValSigned(n){
+  n = Number(n)||0;
+  if(!n) return '';
+  return (n<0?'-':'') + Math.abs(n).toLocaleString('vi-VN');
+}
+function onMoneyInputFmtSigned(el){
+  const neg = el.value.trim().startsWith('-');
+  const raw = el.value.replace(/[^\d]/g,'');
+  el.value = raw ? (neg?'-':'') + Number(raw).toLocaleString('vi-VN') : (neg ? '-' : '');
+}
+function parseMoneyValSigned(el){
+  const v = el.value||'';
+  const neg = v.trim().startsWith('-');
+  const n = Number(v.replace(/[^\d]/g,''))||0;
+  return neg ? -n : n;
+}
+
 /* contract / hợp đồng helpers */
 function daysInMonth(y,m){ return new Date(y,m,0).getDate(); }
 function addMonths(iso, n){
@@ -1951,8 +1971,12 @@ function roomFormHtml(r){
         </select>
       </div>
       <div class="f"><label>${r.racmode==='nguoi'?'Đơn giá / người':'Số tiền cố định'}</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dongiaRac)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dongiaRac',parseMoneyVal(this))"></div>
-      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputVal(r.dieuchinh)}" oninput="onMoneyInputFmt(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyVal(this))">
+      <div class="f"><label>Điều chỉnh khác (+/-)</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" inputmode="numeric" value="${fmtMoneyInputValSigned(r.dieuchinh)}" oninput="onMoneyInputFmtSigned(this)" onchange="updRoom(${r.stt},'dieuchinh',parseMoneyValSigned(this))">
         <div style="font-size:10px;color:var(--ink-soft);margin-top:3px;">Số tiền cộng thêm (+) hoặc trừ bớt (−) vào tổng tiền phải thu tháng này</div></div>
+      ${Number(r.dieuchinh||0)!==0 ? `
+      <div class="f"><label>Lý do điều chỉnh (hiện trên phiếu thu)</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" value="${escapeAttr(r.dieuchinhLyDo||'')}" placeholder="VD: Cọc thêm cho đủ" onchange="updRoom(${r.stt},'dieuchinhLyDo', this.value)">
+        <div style="font-size:10px;color:var(--ink-soft);margin-top:3px;">Để trống thì phiếu thu chỉ hiện chung chung "Điều chỉnh khác" — khách có thể thắc mắc khoản này từ đâu ra.</div></div>
+      ` : ''}
     </div>
 
     <div class="section-title">Ghi chú</div>
@@ -3187,6 +3211,14 @@ function receiptHtml(r, s, options){
     <tr><td>2</td><td>Tiền nước</td><td>${fmtNum(r.songuoi||0)}</td><td>Người</td><td></td><td class="mono">${fmtVND(c.tienNuoc)}</td></tr>
   `;
   const qrHtml = (showQR && r.active && !r.paid) ? buildQRBlockHtml(r, s, md) : '';
+  // Dòng "Điều chỉnh khác" trên phiếu — chỉ hiện khi có điều chỉnh (khác 0), để
+  // khách hiểu vì sao tổng tiền lệch so với các khoản điện/nước/phòng/xe/rác cộng
+  // lại. Nhãn lấy từ "Lý do điều chỉnh" (r.dieuchinhLyDo) nếu có nhập, không thì
+  // dùng nhãn chung chung — vẫn tốt hơn để trống hoàn toàn không giải thích gì.
+  const dieuchinhVal = Number(r.dieuchinh||0);
+  const dieuchinhRow = dieuchinhVal !== 0 ? `
+    <tr><td>6</td><td>${escapeAttr(r.dieuchinhLyDo || 'Điều chỉnh khác')}</td><td></td><td></td><td></td><td class="mono">${fmtVND(dieuchinhVal)}</td></tr>
+  ` : '';
   const proratedBanner = c.prorated ? `
     <div style="background:var(--brass-light); color:var(--brass-dark); font-size:11px; font-weight:700; padding:7px 9px; border-radius:6px; margin-bottom:8px; line-height:1.5;">
       ⓘ Đây là số tiền còn lại của ${md.label} (dọn vào ngày ${fmtDate(r.ngayVaoO)}, còn ${c.soNgayConLai}/${c.soNgayTrongThang} ngày) — không phải tiền nguyên tháng. Từ tháng sau sẽ tính bình thường như các phòng khác.
@@ -3208,6 +3240,7 @@ function receiptHtml(r, s, options){
         <tr><td>3</td><td>Tiền phòng${c.prorated?' (theo ngày ở)':''}</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienPhong)}</td></tr>
         <tr><td>4</td><td>Tiền xe${c.prorated?' (theo ngày ở)':''}</td><td>${fmtNum(r.soxe||0)}</td><td>Xe</td><td></td><td class="mono">${fmtVND(c.tienXe)}</td></tr>
         <tr><td>5</td><td>Rác${c.prorated?' (theo ngày ở)':''}</td><td></td><td></td><td></td><td class="mono">${fmtVND(c.tienRac)}</td></tr>
+        ${dieuchinhRow}
       </tbody>
       <tfoot>
         <tr><td colspan="5">Tổng cộng</td><td class="mono">${fmtVND(c.tong)}</td></tr>
@@ -4985,7 +5018,16 @@ async function backupToDriveFolder(){
     try{ json = JSON.parse(text); }catch(e){}
     if(json && json.status==='ok'){
       showToast('☁️ Đã sao lưu lên Drive: ' + json.fileName);
-      const anhInfo = `${json.imagesCopied||0} ảnh mới, bỏ qua ${json.imagesSkipped||0} ảnh đã có`;
+      let anhInfo;
+      if(json.imagesError){
+        anhInfo = `⚠️ lỗi khi sao lưu ảnh: ${json.imagesError}`;
+      } else if(!json.imagesTotalFound){
+        anhInfo = 'không tìm thấy ảnh giấy tờ nào trong hệ thống để sao lưu';
+      } else if(json.imagesFailed>0){
+        anhInfo = `${json.imagesCopied||0} ảnh mới, bỏ qua ${json.imagesSkipped||0} ảnh đã có, LỖI ${json.imagesFailed} ảnh (vd: ${json.imagesFailError||'không rõ'})`;
+      } else {
+        anhInfo = `${json.imagesCopied||0} ảnh mới, bỏ qua ${json.imagesSkipped||0} ảnh đã có`;
+      }
       setStatus('✅ Đã lưu "'+json.fileName+'" + '+anhInfo+' vào thư mục "'+(json.folderName||'')+'" lúc '+fmtDate(todayISO()));
     } else {
       showToast((json && json.message) || 'Sao lưu thất bại, thử lại sau.');
