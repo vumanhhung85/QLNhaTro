@@ -538,6 +538,7 @@ table.receipt-tbl tfoot tr.debt-total-row td:last-child{text-align:right;}
       </div>
     </div>
     <button class="btn btn-primary btn-block" onclick="tryLogin()">Đăng nhập</button>
+    <button class="btn btn-outline btn-block" id="bioLoginBtn" style="display:none; margin-top:8px;" onclick="loginWithBiometric()">👆 Mở bằng vân tay / khuôn mặt</button>
     <div class="err-msg" id="loginErr"></div>
     <button class="forgot-link" onclick="openForgotPasswordModal()">Quên mật khẩu?</button>
     <p class="hint">Vui lòng đăng nhập để tiếp tục.</p>
@@ -944,6 +945,7 @@ async function boot(){
   const codeWrap = document.getElementById('deviceCodeWrap');
   if(codeWrap) codeWrap.style.display = known ? 'none' : '';
   document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+  renderLoginBiometricButton();
 }
 /* ===== Giao diện sáng / tối ===== */
 const THEME_ORDER = ['light','dark','auto'];
@@ -1022,27 +1024,139 @@ async function tryLogin(){
   const savedPw = (await stGet('auth-password')) || DEFAULT_PASSWORD;
   if(input === savedPw){
     errEl.textContent='';
-    STATE.authed = true;
-    markActivity();
-    // Mã thiết bị đã đúng -> máy này thành máy quen, không hỏi lại
-    STATE.isNewDevice = false;
-    const _cw = document.getElementById('deviceCodeWrap');
-    if(_cw) _cw.style.display = 'none';
-    const _ci = document.getElementById('deviceCodeInput');
-    if(_ci) _ci.value = '';
-    // Giành quyền phiên: máy này thành máy đang hoạt động, máy cũ sẽ tự thoát
-    SingleSession.claim();
-    SingleSession.start();
-    TamTruNotif.start();
-    startSepayLivePoll();
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('appScreen').style.display='flex';
-    await loadAll();
-    STATE.cloudCheckDone = false; // mỗi lần đăng nhập lại phải kiểm tra lại từ đầu
-    checkRemoteForNewerData(); // âm thầm kiểm tra ở nền, không chặn màn hình
+    await completeLogin();
   } else {
     errEl.textContent = 'Sai mật khẩu, vui lòng thử lại.';
   }
+}
+/* Phần dùng chung sau khi đã xác thực xong — bằng mật khẩu gõ tay HOẶC vân tay/
+   khuôn mặt (loginWithBiometric) đều gọi vào đúng đây, để không viết trùng logic
+   single-session/mã thiết bị/tải dữ liệu ở 2 nơi rồi lệch nhau dần theo thời gian. */
+async function completeLogin(){
+  STATE.authed = true;
+  markActivity();
+  // Mã thiết bị đã đúng -> máy này thành máy quen, không hỏi lại
+  STATE.isNewDevice = false;
+  const _cw = document.getElementById('deviceCodeWrap');
+  if(_cw) _cw.style.display = 'none';
+  const _ci = document.getElementById('deviceCodeInput');
+  if(_ci) _ci.value = '';
+  // Giành quyền phiên: máy này thành máy đang hoạt động, máy cũ sẽ tự thoát
+  SingleSession.claim();
+  SingleSession.start();
+  TamTruNotif.start();
+  startSepayLivePoll();
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='flex';
+  await loadAll();
+  STATE.cloudCheckDone = false; // mỗi lần đăng nhập lại phải kiểm tra lại từ đầu
+  checkRemoteForNewerData(); // âm thầm kiểm tra ở nền, không chặn màn hình
+}
+
+/* ===== Đăng nhập vân tay / khuôn mặt (WebAuthn) =====
+   CHỈ áp dụng cho TỪNG MÁY riêng lẻ — không phải cài đặt dùng chung qua Cài đặt/
+   AppData.json, vì khoá sinh trắc học nằm trong phần cứng bảo mật của đúng máy đó
+   (Secure Enclave/TPM), không thể và không nên đồng bộ sang máy khác. Mỗi máy phải
+   tự bật riêng. Không xác thực chữ ký phía server (không cần thiết cho model 1 mật
+   khẩu chung này) — chỉ dùng kết quả pass/fail của trình duyệt làm cổng mở khoá,
+   sau đó đi tiếp bằng đúng mật khẩu đã lưu cục bộ (y hệt cách app đã lưu mật khẩu
+   cục bộ từ trước giờ để so khớp lúc gõ tay). */
+function biometricSupported(){
+  return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
+}
+function abToBase64(buf){
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function base64ToAb(base64){
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+function getBiometricCredId(){
+  try{ return localStorage.getItem(LS_PREFIX+'biometric-cred-id'); }catch(e){ return null; }
+}
+async function enableBiometric(){
+  const statusEl = document.getElementById('bioStatus');
+  const setStatus = (msg)=>{ if(statusEl) statusEl.textContent = msg; };
+  if(!biometricSupported()){
+    setStatus('❌ Trình duyệt/thiết bị này không hỗ trợ đăng nhập vân tay/khuôn mặt cho web.');
+    return;
+  }
+  try{
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'Nhà Trọ 187 NSHL' },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(16)),
+          name: 'chutro-187nshl',
+          displayName: 'Chủ trọ 187 NSHL'
+        },
+        pubKeyCredParams: [{type:'public-key', alg:-7}, {type:'public-key', alg:-257}],
+        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred' },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+    if(!cred){ setStatus('❌ Không tạo được thông tin vân tay/khuôn mặt — thử lại.'); return; }
+    localStorage.setItem(LS_PREFIX+'biometric-cred-id', abToBase64(cred.rawId));
+    setStatus('');
+    showToast('✅ Đã bật vân tay/khuôn mặt cho máy này.');
+    renderBiometricSettingsUI();
+    renderLoginBiometricButton();
+  }catch(err){
+    setStatus('❌ Không bật được: ' + (err && err.message ? err.message : String(err)));
+  }
+}
+function disableBiometric(){
+  try{ localStorage.removeItem(LS_PREFIX+'biometric-cred-id'); }catch(e){}
+  showToast('Đã tắt vân tay/khuôn mặt cho máy này.');
+  renderBiometricSettingsUI();
+  renderLoginBiometricButton();
+}
+async function loginWithBiometric(){
+  const errEl = document.getElementById('loginErr');
+  const credId = getBiometricCredId();
+  if(!credId) return; // nút đã ẩn sẵn nếu chưa bật, phòng hờ vẫn kiểm tra lại
+  try{
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ id: base64ToAb(credId), type:'public-key' }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+    if(!assertion) return;
+    // Vân tay/khuôn mặt đúng -> coi như đã xác thực, đi tiếp đúng luồng đăng nhập
+    // chung (single-session, tải dữ liệu...). Mã thiết bị mới không hỏi lại vì máy
+    // này chỉ bật được vân tay SAU KHI đã đăng nhập thành công bằng mật khẩu ít
+    // nhất 1 lần trước đó rồi (đã qua bước xác nhận thiết bị từ trước).
+    if(errEl) errEl.textContent = '';
+    await completeLogin();
+  }catch(err){
+    // Người dùng huỷ hoặc quét sai — không khoá gì cả, để họ gõ mật khẩu tay bình thường
+    if(errEl) errEl.textContent = 'Vân tay/khuôn mặt không thành công — vui lòng nhập mật khẩu.';
+  }
+}
+function renderLoginBiometricButton(){
+  const btn = document.getElementById('bioLoginBtn');
+  if(!btn) return;
+  btn.style.display = (biometricSupported() && !!getBiometricCredId()) ? '' : 'none';
+}
+function renderBiometricSettingsUI(){
+  const wrap = document.getElementById('bioSettingsWrap');
+  if(!wrap) return;
+  if(!biometricSupported()){
+    wrap.innerHTML = '<div class="desc" style="margin:0;">Trình duyệt/thiết bị này không hỗ trợ đăng nhập vân tay/khuôn mặt cho web — cần máy có cảm biến vân tay/Face ID và trình duyệt hỗ trợ (hầu hết điện thoại đời mới + Chrome/Safari bản mới đều có).</div>';
+    return;
+  }
+  const enabled = !!getBiometricCredId();
+  wrap.innerHTML = enabled
+    ? `<div class="desc" style="margin:0;">✅ Đang bật cho máy này.</div>
+       <div class="toolbar" style="margin-top:8px;"><button class="btn btn-outline" onclick="disableBiometric()">Tắt vân tay/khuôn mặt cho máy này</button></div>`
+    : `<div class="toolbar"><button class="btn btn-brass" onclick="enableBiometric()">👆 Bật vân tay/khuôn mặt cho máy này</button></div>`;
 }
 function logout(){
   SingleSession.stop();
@@ -4435,6 +4549,17 @@ function renderCaiDat(main){
     </div>
 
     <div class="panel">
+      <h2>👆 Đăng nhập vân tay / khuôn mặt</h2>
+      <div class="desc">
+        Mở nhanh app bằng vân tay/Face ID có sẵn trên điện thoại, không cần gõ mật khẩu mỗi lần.
+        <b>Cài đặt này chỉ áp dụng cho đúng máy/trình duyệt đang dùng</b> — vân tay không đồng bộ qua máy khác được (nằm trong phần cứng bảo mật riêng của từng máy), nên máy nào cũng muốn dùng thì phải tự bật riêng trên máy đó.
+        Vẫn luôn gõ được mật khẩu bình thường bất cứ lúc nào, kể cả khi đã bật vân tay.
+      </div>
+      <div id="bioSettingsWrap" style="margin-top:8px;"></div>
+      <div id="bioStatus" style="font-size:12px;color:var(--ink-soft);margin-top:6px;"></div>
+    </div>
+
+    <div class="panel">
       <h2>Đổi mật khẩu</h2>
       <div class="form-grid">
         <div class="f"><label>Mật khẩu hiện tại</label><input type="password" id="pw_old"></div>
@@ -4502,6 +4627,7 @@ function renderCaiDat(main){
   `;
   updateQRPreview();
   renderGiayToTypesList();
+  renderBiometricSettingsUI();
 }
 function renderGiayToTypesList(){
   const el = document.getElementById('giayToTypesList');
