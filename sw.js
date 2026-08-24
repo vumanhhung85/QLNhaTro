@@ -14,7 +14,7 @@
 // GitHub Pages. Nếu không đổi số, một số máy đã cài sẵn có thể vẫn thấy bản cache
 // cũ một thời gian trước khi cập nhật.
 
-const CACHE_VERSION = 'nt187-shell-v1';
+const CACHE_VERSION = 'nt187-shell-v2';
 
 const SHELL_FILES = [
   './',
