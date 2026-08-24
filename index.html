@@ -5172,6 +5172,16 @@ async function backupToDriveFolder(){
     if(btn){ btn.disabled = false; btn.textContent = '☁️ Sao lưu lên Google Drive'; }
   }
 }
+
+// Đăng ký service worker (chỉ cache vỏ giao diện tĩnh, không cache dữ liệu) —
+// đăng ký sau khi trang đã tải xong nên không ảnh hưởng tốc độ mở app.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){
+      console.warn('Không đăng ký được service worker:', e);
+    });
+  });
+}
 </script>
 </body>
 </html>
