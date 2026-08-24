@@ -13,11 +13,16 @@
     }
     document.documentElement.setAttribute('data-theme', effective);
     document.documentElement.setAttribute('data-theme-mode', saved); // ghi nhớ lựa chọn gốc (sáng/tối/tự động)
+    document.documentElement.style.colorScheme = effective; // khớp đúng theme hiện tại, chặn Chrome tự ép tối
   }catch(e){}
 })();
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
+<!-- Báo cho Chrome (đặc biệt bản đóng gói APK/TWA trên Android) biết trang này
+     TỰ quản lý sáng/tối rồi — nếu không có dòng này, Chrome Android có thể tự
+     "ép tối" (Force Dark) đè lên theme sáng do người dùng chọn, dù CSS đã đúng. -->
+<meta name="color-scheme" content="light dark">
 <title>Sổ Thu Tiền — Nhà Trọ 187 NSHL</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#16233B">
@@ -960,8 +965,10 @@ function effectiveTheme(mode){
 }
 
 function applyTheme(mode){
-  document.documentElement.setAttribute('data-theme', effectiveTheme(mode));
+  const eff = effectiveTheme(mode);
+  document.documentElement.setAttribute('data-theme', eff);
   document.documentElement.setAttribute('data-theme-mode', mode);
+  document.documentElement.style.colorScheme = eff; // khớp đúng theme hiện tại, chặn Chrome tự ép tối
   try{ localStorage.setItem('nt187_theme', mode); }catch(e){}
   const btn = document.getElementById('themeToggleBtn');
   if(btn) btn.textContent = THEME_ICON[mode];
