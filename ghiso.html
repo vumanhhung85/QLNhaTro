@@ -12,7 +12,9 @@
     --cream:#FAF5E9;
     --navy:#16233B;
     --green:#00BF63;
-    --red:#e0544a;
+    --green-dark:#0f6b3f;
+    --red:#d9362e;
+    --amber:#b76e00;
     --card:#ffffff;
     --border:#e7e0d0;
     --soft:#6b7280;
@@ -26,7 +28,7 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Be Vietnam Pro",Arial,sans-serif;
   }
   body{
-    padding:16px 14px 120px;
+    padding:16px 14px 130px;
   }
   h1{font-size:19px; margin:0 0 4px;}
   h2{font-size:16px; margin:0 0 10px;}
@@ -96,51 +98,52 @@
   }
   .banner.locked{ background:#fdf1ee; border:1px solid #f4cec7; color:#8a3a30; }
   .banner.open{ background:#eafaf1; border:1px solid #bfe9d1; color:#0f6b3f; }
-  .progress-wrap{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:12px 14px;
-    margin-bottom:14px;
-    font-size:14px;
-  }
-  .progress-wrap b{ font-size:17px; }
   .room-card{
     background:var(--card);
     border:1px solid var(--border);
-    border-radius:16px;
-    padding:14px;
-    margin-bottom:12px;
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:10px;
+    transition:background .2s, border-color .2s;
   }
-  .room-card.done{ border-color:#bfe9d1; }
+  /* Đổi hẳn màu nền + viền khi phòng đã thực sự ghi điện — khác rõ với lúc mới load,
+     để lướt mắt qua danh sách dài là biết ngay phòng nào xong, phòng nào chưa. */
+  .room-card.done{
+    background:#e9f8ef;
+    border-color:#7fd3a3;
+    box-shadow:inset 0 0 0 1px #7fd3a3;
+  }
+  .room-card.trong{ background:#fdfaf3; }
+  .room-card.trong.done{ background:#e9f8ef; }
   .room-head{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:10px;
+    margin-bottom:8px;
+    gap:8px;
   }
-  .room-num{ font-size:20px; font-weight:800; }
-  .room-badge{ font-size:12.5px; padding:3px 10px; border-radius:999px; background:#eef2f6; color:var(--soft); }
-  .room-badge.ok{ background:#eafaf1; color:#0f6b3f; }
-  .save-flag{ font-size:12px; color:var(--green); font-weight:700; opacity:0; transition:opacity .25s; }
+  .room-num{ font-size:28px; font-weight:900; color:var(--red); letter-spacing:.3px; }
+  .room-sub{ font-size:14px; font-weight:600; color:var(--soft); margin-left:4px; }
+  .room-sub.trong{ color:var(--amber); }
+  .room-badge{ font-size:12px; padding:3px 9px; border-radius:999px; background:#eef2f6; color:var(--soft); white-space:nowrap; }
+  .room-badge.ok{ background:var(--green-dark); color:#fff; font-weight:800; }
+  .save-flag{ font-size:11.5px; color:var(--green); font-weight:700; opacity:0; transition:opacity .25s; }
   .save-flag.show{ opacity:1; }
-  .field-row{ margin-bottom:10px; }
-  .field-label{ font-size:13px; color:var(--soft); margin-bottom:6px; font-weight:600; }
+  .field-row{ margin-bottom:8px; }
+  .field-label{ font-size:12.5px; color:var(--soft); margin-bottom:5px; font-weight:600; }
+  .field-label .ref-hint{ color:var(--navy); font-weight:700; }
   .stepper{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:8px;
   }
   .stepper button{
-    width:48px;
-    height:48px;
-    border-radius:12px;
+    width:40px;
+    height:40px;
+    border-radius:10px;
     border:1px solid var(--border);
     background:#f5f2e9;
-    font-size:24px;
+    font-size:20px;
     font-weight:700;
     color:var(--navy);
     flex-shrink:0;
@@ -149,13 +152,13 @@
   .stepper .val{
     flex:1;
     text-align:center;
-    font-size:26px;
+    font-size:21px;
     font-weight:800;
   }
   .num-input{
     width:100%;
-    padding:14px;
-    border-radius:12px;
+    padding:11px;
+    border-radius:10px;
     border:1px solid var(--border);
     background:#fdfcf8;
     color:var(--navy);
@@ -163,16 +166,19 @@
     text-align:center;
   }
   .num-input:focus{ outline:2px solid var(--green); border-color:var(--green); background:#fff; }
+  .field-note{ font-size:11.5px; color:var(--soft); margin-top:4px; font-style:italic; }
+  .usage-line{ font-size:12.5px; color:#0f6b3f; font-weight:700; margin-top:4px; min-height:16px; }
+  .warn-line{ font-size:12.5px; color:var(--red); font-weight:700; margin-top:4px; min-height:16px; }
   .room-actions{
     display:flex;
     justify-content:flex-end;
-    margin-top:4px;
+    margin-top:2px;
   }
   .clear-btn{
     border:none;
     background:none;
     color:var(--red);
-    font-size:13px;
+    font-size:12.5px;
     padding:6px 4px;
   }
   .footer-bar{
@@ -180,10 +186,22 @@
     left:0; right:0; bottom:0;
     background:var(--cream);
     border-top:1px solid var(--border);
-    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
     box-shadow:0 -6px 16px rgba(22,35,59,.08);
   }
-  .footer-count{ text-align:center; font-size:13px; color:var(--soft); margin-bottom:8px; }
+  .footer-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .footer-count{ flex:1; font-size:13px; color:var(--soft); }
+  .next-btn{
+    appearance:none;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--navy);
+    font-size:12.5px;
+    font-weight:700;
+    padding:8px 12px;
+    border-radius:10px;
+    white-space:nowrap;
+  }
   .empty-note{ text-align:center; color:var(--soft); padding:30px 10px; }
   .reload-btn{
     appearance:none;
@@ -228,9 +246,12 @@
   </div>
 </div>
 
-<!-- ===== NÚT GỬI CỐ ĐỊNH DƯỚI CÙNG (chỉ hiện khi đang mở) ===== -->
+<!-- ===== THANH DƯỚI CÙNG (chỉ hiện khi đang mở) ===== -->
 <div class="footer-bar" id="footerBar" style="display:none;">
-  <div class="footer-count" id="footerCount">Đã ghi 0/0 phòng</div>
+  <div class="footer-row">
+    <div class="footer-count" id="footerCount">Đã ghi 0/0 phòng</div>
+    <button class="next-btn" onclick="scrollToNextUnfinished()">⏭ Phòng chưa ghi tiếp</button>
+  </div>
   <button class="btn-big" id="submitBtn" onclick="guiChuNha()">📤 Gửi chủ nhà</button>
 </div>
 
@@ -242,12 +263,16 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0Kv
 const PASSCODE = '187';
 const UNLOCK_KEY = 'nt187_ghiso_unlocked';
 
-let ROOMS = [];           // [{stt, waterMeter}]
+let ROOMS = [];           // [{stt, trong, hoTenChinh, waterMeter, soxeHienTai, songuoiHienTai, dienThangTruoc, nuocThangTruoc}]
+let ROOM_INFO = {};       // stt -> phần tử tương ứng trong ROOMS, tra nhanh khi validate
 let DRAFT = {};           // stt -> {xe, songuoi, dien, nuoc}
 let WINDOW_STATUS = 'closed';
 let saveTimers = {};      // stt -> timeout id, debounce lưu từng phòng
 
 function $(id){ return document.getElementById(id); }
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 /* ---------- Cổng mã ---------- */
 function checkPasscode(){
@@ -282,8 +307,18 @@ async function taiDuLieu(){
     }
     WINDOW_STATUS = json.windowStatus;
     ROOMS = json.rooms || [];
+    ROOM_INFO = {};
+    ROOMS.forEach(r => { ROOM_INFO[r.stt] = r; });
     DRAFT = {};
     (json.draft||[]).forEach(d => { DRAFT[d.stt] = d; });
+    // Phòng CHƯA có nháp trên server → khởi tạo sẵn Xe/Người theo đúng dữ liệu hiện có của
+    // tháng đang mở (thường ít đổi tháng này qua tháng khác) — người ghi chỉ cần xác nhận
+    // hoặc sửa lại, không phải gõ/đếm lại từ đầu. Điện/Nước vẫn để trống, bắt buộc đọc mới.
+    ROOMS.forEach(r => {
+      if(!DRAFT[r.stt]){
+        DRAFT[r.stt] = {stt:r.stt, xe:r.soxeHienTai||0, songuoi:r.songuoiHienTai||0, dien:null, nuoc:null};
+      }
+    });
     $('monthLabelText').textContent = json.monthLabel ? ('Tháng ' + json.monthLabel) : 'Nhà Trọ 187 NSHL';
     renderAll();
   }catch(err){
@@ -302,12 +337,13 @@ function renderAll(){
     return;
   }
   if(!ROOMS.length){
-    $('roomListWrap').innerHTML = '<div class="empty-note">Không có phòng nào đang có khách để ghi số.</div>';
+    $('roomListWrap').innerHTML = '<div class="empty-note">Không có phòng nào để ghi số.</div>';
     $('footerBar').style.display = 'none';
     return;
   }
   const readOnly = (WINDOW_STATUS === 'submitted');
   $('roomListWrap').innerHTML = ROOMS.map(r => roomCardHtml(r, readOnly)).join('');
+  ROOMS.forEach(r => updateFieldFeedback(r.stt));
   updateFooter();
   $('footerBar').style.display = readOnly ? 'none' : '';
 }
@@ -323,21 +359,71 @@ function renderBanner(){
   }
 }
 
+function isDaGhiDien(stt){
+  const d = DRAFT[stt];
+  return !!(d && d.dien !== null && d.dien !== undefined);
+}
+
 function roomCardHtml(r, readOnly){
-  const d = DRAFT[r.stt] || {xe:0, songuoi:0, dien:null, nuoc:null};
-  const done = d.dien !== null && d.dien !== undefined;
+  const d = DRAFT[r.stt] || {xe:r.soxeHienTai||0, songuoi:r.songuoiHienTai||0, dien:null, nuoc:null};
+  const done = isDaGhiDien(r.stt);
   const dis = readOnly ? 'disabled' : '';
-  const waterRow = r.waterMeter ? `
+  const dienRef = r.dienThangTruoc!=null ? ('<span class="ref-hint">(tháng trước: '+r.dienThangTruoc+')</span>') : '';
+  const dienPlaceholder = r.dienThangTruoc!=null ? ('≥ ' + r.dienThangTruoc) : 'VD: 4521';
+
+  // Tên người ở chính (nếu có) hoặc nhãn "Phòng đang trống" ngay sau số phòng, để người
+  // ghi dễ đối chiếu ngoài đời — khỏi lộn phòng khi cửa không ghi số phòng rõ ràng.
+  const subLabel = r.trong
+    ? '<span class="room-sub trong">(Phòng đang trống)</span>'
+    : (r.hoTenChinh ? '<span class="room-sub">(' + escapeHtml(r.hoTenChinh) + ')</span>' : '');
+
+  const dienField = `
       <div class="field-row">
-        <div class="field-label">💧 Nước — chỉ số đồng hồ (khối)</div>
-        <input type="tel" inputmode="numeric" class="num-input" style="font-size:26px;"
-          id="nuoc_${r.stt}" value="${d.nuoc!=null?d.nuoc:''}" placeholder="VD: 1523" ${dis}
+        <div class="field-label">⚡ Điện — chỉ số đồng hồ ${dienRef}</div>
+        <input type="tel" inputmode="decimal" class="num-input" style="font-size:22px;"
+          id="dien_${r.stt}" value="${d.dien!=null?d.dien:''}" placeholder="${dienPlaceholder}" ${dis}
           oninput="onFieldChange(${r.stt})">
-      </div>` : '';
+        <div class="field-note">Đồng hồ có số sau dấu chấm thì bỏ qua, chỉ ghi phần nguyên trước dấu chấm.</div>
+        <div class="usage-line" id="dienUsage_${r.stt}"></div>
+        <div class="warn-line" id="dienWarn_${r.stt}"></div>
+      </div>`;
+
+  // Phòng TRỐNG: chỉ hiện Điện (đề phòng có người lẻn vào dùng điện quên tắt), khỏi hỏi
+  // Xe/Người/Nước vì không có ai ở để đếm.
+  if (r.trong) {
+    return `
+    <div class="room-card trong ${done?'done':''}" id="room_${r.stt}">
+      <div class="room-head">
+        <div class="room-num">🚪 Phòng ${r.stt} ${subLabel}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="save-flag" id="flag_${r.stt}">💾 Đã lưu</span>
+          <span class="room-badge ${done?'ok':''}">${done?'✅ Đã ghi':'Chưa ghi'}</span>
+        </div>
+      </div>
+      ${dienField}
+      ${readOnly ? '' : `<div class="room-actions"><button class="clear-btn" onclick="xoaPhong(${r.stt})">🗑 Xoá số đã ghi phòng này</button></div>`}
+    </div>`;
+  }
+
+  const waterRow = r.waterMeter ? (function(){
+    const nuocRef = r.nuocThangTruoc!=null ? ('<span class="ref-hint">(tháng trước: '+r.nuocThangTruoc+')</span>') : '';
+    const nuocPlaceholder = r.nuocThangTruoc!=null ? ('≥ ' + r.nuocThangTruoc) : 'VD: 1523';
+    return `
+      <div class="field-row">
+        <div class="field-label">💧 Nước — chỉ số đồng hồ (khối) ${nuocRef}</div>
+        <input type="tel" inputmode="decimal" class="num-input" style="font-size:22px;"
+          id="nuoc_${r.stt}" value="${d.nuoc!=null?d.nuoc:''}" placeholder="${nuocPlaceholder}" ${dis}
+          oninput="onFieldChange(${r.stt})">
+        <div class="field-note">Đồng hồ có số sau dấu chấm thì bỏ qua, chỉ ghi phần nguyên trước dấu chấm.</div>
+        <div class="usage-line" id="nuocUsage_${r.stt}"></div>
+        <div class="warn-line" id="nuocWarn_${r.stt}"></div>
+      </div>`;
+  })() : '';
+
   return `
     <div class="room-card ${done?'done':''}" id="room_${r.stt}">
       <div class="room-head">
-        <div class="room-num">🚪 Phòng ${r.stt}</div>
+        <div class="room-num">🚪 Phòng ${r.stt} ${subLabel}</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="save-flag" id="flag_${r.stt}">💾 Đã lưu</span>
           <span class="room-badge ${done?'ok':''}">${done?'✅ Đã ghi':'Chưa ghi'}</span>
@@ -362,12 +448,7 @@ function roomCardHtml(r, readOnly){
         </div>
       </div>
 
-      <div class="field-row">
-        <div class="field-label">⚡ Điện — chỉ số đồng hồ</div>
-        <input type="tel" inputmode="numeric" class="num-input" style="font-size:26px;"
-          id="dien_${r.stt}" value="${d.dien!=null?d.dien:''}" placeholder="VD: 4521" ${dis}
-          oninput="onFieldChange(${r.stt})">
-      </div>
+      ${dienField}
       ${waterRow}
 
       ${readOnly ? '' : `<div class="room-actions"><button class="clear-btn" onclick="xoaPhong(${r.stt})">🗑 Xoá số đã ghi phòng này</button></div>`}
@@ -385,25 +466,73 @@ function stepVal(stt, field, delta){
   scheduleSave(stt);
 }
 
-/* ---------- Điện / Nước — gõ tay ---------- */
+/* ---------- Điện / Nước — gõ tay. Cho phép gõ dấu chấm tự nhiên như trên mặt đồng hồ,
+   nhưng chỉ LẤY phần nguyên trước dấu chấm để lưu (parseInt tự cắt đúng chỗ đó). ---------- */
 function onFieldChange(stt){
   if(!DRAFT[stt]) DRAFT[stt] = {xe:0, songuoi:0, dien:null, nuoc:null};
   const dienEl = $('dien_'+stt);
   const nuocEl = $('nuoc_'+stt);
   if(dienEl){
-    const raw = (dienEl.value||'').replace(/[^\d]/g,'');
+    const raw = (dienEl.value||'').replace(/[^\d.]/g,'');
     dienEl.value = raw;
-    DRAFT[stt].dien = raw==='' ? null : Number(raw);
+    const parsed = raw==='' ? null : parseInt(raw, 10);
+    DRAFT[stt].dien = (parsed==null || isNaN(parsed)) ? null : parsed;
   }
   if(nuocEl){
-    const raw2 = (nuocEl.value||'').replace(/[^\d]/g,'');
+    const raw2 = (nuocEl.value||'').replace(/[^\d.]/g,'');
     nuocEl.value = raw2;
-    DRAFT[stt].nuoc = raw2==='' ? null : Number(raw2);
+    const parsed2 = raw2==='' ? null : parseInt(raw2, 10);
+    DRAFT[stt].nuoc = (parsed2==null || isNaN(parsed2)) ? null : parsed2;
   }
+  updateRoomBadge(stt);
+  updateFieldFeedback(stt);
   scheduleSave(stt);
 }
 
-/* ---------- Tự lưu — debounce 600ms mỗi phòng, không spam mạng khi họ bấm +/- liên tục ---------- */
+/* ---------- Không cho ghi số nhỏ hơn tháng trước (đồng hồ điện/nước chỉ tăng) ---------- */
+function isRoomValid(stt){
+  const info = ROOM_INFO[stt] || {};
+  const d = DRAFT[stt] || {};
+  if(d.dien != null && info.dienThangTruoc != null && d.dien < info.dienThangTruoc) return false;
+  if(info.waterMeter && d.nuoc != null && info.nuocThangTruoc != null && d.nuoc < info.nuocThangTruoc) return false;
+  return true;
+}
+
+/* ---------- Hiện dòng cảnh báo (nếu nhập nhỏ hơn tháng trước) hoặc số đã dùng tháng này ---------- */
+function updateFieldFeedback(stt){
+  const info = ROOM_INFO[stt] || {};
+  const d = DRAFT[stt] || {};
+  const dienWarn = $('dienWarn_'+stt);
+  const dienUsage = $('dienUsage_'+stt);
+  if(dienWarn && dienUsage){
+    if(d.dien != null && info.dienThangTruoc != null && d.dien < info.dienThangTruoc){
+      dienWarn.textContent = '⚠️ Không được nhỏ hơn số tháng trước (' + info.dienThangTruoc + ') — kiểm tra lại.';
+      dienUsage.textContent = '';
+    } else {
+      dienWarn.textContent = '';
+      dienUsage.textContent = (d.dien != null && info.dienThangTruoc != null)
+        ? ('✅ Dùng tháng này: ' + (d.dien - info.dienThangTruoc) + ' kWh') : '';
+    }
+  }
+  if(info.waterMeter){
+    const nuocWarn = $('nuocWarn_'+stt);
+    const nuocUsage = $('nuocUsage_'+stt);
+    if(nuocWarn && nuocUsage){
+      if(d.nuoc != null && info.nuocThangTruoc != null && d.nuoc < info.nuocThangTruoc){
+        nuocWarn.textContent = '⚠️ Không được nhỏ hơn số tháng trước (' + info.nuocThangTruoc + ') — kiểm tra lại.';
+        nuocUsage.textContent = '';
+      } else {
+        nuocWarn.textContent = '';
+        nuocUsage.textContent = (d.nuoc != null && info.nuocThangTruoc != null)
+          ? ('✅ Dùng tháng này: ' + (d.nuoc - info.nuocThangTruoc) + ' khối') : '';
+      }
+    }
+  }
+}
+
+/* ---------- Tự lưu — debounce 600ms mỗi phòng, không spam mạng khi họ bấm +/- liên tục.
+   KHÔNG gửi lên server khi đang có cảnh báo nhỏ hơn tháng trước — giữ lại trên màn hình để
+   họ tự sửa, tránh lỡ tay lưu số sai lên server rồi quên sửa lại. ---------- */
 function scheduleSave(stt){
   updateRoomBadge(stt);
   if(saveTimers[stt]) clearTimeout(saveTimers[stt]);
@@ -411,8 +540,7 @@ function scheduleSave(stt){
 }
 
 function updateRoomBadge(stt){
-  const d = DRAFT[stt] || {};
-  const done = d.dien !== null && d.dien !== undefined;
+  const done = isDaGhiDien(stt);
   const card = $('room_'+stt);
   if(card) card.classList.toggle('done', done);
   const badge = card ? card.querySelector('.room-badge') : null;
@@ -424,6 +552,7 @@ function updateRoomBadge(stt){
 }
 
 async function luuPhong(stt){
+  if(!isRoomValid(stt)) return; // đang có cảnh báo — không lưu, chờ họ sửa lại
   const d = DRAFT[stt] || {xe:0, songuoi:0, dien:null, nuoc:null};
   try{
     const res = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
@@ -433,7 +562,6 @@ async function luuPhong(stt){
     if(json && json.status === 'ok'){
       flashSaved(stt);
     } else if(json && json.message === 'closed'){
-      // Cửa vừa bị khoá lại giữa chừng (anh Hưng vừa xem tháng khác/khoá) — tải lại cho khớp
       taiDuLieu();
     }
   }catch(e){
@@ -449,12 +577,14 @@ function flashSaved(stt){
 
 async function xoaPhong(stt){
   if(!confirm('Xoá số đã ghi của phòng ' + stt + '?')) return;
-  delete DRAFT[stt];
-  const xeEl = $('xeval_'+stt); if(xeEl) xeEl.textContent = '0';
-  const ngEl = $('songuoival_'+stt); if(ngEl) ngEl.textContent = '0';
+  const info = ROOM_INFO[stt] || {};
+  DRAFT[stt] = {stt:stt, xe:info.soxeHienTai||0, songuoi:info.songuoiHienTai||0, dien:null, nuoc:null};
+  const xeEl = $('xeval_'+stt); if(xeEl) xeEl.textContent = String(DRAFT[stt].xe);
+  const ngEl = $('songuoival_'+stt); if(ngEl) ngEl.textContent = String(DRAFT[stt].songuoi);
   const dienEl = $('dien_'+stt); if(dienEl) dienEl.value = '';
   const nuocEl = $('nuoc_'+stt); if(nuocEl) nuocEl.value = '';
   updateRoomBadge(stt);
+  updateFieldFeedback(stt);
   try{
     await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'xoaGhiSoDraft', stt: stt})});
   }catch(e){}
@@ -462,20 +592,41 @@ async function xoaPhong(stt){
 
 function updateFooter(){
   const total = ROOMS.length;
-  const done = ROOMS.filter(r => { const d = DRAFT[r.stt]; return d && d.dien !== null && d.dien !== undefined; }).length;
+  const done = ROOMS.filter(r => isDaGhiDien(r.stt)).length;
   const cEl = $('footerCount');
   if(cEl) cEl.textContent = 'Đã ghi ' + done + '/' + total + ' phòng';
 }
 
+/* ---------- Ý tưởng thêm: cuộn thẳng tới phòng chưa ghi gần nhất, đỡ kéo tay qua các
+   phòng đã xong khi danh sách dài. ---------- */
+function scrollToNextUnfinished(){
+  const next = ROOMS.find(r => !isDaGhiDien(r.stt));
+  if(!next){ alert('Đã ghi hết tất cả các phòng rồi!'); return; }
+  const el = $('room_'+next.stt);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
 /* ---------- Gửi chủ nhà — 1 lần chốt, khoá lại ngay sau khi thành công ---------- */
 async function guiChuNha(){
-  const total = ROOMS.length;
-  const done = ROOMS.filter(r => { const d = DRAFT[r.stt]; return d && d.dien !== null && d.dien !== undefined; }).length;
-  let confirmMsg = 'Xác nhận đã ghi xong, gửi cho chủ nhà?\nSau khi gửi sẽ KHOÁ LẠI, không sửa được nữa cho tới khi chủ nhà mở lại.';
-  if(done < total){
-    confirmMsg = 'Còn ' + (total-done) + ' phòng chưa ghi điện. Vẫn muốn gửi luôn?\n\n' + confirmMsg;
+  const invalidRooms = ROOMS.filter(r => !isRoomValid(r.stt));
+  if(invalidRooms.length){
+    alert('Còn phòng ' + invalidRooms.map(r=>r.stt).join(', ') + ' đang ghi số NHỎ HƠN tháng trước — sửa lại rồi mới gửi được.');
+    return;
   }
-  if(!confirm(confirmMsg)) return;
+
+  const chuaGhiDangO = ROOMS.filter(r => !r.trong && !isDaGhiDien(r.stt));
+  const chuaGhiTrong = ROOMS.filter(r => r.trong && !isDaGhiDien(r.stt));
+  const parts = [];
+  // Cảnh báo NHẸ riêng cho phòng trống chưa ghi điện — dễ bị bỏ sót vì không có ai ở,
+  // nhưng KHÔNG chặn gửi, chỉ nhắc để người ghi tự cân nhắc quay lại ghi hay bỏ qua.
+  if(chuaGhiTrong.length){
+    parts.push('⚠️ Phòng trống chưa ghi điện: ' + chuaGhiTrong.map(r=>r.stt).join(', ') + ' — nên ghi luôn để tránh sót điện hao hụt lúc trống.');
+  }
+  if(chuaGhiDangO.length){
+    parts.push('Còn ' + chuaGhiDangO.length + ' phòng đang ở chưa ghi điện.');
+  }
+  parts.push('Xác nhận đã ghi xong, gửi cho chủ nhà?\nSau khi gửi sẽ KHOÁ LẠI, không sửa được nữa cho tới khi chủ nhà mở lại.');
+  if(!confirm(parts.join('\n\n'))) return;
 
   const btn = $('submitBtn');
   btn.disabled = true;
