@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes">
+<meta name="color-scheme" content="light">
+<title>Ghi số cuối tháng — Nhà Trọ 187 NSHL</title>
+<meta name="theme-color" content="#16233B">
+<link rel="icon" type="image/png" href="logo_187_xanhla.png">
+<style>
+  :root{
+    --cream:#FAF5E9;
+    --navy:#16233B;
+    --green:#00BF63;
+    --red:#e0544a;
+    --card:#ffffff;
+    --border:#e7e0d0;
+    --soft:#6b7280;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:var(--cream);
+    color:var(--navy);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Be Vietnam Pro",Arial,sans-serif;
+  }
+  body{
+    padding:16px 14px 120px;
+  }
+  h1{font-size:19px; margin:0 0 4px;}
+  h2{font-size:16px; margin:0 0 10px;}
+  p{line-height:1.5; margin:0 0 12px; color:var(--soft);}
+  .center{
+    min-height:80vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .center-inner{ width:100%; max-width:380px; text-align:center; }
+  .logo{width:84px;height:84px;border-radius:20px;margin:0 auto 20px;display:block;box-shadow:0 8px 20px rgba(22,35,59,.15);}
+  input[type=text], input[type=tel], input[type=number]{
+    font-size:22px;
+    font-family:inherit;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  .pass-input{
+    width:100%;
+    text-align:center;
+    letter-spacing:10px;
+    font-size:32px;
+    font-weight:700;
+    padding:16px;
+    border-radius:16px;
+    border:2px solid var(--border);
+    background:var(--card);
+    color:var(--navy);
+    margin-bottom:14px;
+  }
+  .pass-input:focus{ outline:2px solid var(--green); border-color:var(--green); }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn-big{
+    appearance:none;
+    border:none;
+    background:var(--green);
+    color:#fff;
+    font-size:18px;
+    font-weight:700;
+    padding:16px 20px;
+    border-radius:16px;
+    width:100%;
+    box-shadow:0 6px 16px rgba(0,191,99,.3);
+  }
+  .btn-big:active{ transform:scale(.98); }
+  .btn-big:disabled{ background:#b9bfc6; box-shadow:none; }
+  .err-text{ color:var(--red); font-size:14px; min-height:18px; margin-top:2px; }
+  header.top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  header.top img{ width:36px; height:36px; border-radius:9px; }
+  header.top .ttl{ font-weight:700; font-size:16px; line-height:1.2; }
+  header.top .sub{ font-size:12.5px; color:var(--soft); }
+  .banner{
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:14px;
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+  .banner.locked{ background:#fdf1ee; border:1px solid #f4cec7; color:#8a3a30; }
+  .banner.open{ background:#eafaf1; border:1px solid #bfe9d1; color:#0f6b3f; }
+  .progress-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:14px;
+    font-size:14px;
+  }
+  .progress-wrap b{ font-size:17px; }
+  .room-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .room-card.done{ border-color:#bfe9d1; }
+  .room-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .room-num{ font-size:20px; font-weight:800; }
+  .room-badge{ font-size:12.5px; padding:3px 10px; border-radius:999px; background:#eef2f6; color:var(--soft); }
+  .room-badge.ok{ background:#eafaf1; color:#0f6b3f; }
+  .save-flag{ font-size:12px; color:var(--green); font-weight:700; opacity:0; transition:opacity .25s; }
+  .save-flag.show{ opacity:1; }
+  .field-row{ margin-bottom:10px; }
+  .field-label{ font-size:13px; color:var(--soft); margin-bottom:6px; font-weight:600; }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .stepper button{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#f5f2e9;
+    font-size:24px;
+    font-weight:700;
+    color:var(--navy);
+    flex-shrink:0;
+  }
+  .stepper button:active{ background:#e9e4d4; }
+  .stepper .val{
+    flex:1;
+    text-align:center;
+    font-size:26px;
+    font-weight:800;
+  }
+  .num-input{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fdfcf8;
+    color:var(--navy);
+    font-weight:800;
+    text-align:center;
+  }
+  .num-input:focus{ outline:2px solid var(--green); border-color:var(--green); background:#fff; }
+  .room-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:4px;
+  }
+  .clear-btn{
+    border:none;
+    background:none;
+    color:var(--red);
+    font-size:13px;
+    padding:6px 4px;
+  }
+  .footer-bar{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:var(--cream);
+    border-top:1px solid var(--border);
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    box-shadow:0 -6px 16px rgba(22,35,59,.08);
+  }
+  .footer-count{ text-align:center; font-size:13px; color:var(--soft); margin-bottom:8px; }
+  .empty-note{ text-align:center; color:var(--soft); padding:30px 10px; }
+  .reload-btn{
+    appearance:none;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--navy);
+    font-size:14px;
+    font-weight:700;
+    padding:12px 18px;
+    border-radius:12px;
+    width:100%;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== MÀN NHẬP MÃ ===== -->
+<div id="gateScreen" class="center">
+  <div class="center-inner">
+    <img class="logo" src="icon-192.png" alt="" onerror="this.src='logo_187_xanhla.png'">
+    <h1>Ghi số cuối tháng</h1>
+    <p>Nhà Trọ 187 Ni Sư Huỳnh Liên — nhập mã do chủ nhà cung cấp để tiếp tục.</p>
+    <input type="tel" inputmode="numeric" maxlength="6" class="pass-input" id="passInput" placeholder="• • •" autocomplete="off">
+    <div class="err-text" id="passErr"></div>
+    <button class="btn-big" onclick="checkPasscode()">Tiếp tục</button>
+  </div>
+</div>
+
+<!-- ===== MÀN CHÍNH ===== -->
+<div id="mainScreen" style="display:none;">
+  <header class="top">
+    <img src="icon-192.png" alt="" onerror="this.src='logo_187_xanhla.png'">
+    <div>
+      <div class="ttl">Ghi số cuối tháng</div>
+      <div class="sub" id="monthLabelText">Đang tải…</div>
+    </div>
+  </header>
+
+  <div id="statusBanner"></div>
+  <div id="roomListWrap">
+    <div class="empty-note">Đang tải danh sách phòng…</div>
+  </div>
+</div>
+
+<!-- ===== NÚT GỬI CỐ ĐỊNH DƯỚI CÙNG (chỉ hiện khi đang mở) ===== -->
+<div class="footer-bar" id="footerBar" style="display:none;">
+  <div class="footer-count" id="footerCount">Đã ghi 0/0 phòng</div>
+  <button class="btn-big" id="submitBtn" onclick="guiChuNha()">📤 Gửi chủ nhà</button>
+</div>
+
+<script>
+/* ĐÚNG LINK WEB APP APPS SCRIPT ĐANG DÙNG CHO NHÀ TRỌ 187 — nếu sau này anh Hưng
+   deploy phiên bản mới (đổi URL) mà quên sửa dòng này, trang này sẽ gọi vào bản cũ.
+   Kiểm tra khớp với "Link Web App" trong app chính > Cài đặt > Đồng bộ Google Sheet. */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzoLf_on_-YQcQBbGP_v0KvcoDlQDTaAsa7vgu5CFuiZDrvbzYg-w23-lYhY1lptvVJ/exec';
+const PASSCODE = '187';
+const UNLOCK_KEY = 'nt187_ghiso_unlocked';
+
+let ROOMS = [];           // [{stt, waterMeter}]
+let DRAFT = {};           // stt -> {xe, songuoi, dien, nuoc}
+let WINDOW_STATUS = 'closed';
+let saveTimers = {};      // stt -> timeout id, debounce lưu từng phòng
+
+function $(id){ return document.getElementById(id); }
+
+/* ---------- Cổng mã ---------- */
+function checkPasscode(){
+  const v = ($('passInput').value || '').trim();
+  if(v === PASSCODE){
+    try{ localStorage.setItem(UNLOCK_KEY, '1'); }catch(e){}
+    enterApp();
+  } else {
+    $('passErr').textContent = 'Sai mã, hỏi lại chủ nhà.';
+  }
+}
+$('passInput') && $('passInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') checkPasscode();
+});
+
+function enterApp(){
+  $('gateScreen').style.display = 'none';
+  $('mainScreen').style.display = '';
+  taiDuLieu();
+}
+
+/* ---------- Tải dữ liệu phòng + nháp ---------- */
+async function taiDuLieu(){
+  $('roomListWrap').innerHTML = '<div class="empty-note">Đang tải danh sách phòng…</div>';
+  $('footerBar').style.display = 'none';
+  try{
+    const res = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'getGhiSoRooms'})});
+    const json = await res.json();
+    if(!json || json.status !== 'ok'){
+      $('roomListWrap').innerHTML = '<div class="empty-note">Không tải được dữ liệu. Kiểm tra lại mạng rồi bấm "Tải lại".</div>' + reloadBtnHtml();
+      return;
+    }
+    WINDOW_STATUS = json.windowStatus;
+    ROOMS = json.rooms || [];
+    DRAFT = {};
+    (json.draft||[]).forEach(d => { DRAFT[d.stt] = d; });
+    $('monthLabelText').textContent = json.monthLabel ? ('Tháng ' + json.monthLabel) : 'Nhà Trọ 187 NSHL';
+    renderAll();
+  }catch(err){
+    $('roomListWrap').innerHTML = '<div class="empty-note">Lỗi kết nối: ' + (err && err.message ? err.message : err) + '</div>' + reloadBtnHtml();
+  }
+}
+function reloadBtnHtml(){
+  return '<div style="margin-top:14px;"><button class="reload-btn" onclick="taiDuLieu()">🔄 Tải lại</button></div>';
+}
+
+function renderAll(){
+  renderBanner();
+  if(WINDOW_STATUS === 'closed'){
+    $('roomListWrap').innerHTML = '<div class="empty-note">Chủ nhà chưa mở tháng mới — chưa tới lúc ghi số.<br>Quay lại sau nhé.</div>' + reloadBtnHtml();
+    $('footerBar').style.display = 'none';
+    return;
+  }
+  if(!ROOMS.length){
+    $('roomListWrap').innerHTML = '<div class="empty-note">Không có phòng nào đang có khách để ghi số.</div>';
+    $('footerBar').style.display = 'none';
+    return;
+  }
+  const readOnly = (WINDOW_STATUS === 'submitted');
+  $('roomListWrap').innerHTML = ROOMS.map(r => roomCardHtml(r, readOnly)).join('');
+  updateFooter();
+  $('footerBar').style.display = readOnly ? 'none' : '';
+}
+
+function renderBanner(){
+  const el = $('statusBanner');
+  if(WINDOW_STATUS === 'submitted'){
+    el.innerHTML = '<div class="banner locked">🔒 Đã gửi cho chủ nhà rồi — cần chủ nhà mở lại mới sửa được. Số đã ghi vẫn hiện bên dưới để anh/chị xem lại.</div>' + reloadBtnHtml();
+  } else if(WINDOW_STATUS === 'open'){
+    el.innerHTML = '<div class="banner open">🟢 Đang mở — ghi xong phòng nào tự lưu ngay phòng đó, không cần bấm gì thêm. Ghi xong hết thì bấm "Gửi chủ nhà" ở dưới cùng.</div>';
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function roomCardHtml(r, readOnly){
+  const d = DRAFT[r.stt] || {xe:0, songuoi:0, dien:null, nuoc:null};
+  const done = d.dien !== null && d.dien !== undefined;
+  const dis = readOnly ? 'disabled' : '';
+  const waterRow = r.waterMeter ? `
+      <div class="field-row">
+        <div class="field-label">💧 Nước — chỉ số đồng hồ (khối)</div>
+        <input type="tel" inputmode="numeric" class="num-input" style="font-size:26px;"
+          id="nuoc_${r.stt}" value="${d.nuoc!=null?d.nuoc:''}" placeholder="VD: 1523" ${dis}
+          oninput="onFieldChange(${r.stt})">
+      </div>` : '';
+  return `
+    <div class="room-card ${done?'done':''}" id="room_${r.stt}">
+      <div class="room-head">
+        <div class="room-num">🚪 Phòng ${r.stt}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="save-flag" id="flag_${r.stt}">💾 Đã lưu</span>
+          <span class="room-badge ${done?'ok':''}">${done?'✅ Đã ghi':'Chưa ghi'}</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">🚗 Số xe</div>
+        <div class="stepper">
+          <button ${dis} onclick="stepVal(${r.stt},'xe',-1)">−</button>
+          <div class="val" id="xeval_${r.stt}">${d.xe||0}</div>
+          <button ${dis} onclick="stepVal(${r.stt},'xe',1)">+</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">👥 Số người ở</div>
+        <div class="stepper">
+          <button ${dis} onclick="stepVal(${r.stt},'songuoi',-1)">−</button>
+          <div class="val" id="songuoival_${r.stt}">${d.songuoi||0}</div>
+          <button ${dis} onclick="stepVal(${r.stt},'songuoi',1)">+</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">⚡ Điện — chỉ số đồng hồ</div>
+        <input type="tel" inputmode="numeric" class="num-input" style="font-size:26px;"
+          id="dien_${r.stt}" value="${d.dien!=null?d.dien:''}" placeholder="VD: 4521" ${dis}
+          oninput="onFieldChange(${r.stt})">
+      </div>
+      ${waterRow}
+
+      ${readOnly ? '' : `<div class="room-actions"><button class="clear-btn" onclick="xoaPhong(${r.stt})">🗑 Xoá số đã ghi phòng này</button></div>`}
+    </div>`;
+}
+
+/* ---------- Xe / Số người — nút bấm to, khỏi gõ ---------- */
+function stepVal(stt, field, delta){
+  if(!DRAFT[stt]) DRAFT[stt] = {xe:0, songuoi:0, dien:null, nuoc:null};
+  const cur = Number(DRAFT[stt][field]) || 0;
+  const next = Math.max(0, Math.min(20, cur + delta));
+  DRAFT[stt][field] = next;
+  const el = $((field==='xe'?'xeval_':'songuoival_') + stt);
+  if(el) el.textContent = next;
+  scheduleSave(stt);
+}
+
+/* ---------- Điện / Nước — gõ tay ---------- */
+function onFieldChange(stt){
+  if(!DRAFT[stt]) DRAFT[stt] = {xe:0, songuoi:0, dien:null, nuoc:null};
+  const dienEl = $('dien_'+stt);
+  const nuocEl = $('nuoc_'+stt);
+  if(dienEl){
+    const raw = (dienEl.value||'').replace(/[^\d]/g,'');
+    dienEl.value = raw;
+    DRAFT[stt].dien = raw==='' ? null : Number(raw);
+  }
+  if(nuocEl){
+    const raw2 = (nuocEl.value||'').replace(/[^\d]/g,'');
+    nuocEl.value = raw2;
+    DRAFT[stt].nuoc = raw2==='' ? null : Number(raw2);
+  }
+  scheduleSave(stt);
+}
+
+/* ---------- Tự lưu — debounce 600ms mỗi phòng, không spam mạng khi họ bấm +/- liên tục ---------- */
+function scheduleSave(stt){
+  updateRoomBadge(stt);
+  if(saveTimers[stt]) clearTimeout(saveTimers[stt]);
+  saveTimers[stt] = setTimeout(() => luuPhong(stt), 600);
+}
+
+function updateRoomBadge(stt){
+  const d = DRAFT[stt] || {};
+  const done = d.dien !== null && d.dien !== undefined;
+  const card = $('room_'+stt);
+  if(card) card.classList.toggle('done', done);
+  const badge = card ? card.querySelector('.room-badge') : null;
+  if(badge){
+    badge.textContent = done ? '✅ Đã ghi' : 'Chưa ghi';
+    badge.classList.toggle('ok', done);
+  }
+  updateFooter();
+}
+
+async function luuPhong(stt){
+  const d = DRAFT[stt] || {xe:0, songuoi:0, dien:null, nuoc:null};
+  try{
+    const res = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
+      action:'luuGhiSoDraft', stt: stt, xe: d.xe||0, songuoi: d.songuoi||0, dien: d.dien, nuoc: d.nuoc
+    })});
+    const json = await res.json();
+    if(json && json.status === 'ok'){
+      flashSaved(stt);
+    } else if(json && json.message === 'closed'){
+      // Cửa vừa bị khoá lại giữa chừng (anh Hưng vừa xem tháng khác/khoá) — tải lại cho khớp
+      taiDuLieu();
+    }
+  }catch(e){
+    // Mất mạng thoáng qua — dữ liệu vẫn còn trên màn hình, họ gõ thêm ô khác sẽ tự thử lưu lại
+  }
+}
+function flashSaved(stt){
+  const el = $('flag_'+stt);
+  if(!el) return;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1200);
+}
+
+async function xoaPhong(stt){
+  if(!confirm('Xoá số đã ghi của phòng ' + stt + '?')) return;
+  delete DRAFT[stt];
+  const xeEl = $('xeval_'+stt); if(xeEl) xeEl.textContent = '0';
+  const ngEl = $('songuoival_'+stt); if(ngEl) ngEl.textContent = '0';
+  const dienEl = $('dien_'+stt); if(dienEl) dienEl.value = '';
+  const nuocEl = $('nuoc_'+stt); if(nuocEl) nuocEl.value = '';
+  updateRoomBadge(stt);
+  try{
+    await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'xoaGhiSoDraft', stt: stt})});
+  }catch(e){}
+}
+
+function updateFooter(){
+  const total = ROOMS.length;
+  const done = ROOMS.filter(r => { const d = DRAFT[r.stt]; return d && d.dien !== null && d.dien !== undefined; }).length;
+  const cEl = $('footerCount');
+  if(cEl) cEl.textContent = 'Đã ghi ' + done + '/' + total + ' phòng';
+}
+
+/* ---------- Gửi chủ nhà — 1 lần chốt, khoá lại ngay sau khi thành công ---------- */
+async function guiChuNha(){
+  const total = ROOMS.length;
+  const done = ROOMS.filter(r => { const d = DRAFT[r.stt]; return d && d.dien !== null && d.dien !== undefined; }).length;
+  let confirmMsg = 'Xác nhận đã ghi xong, gửi cho chủ nhà?\nSau khi gửi sẽ KHOÁ LẠI, không sửa được nữa cho tới khi chủ nhà mở lại.';
+  if(done < total){
+    confirmMsg = 'Còn ' + (total-done) + ' phòng chưa ghi điện. Vẫn muốn gửi luôn?\n\n' + confirmMsg;
+  }
+  if(!confirm(confirmMsg)) return;
+
+  const btn = $('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi…';
+  try{
+    const res = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'chotGuiChuNha'})});
+    const json = await res.json();
+    if(json && json.status === 'ok'){
+      alert('Đã gửi cho chủ nhà — cảm ơn anh/chị!');
+      taiDuLieu();
+    } else {
+      alert('Lỗi: ' + (json && json.message ? json.message : 'không rõ') + '\nThử bấm Gửi lại.');
+      btn.disabled = false;
+      btn.textContent = '📤 Gửi chủ nhà';
+    }
+  }catch(err){
+    alert('Lỗi kết nối, kiểm tra mạng rồi bấm Gửi lại.');
+    btn.disabled = false;
+    btn.textContent = '📤 Gửi chủ nhà';
+  }
+}
+
+/* ---------- Khởi động: nếu đã nhập đúng mã trước đó trên máy này thì vào thẳng ---------- */
+(function init(){
+  let unlocked = false;
+  try{ unlocked = localStorage.getItem(UNLOCK_KEY) === '1'; }catch(e){}
+  if(unlocked) enterApp();
+})();
+</script>
+</body>
+</html>
