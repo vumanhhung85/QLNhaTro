@@ -3919,18 +3919,43 @@ async function loadGhiSoStatus(){
 function renderGhiSoStatus(){
   const box = document.getElementById('ghiSoStatusBox');
   const reopenBtn = document.getElementById('ghiSoReopenBtn');
+  const openNowBtn = document.getElementById('ghiSoOpenNowBtn');
   const info = STATE.ghiSoInfo;
   if(!box || !info) return;
   const label = info.monthLabel || info.monthKey || '';
   if(info.windowStatus === 'open'){
     box.innerHTML = `<div class="stat good" style="max-width:280px;"><div class="lbl">🟢 Đang mở</div><div class="val" style="font-size:14px;">Người ghi đang nhập được — ${label||'(chưa có tháng)'}</div></div>`;
     if(reopenBtn) reopenBtn.style.display = 'none';
+    if(openNowBtn) openNowBtn.style.display = 'none';
   } else if(info.windowStatus === 'submitted'){
     box.innerHTML = `<div class="stat bad" style="max-width:280px;"><div class="lbl">🔒 Đã khoá</div><div class="val" style="font-size:14px;">Đã nhận số liệu — ${label}</div></div>`;
     if(reopenBtn) reopenBtn.style.display = '';
+    if(openNowBtn) openNowBtn.style.display = 'none';
   } else {
-    box.innerHTML = `<div class="stat" style="max-width:280px;"><div class="lbl">⚪ Chưa mở</div><div class="val" style="font-size:14px;">Bấm "+ Tháng mới" để tự mở link cho người ghi</div></div>`;
+    box.innerHTML = `<div class="stat" style="max-width:280px;"><div class="lbl">⚪ Chưa mở</div><div class="val" style="font-size:14px;">Bấm "+ Tháng mới" để tự mở link cho người ghi, hoặc bấm "▶️ Mở ngay" cho tháng đang dùng</div></div>`;
     if(reopenBtn) reopenBtn.style.display = 'none';
+    if(openNowBtn) openNowBtn.style.display = '';
+  }
+}
+async function openGhiSoNow(){
+  const url = (STATE.settings.sheetWebhookUrl||'').trim();
+  if(!url){ showToast('Chưa cấu hình Google Sheet trong Cài đặt.'); return; }
+  if(!STATE.currentKey){ showToast('Chưa có tháng nào đang mở để chọn.'); return; }
+  if(!confirm('Mở cửa ghi số ngay cho tháng "'+monthLabel(STATE.currentKey)+'"?')) return;
+  try{
+    showToast('Đang mở…');
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'openGhiSoWindow', monthKey: STATE.currentKey})});
+    const text = await res.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch(e){}
+    if(json && json.status==='ok'){
+      showToast('Đã mở — người ghi có thể vào ghi số ngay.');
+      await loadGhiSoStatus();
+    } else {
+      showToast('Lỗi: ' + (json && json.message ? json.message : 'không rõ'));
+    }
+  }catch(err){
+    showToast('Lỗi: '+describeSyncError(err));
   }
 }
 async function shareGhiSoLink(){
@@ -4730,6 +4755,7 @@ function renderCaiDat(main){
       <div id="ghiSoStatusBox" style="margin:10px 0;"><div class="desc" style="margin:0;">Đang tải trạng thái…</div></div>
       <div class="toolbar">
         <button class="btn btn-brass btn-sm" onclick="shareGhiSoLink()">📤 Chia sẻ link cho người ghi số</button>
+        <button class="btn btn-outline btn-sm" id="ghiSoOpenNowBtn" style="display:none;" onclick="openGhiSoNow()">▶️ Mở ngay</button>
         <button class="btn btn-outline btn-sm" id="ghiSoReopenBtn" style="display:none;" onclick="reopenGhiSoForEditing()">🔓 Mở lại cho sửa</button>
         <button class="btn btn-outline btn-sm" onclick="loadGhiSoStatus()">🔄 Làm mới</button>
       </div>
