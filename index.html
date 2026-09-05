@@ -3040,7 +3040,7 @@ function renderThuTien(main){
             return `
             <tr>
               <td class="text-center sticky-col"><b>${r.stt}</b></td>
-              <td class="mono" style="font-weight:800; color:var(--brick); font-size:13.5px;">${fmtVND(totalWithDebt)}${debt?`<div style="font-size:10px;font-weight:600;color:var(--ink-soft);">Nợ ${debt.monthLabel}: ${fmtVND(debt.amount)}</div>`:''}</td>
+              <td class="mono" style="font-weight:800; color:var(--brick); font-size:13.5px;">${fmtVND(totalWithDebt)}${debt?`<div style="font-size:10px;font-weight:600;color:var(--ink-soft);">Gồm nợ ${debt.monthLabel}: </td> ${fmtVND(debt.amount)}</div>`:''}</td>
               <td>
                 <input type="checkbox" ${r.paid?'checked':''} onchange="onTogglePaid(${r.stt}, this.checked)">
                 ${r.paid && r.paidBy==='sepay' ? `<span title="Tick tự động qua SePay — bấm để xem lịch sử" style="margin-left:4px;cursor:pointer;" onclick="openSepayHistoryModal(${r.stt})">🔄</span>` : ''}
