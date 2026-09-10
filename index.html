@@ -1492,6 +1492,7 @@ async function confirmNewMonth(){
     nr.dieuchinh = 0;
     nr.khachMoi = false;
     nr.phieuTraPhong = null; // phiếu trả phòng chỉ thuộc về đúng tháng khách rời đi, không mang sang tháng sau
+    nr.doiPhongInfo = null; // ghi chú dời phòng cũng chỉ thuộc đúng tháng đó
     return nr;
   });
   const newMonth = {
@@ -2787,6 +2788,11 @@ async function applyTenantChange(stt, isNewTenant){
   r.active = true;
   r.khachMoi = !!isNewTenant;
   r.ngayTrong = ''; // không còn trống nữa
+  // Phòng có khách trở lại (dù khách mới hay khách cũ ở tiếp) -> phiếu chốt trả phòng lần
+  // trước (nếu có) không còn ý nghĩa gì với đợt ở này nữa, xoá luôn kẻo Tab Phiếu thu lại
+  // nhầm lấy số cũ ra tính cho đợt khách mới.
+  r.phieuTraPhong = null;
+  r.doiPhongInfo = null;
   if(isNewTenant){
     archiveCurrentTenancy(r, todayISO()); // đề phòng còn sót người ở cũ chưa được lưu lịch sử
     r.ngayVaoO = todayISO();
@@ -3026,30 +3032,79 @@ async function applyVacate(stt){
 }
 
 /* ---- Dời phòng: khách chuyển sang phòng trống khác, gộp tiền điện phòng cũ vào phòng mới ---- */
+function ngaySauISO(iso, soNgay){
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y, m-1, d+soNgay);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
 function openTransferModal(fromStt){
   const vacantRooms = STATE.monthData.rooms.filter(x=>!x.active && x.stt!==fromStt);
   if(!vacantRooms.length){ showToast('Hiện không có phòng nào đang trống để dời sang.'); return; }
   const r = STATE.monthData.rooms.find(x=>x.stt===fromStt);
+  const md = STATE.monthData;
+  const dim = daysInMonth(...md.key.split('-').map(Number));
+  const ngayCuoiMax = dim - 1;
+  const todayDay = Number(todayISO().slice(8,10));
+  const ngayMacDinh = (todayISO().slice(0,7)===md.key)
+    ? `${md.key}-${String(Math.min(todayDay, ngayCuoiMax)).padStart(2,'0')}`
+    : `${md.key}-${String(ngayCuoiMax).padStart(2,'0')}`;
   showModal(`
     <h3>Dời khách từ phòng ${fromStt}</h3>
-    <div class="desc">Chỉ hiện các phòng đang trống. Số điện phòng cũ sẽ được chốt sổ và cộng tiền vào phòng mới (không thu riêng ở phòng cũ nữa); số điện phòng mới nếu bỏ qua sẽ giữ theo số đầu tháng hiện có của phòng đó.</div>
-    <div class="field"><label>Dời sang phòng</label>
-      <select id="tf_target">${vacantRooms.map(x=>`<option value="${x.stt}">Phòng ${x.stt}</option>`).join('')}</select>
+    <div class="desc">App tự chốt phiếu phòng cũ theo đúng số ngày đã ở (phòng/xe/rác/nước theo ngày, điện${r.waterMeter?'/nước':''} theo số thực) rồi cộng gộp vào phiếu phòng mới — 1 phiếu duy nhất cho khách, không tách 2 phiếu riêng.</div>
+    <div class="field"><label>Ngày cuối ở phòng ${fromStt}</label>
+      <input type="date" id="tf_ngay" value="${ngayMacDinh}" min="${md.key}-01" max="${md.key}-${String(dim-1).padStart(2,'0')}" onchange="updateTransferPreview(${fromStt})">
     </div>
-    <div class="field"><label>Số điện phòng ${fromStt} lúc dời đi (chốt sổ, tuỳ chọn)</label><input type="number" id="tf_oldreading" placeholder="để trống nếu bỏ qua"></div>
+    <div class="field"><label>Dời sang phòng</label>
+      <select id="tf_target" onchange="updateTransferPreview(${fromStt})">${vacantRooms.map(x=>`<option value="${x.stt}">Phòng ${x.stt}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>Số điện phòng ${fromStt} lúc dời đi (tuỳ chọn)</label><input type="number" id="tf_oldreading" placeholder="để trống nếu bỏ qua" oninput="updateTransferPreview(${fromStt})"></div>
+    ${r.waterMeter ? `<div class="field"><label>Số nước phòng ${fromStt} lúc dời đi (tuỳ chọn)</label><input type="number" id="tf_oldnuoc" placeholder="để trống nếu bỏ qua" oninput="updateTransferPreview(${fromStt})"></div>` : ''}
     <div class="field"><label>Số điện phòng mới lúc dọn vào (tuỳ chọn)</label><input type="number" id="tf_newreading" placeholder="để trống = giữ số đầu tháng"></div>
+    <div class="field" id="tf_newnuoc_wrap" style="display:none;"><label>Số nước phòng mới lúc dọn vào (tuỳ chọn)</label><input type="number" id="tf_newnuoc" placeholder="để trống = giữ số đầu tháng"></div>
     <div class="field"><label>Ghi chú</label><input type="text" spellcheck="false" autocorrect="off" autocapitalize="off" id="tf_note" value="Dời P${fromStt} ${fmtDateShort(todayISO())}"></div>
+    <div class="breakdown" id="tf_preview" style="border-top:1px dashed var(--line); padding-top:8px;">
+      ${transferPreviewHtml(r, ngayMacDinh, '', '')}
+    </div>
     <div class="err-msg" id="tf_err"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal(); renderMain();">Hủy</button>
       <button class="btn btn-primary" onclick="confirmTransfer(${fromStt})">Xác nhận dời phòng</button>
     </div>
   `);
+  updateTransferPreview(fromStt);
+}
+function transferPreviewHtml(r, ngayCuoi, dienVal, nuocVal){
+  const p = tinhPhieuTraPhong(r, STATE.monthData.key, ngayCuoi, dienVal, nuocVal, 0);
+  return `
+    <span>Phòng ${r.stt} tính ${p.soNgayDaO}/${p.soNgayTrongThang} ngày:</span>
+    <span>Phòng ${fmtVND(p.tienPhong)} + Xe ${fmtVND(p.tienXe)} + Rác ${fmtVND(p.tienRac)} + Nước ${fmtVND(p.tienNuoc)} + Điện ${fmtVND(p.tienDien)}</span>
+    <span>= <b class="mono" style="font-size:14px;">Cộng gộp vào phòng mới: ${fmtVND(p.tongPhieu)}</b></span>
+  `;
+}
+function updateTransferPreview(fromStt){
+  const r = STATE.monthData.rooms.find(x=>x.stt===fromStt);
+  if(!r) return;
+  const ngayCuoi = document.getElementById('tf_ngay').value;
+  const dienVal = document.getElementById('tf_oldreading').value;
+  const oldNuocEl = document.getElementById('tf_oldnuoc');
+  const nuocVal = oldNuocEl ? oldNuocEl.value : '';
+  const el = document.getElementById('tf_preview');
+  if(el) el.innerHTML = transferPreviewHtml(r, ngayCuoi, dienVal, nuocVal);
+  const targetStt = Number(document.getElementById('tf_target').value);
+  const newRoom = STATE.monthData.rooms.find(x=>x.stt===targetStt);
+  const wrap = document.getElementById('tf_newnuoc_wrap');
+  if(wrap) wrap.style.display = (newRoom && newRoom.waterMeter) ? '' : 'none';
 }
 async function confirmTransfer(fromStt){
   const targetStt = Number(document.getElementById('tf_target').value);
+  const ngayCuoi = document.getElementById('tf_ngay').value;
   const oldReadingVal = document.getElementById('tf_oldreading').value;
+  const oldNuocEl = document.getElementById('tf_oldnuoc');
+  const oldNuocVal = oldNuocEl ? oldNuocEl.value : '';
   const newReadingVal = document.getElementById('tf_newreading').value;
+  const newNuocEl = document.getElementById('tf_newnuoc');
+  const newNuocWrap = document.getElementById('tf_newnuoc_wrap');
+  const newNuocVal = (newNuocEl && newNuocWrap && newNuocWrap.style.display!=='none') ? newNuocEl.value : '';
   const note = (document.getElementById('tf_note').value||'').trim();
   const errEl = document.getElementById('tf_err');
   const oldRoom = STATE.monthData.rooms.find(x=>x.stt===fromStt);
@@ -3060,42 +3115,48 @@ async function confirmTransfer(fromStt){
   // giữ lại thông tin khách trước khi xoá ở phòng cũ
   const tenant = {songuoi:oldRoom.songuoi||0, soxe:oldRoom.soxe||0, coc:oldRoom.coc||0, nguoiO: JSON.parse(JSON.stringify(oldRoom.nguoiO||[]))};
 
-  let dienPhongCu = 0, dienNote = '';
-  if(oldReadingVal !== ''){
-    const oldReading = Number(oldReadingVal);
-    const oldCu = Number(oldRoom.sodiencu||0);
-    const daDung = Math.max(0, oldReading - oldCu);
-    dienPhongCu = daDung * Number(oldRoom.dongiaDien||0);
-    oldRoom.sodienmoi = oldReading;
-    dienNote = ` — điện P${fromStt} chốt: ${daDung} số × ${fmtVND(oldRoom.dongiaDien)} = ${fmtVND(dienPhongCu)} (${oldReading} - ${oldCu} = ${daDung} số)`;
-  }
+  // Chốt TOÀN BỘ phiếu phòng cũ theo đúng số ngày đã ở (dùng chung công thức với "Trả phòng") —
+  // phòng/xe/rác/nước theo ngày, điện/nước đồng hồ riêng theo số thực, KHÔNG chỉ mỗi tiền điện.
+  const p = tinhPhieuTraPhong(oldRoom, STATE.monthData.key, ngayCuoi, oldReadingVal, oldNuocVal, 0);
+  const ngayVaoPhongMoi = ngaySauISO(ngayCuoi, 1); // phòng mới tính từ ngày KẾ TIẾP, tránh đếm trùng ngày chuyển
+
+  if(oldReadingVal !== ''){ oldRoom.sodienmoi = Number(oldReadingVal); }
+  if(oldRoom.waterMeter && oldNuocVal !== ''){ oldRoom.nuocMoi = Number(oldNuocVal); }
 
   // đóng sổ phòng cũ, trả về trạng thái trống (lưu lịch sử người ở trước khi xoá)
   archiveCurrentTenancy(oldRoom, todayISO());
   oldRoom.sodiencu = oldRoom.sodienmoi!=null ? oldRoom.sodienmoi : oldRoom.sodiencu;
+  if(oldRoom.waterMeter) oldRoom.nuocCu = oldRoom.nuocMoi!=null ? oldRoom.nuocMoi : oldRoom.nuocCu;
   oldRoom.active = false;
   oldRoom.songuoi = 0; oldRoom.soxe = 0; oldRoom.coc = 0; oldRoom.ngayVaoO = '';
   oldRoom.ngayTrong = todayISO();
-  oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang P${targetStt} (${fmtDateShort(todayISO())})`;
+  oldRoom.phieuTraPhong = null; // KHÔNG đóng băng riêng — tiền đã gộp hết vào phòng mới, tránh tính trùng 2 lần
+  oldRoom.ghichu = ((oldRoom.ghichu||'').trim() ? oldRoom.ghichu.trim()+' · ' : '') + `Đã dời sang P${targetStt} (${p.soNgayDaO}/${p.soNgayTrongThang} ngày = ${fmtVND(p.tongPhieu)}) (${fmtDateShort(todayISO())})`;
 
-  // mở phòng mới cho khách, kế thừa số người/xe/cọc/giấy tờ, cộng tiền điện phòng cũ vào điều chỉnh
+  // mở phòng mới cho khách, kế thừa số người/xe/cọc/giấy tờ, cộng gộp phiếu phòng cũ vào điều chỉnh
   newRoom.active = true;
   newRoom.khachMoi = true; // nợ cũ (nếu có) của phòng này trước đây coi như đã chốt, không cộng dồn cho khách mới tới
   newRoom.ngayTrong = '';
-  newRoom.ngayVaoO = todayISO();
+  newRoom.ngayVaoO = ngayVaoPhongMoi;
   newRoom.songuoi = tenant.songuoi;
   newRoom.soxe = tenant.soxe;
   newRoom.coc = tenant.coc;
   newRoom.nguoiO = tenant.nguoiO;
+  newRoom.phieuTraPhong = null;
   if(newReadingVal !== ''){ newRoom.sodiencu = Number(newReadingVal); }
-  newRoom.dieuchinh = Number(newRoom.dieuchinh||0) + dienPhongCu;
-  newRoom.ghichu = (note || `Dời P${fromStt} ${fmtDateShort(todayISO())}`) + dienNote;
+  if(newRoom.waterMeter && newNuocVal !== ''){ newRoom.nuocCu = Number(newNuocVal); }
+  newRoom.dieuchinh = Number(newRoom.dieuchinh||0) + p.tongPhieu;
+  newRoom.dieuchinhLyDo = `Phòng ${fromStt} cũ (${p.soNgayDaO} ngày): phòng ${fmtVND(p.tienPhong)}+xe ${fmtVND(p.tienXe)}+rác ${fmtVND(p.tienRac)}+nước ${fmtVND(p.tienNuoc)}+điện ${fmtVND(p.tienDien)}`;
+  // Ghi lại thông tin ngắn gọn để in note dễ hiểu trên phiếu (không lưu số tiền ở đây, receiptHtml
+  // tự lấy đúng từ dieuchinh hiện tại để tránh lệch nếu sau này còn chỉnh sửa thủ công thêm).
+  newRoom.doiPhongInfo = {fromStt, soNgayPhongCu:p.soNgayDaO, soNgayPhongMoi:(daysInMonth(...STATE.monthData.key.split('-').map(Number)) - Number(ngayVaoPhongMoi.split('-')[2]) + 1), tuNgay:ngayVaoPhongMoi};
+  newRoom.ghichu = (note || `Dời P${fromStt} ${fmtDateShort(todayISO())}`);
 
   scheduleSave();
   await refreshPrevDebts();
   closeModal();
   renderMain();
-  showToast(`Đã dời khách từ phòng ${fromStt} sang phòng ${targetStt}.`);
+  showToast(`Đã dời khách từ phòng ${fromStt} sang phòng ${targetStt}. Cộng gộp phòng cũ: ${fmtVND(p.tongPhieu)}.`);
 }
 
 /* ============ TAB: THU TIỀN ============ */
@@ -3451,6 +3512,9 @@ function receiptHtml(r, s, options){
   const proratedBanner = c.traPhong ? `
     <div style="background:var(--brass-light); color:var(--brass-dark); font-size:11px; font-weight:700; padding:7px 9px; border-radius:6px; margin-bottom:8px; line-height:1.5;">
       ⓘ Phiếu chốt trả phòng — khách ở ${c.soNgayConLai}/${c.soNgayTrongThang} ngày của ${md.label} rồi dọn đi, không phải tiền nguyên tháng. Cọc ${fmtVND(c.cocGoc)} − phiếu ${fmtVND(c.tong)} = ${c.conLai>=0?('hoàn khách '+fmtVND(c.conLai)):('khách đóng thêm '+fmtVND(-c.conLai))}.
+    </div>` : r.doiPhongInfo ? `
+    <div style="background:var(--brass-light); color:var(--brass-dark); font-size:11px; font-weight:700; padding:7px 9px; border-radius:6px; margin-bottom:8px; line-height:1.5;">
+      ⓘ Khách vừa dời từ Phòng ${r.doiPhongInfo.fromStt} sang phòng này ngày ${fmtDate(r.doiPhongInfo.tuNgay)} — phiếu gồm ${r.doiPhongInfo.soNgayPhongCu} ngày ở phòng cũ + ${r.doiPhongInfo.soNgayPhongMoi} ngày ở phòng này.
     </div>` : c.prorated ? `
     <div style="background:var(--brass-light); color:var(--brass-dark); font-size:11px; font-weight:700; padding:7px 9px; border-radius:6px; margin-bottom:8px; line-height:1.5;">
       ⓘ Đây là số tiền còn lại của ${md.label} (dọn vào ngày ${fmtDate(r.ngayVaoO)}, còn ${c.soNgayConLai}/${c.soNgayTrongThang} ngày) — không phải tiền nguyên tháng. Từ tháng sau sẽ tính bình thường như các phòng khác.
